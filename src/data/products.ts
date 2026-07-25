@@ -1,0 +1,32 @@
+export const products = [
+  {
+    id: 'oak-dining-table',
+    name: 'Oak Grove Dining Table',
+    category: 'Dining',
+    summary: 'A signature table shaped from premium hardwood with a soft, hand-finished edge.',
+    price: 'Made to order',
+    wood: 'White oak',
+    availability: 'Made to order',
+    image: 'https://images.unsplash.com/photo-1617806118233-18e1de247200?auto=format&fit=crop&w=1200&q=85',
+  },
+  {
+    id: 'cherry-nightstand',
+    name: 'Cherry Blossom Nightstand',
+    category: 'Bedroom',
+    summary: 'Rich cherry wood tones and considered storage for an elegant bedroom ritual.',
+    price: 'Made to order',
+    wood: 'Solid cherry',
+    availability: 'Limited run',
+    image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=85',
+  },
+  {
+    id: 'artisan-lounge-chair',
+    name: 'Artisan Lounge Chair',
+    category: 'Seating',
+    summary: 'A sculpted frame and generous upholstery made for warm, comfortable spaces.',
+    price: 'Made to order',
+    wood: 'American walnut',
+    availability: 'Available to commission',
+    image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=1200&q=85',
+  },
+];
