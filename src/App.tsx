@@ -22,7 +22,9 @@ const QuoteRequest = lazy(() => import('./pages/QuoteRequest').then(m => ({ defa
 const Dashboard = lazy(() => import('./pages/admin/Dashboard').then(m => ({ default: m.Dashboard })));
 const Quotes = lazy(() => import('./pages/admin/Quotes').then(m => ({ default: m.Quotes })));
 const ProductsAdmin = lazy(() => import('./pages/admin/Products').then(m => ({ default: m.ProductsAdmin })));
-const { Analytics, Contacts, Settings } = require('./pages/admin/AdminPagePlaceholder');
+const Analytics = lazy(() => import('./pages/admin/AdminPagePlaceholder').then(m => ({ default: m.Analytics })));
+const Contacts = lazy(() => import('./pages/admin/AdminPagePlaceholder').then(m => ({ default: m.Contacts })));
+const Settings = lazy(() => import('./pages/admin/AdminPagePlaceholder').then(m => ({ default: m.Settings })));
 
 const pageTransition = {
   initial: { opacity: 0, y: 18 },
