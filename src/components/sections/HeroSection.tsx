@@ -95,15 +95,15 @@ export function HeroSection({ children }: HeroSectionProps) {
                 initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.16 + index * 0.08, ease: 'easeOut' }}
-                className="flex h-full flex-col rounded-[1.5rem] border border-bark/10 bg-white/90 p-4 shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-medium sm:rounded-[2rem] sm:p-5"
+                className="flex h-full flex-col rounded-[1.5rem] border border-bark/10 bg-white/90 p-3 shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-medium sm:rounded-[2rem] sm:p-4"
               >
-                <div className="flex items-start gap-2 sm:gap-3">
+                <div className="flex flex-shrink-0 items-start gap-2">
                   <span className="icon-surface shrink-0 bg-bark/5 text-bark">
-                    <Icon size={18} aria-hidden="true" className="sm:size-[20px]" />
+                    <Icon size={16} aria-hidden="true" className="sm:size-[18px]" />
                   </span>
-                  <p className="min-w-0 text-xs leading-4 tracking-[0.15em] text-bark/60 sm:leading-5 sm:tracking-[0.2em]">{label}</p>
+                  <p className="min-w-0 flex-1 text-[0.625rem] leading-3 tracking-[0.1em] text-bark/60 sm:text-xs sm:leading-4 sm:tracking-[0.15em]">{label}</p>
                 </div>
-                <p className="mt-3 break-words text-2xl font-bold tracking-tight text-bark sm:mt-4 sm:text-3xl">{value}</p>
+                <p className="mt-2 truncate text-xl font-bold tracking-tight text-bark sm:mt-3 sm:text-2xl">{value}</p>
               </motion.article>
             ))}
           </div>
