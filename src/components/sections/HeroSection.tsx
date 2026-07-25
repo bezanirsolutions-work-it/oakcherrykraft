@@ -88,22 +88,22 @@ export function HeroSection({ children }: HeroSectionProps) {
             </motion.div>
           </motion.div>
 
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Oak Cherry Kraft achievements">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4" aria-label="Oak Cherry Kraft achievements">
             {stats.map(({ Icon, value, label }, index) => (
               <motion.article
                 key={label}
                 initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.16 + index * 0.08, ease: 'easeOut' }}
-                className="rounded-[2rem] border border-bark/10 bg-white/90 p-5 shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-medium sm:p-6"
+                className="flex h-full flex-col rounded-[1.5rem] border border-bark/10 bg-white/90 p-4 shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-medium sm:rounded-[2rem] sm:p-5"
               >
-                <div className="flex items-start gap-3">
-                  <span className="icon-surface bg-bark/5 text-bark">
-                    <Icon size={20} aria-hidden="true" />
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <span className="icon-surface shrink-0 bg-bark/5 text-bark">
+                    <Icon size={18} aria-hidden="true" className="sm:size-[20px]" />
                   </span>
-                  <p className="pt-1 text-xs uppercase leading-5 tracking-[0.2em] text-bark/60">{label}</p>
+                  <p className="min-w-0 text-xs leading-4 tracking-[0.15em] text-bark/60 sm:leading-5 sm:tracking-[0.2em]">{label}</p>
                 </div>
-                <p className="mt-4 text-3xl font-semibold tracking-tight text-bark">{value}</p>
+                <p className="mt-3 break-words text-2xl font-bold tracking-tight text-bark sm:mt-4 sm:text-3xl">{value}</p>
               </motion.article>
             ))}
           </div>

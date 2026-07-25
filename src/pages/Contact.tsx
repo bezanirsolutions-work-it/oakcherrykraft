@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { Mail, MapPin, MessageCircle, Phone, Send, Clock3 } from 'lucide-react';
+import { Mail, MapPin, MessageCircle, Phone, Send, Clock3, Instagram } from 'lucide-react';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Button, Card, SectionHeader } from '../components/ui';
 import { supabase } from '../lib/supabase';
@@ -20,6 +20,7 @@ const contactItems = [
   { label: 'Call the studio', value: '07035000174 / 08034291245', href: 'tel:+2347035000174', Icon: Phone },
   { label: 'WhatsApp', value: '08034291245', href: 'https://wa.me/2348034291245', Icon: MessageCircle },
   { label: 'Email', value: 'oakcherrykraft@gmail.com', href: 'mailto:oakcherrykraft@gmail.com', Icon: Mail },
+  { label: 'Instagram', value: '@oakcherrykraft', href: 'https://www.instagram.com/oakcherrykraft/?hl=en', Icon: Instagram },
 ];
 
 export function Contact() {

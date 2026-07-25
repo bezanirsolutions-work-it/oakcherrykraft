@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { X, Menu } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 interface AdminLayoutProps {
@@ -17,6 +18,14 @@ const navItems = [
 
 export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayoutProps) {
   const [isNavOpen, setIsNavOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      return localStorage.getItem('admin-sidebar-collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [adminName, setAdminName] = useState('Admin');
   const location = useLocation();
   const navigate = useNavigate();
@@ -34,6 +43,28 @@ export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayout
       year: 'numeric',
     }).format(new Date());
   }, []);
+
+  // Close sidebar on Escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsNavOpen(false);
+      }
+    };
+    if (isNavOpen) {
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
+    }
+  }, [isNavOpen]);
+
+  // Persist collapsed state
+  useEffect(() => {
+    try {
+      localStorage.setItem('admin-sidebar-collapsed', isCollapsed.toString());
+    } catch {
+      // localStorage not available
+    }
+  }, [isCollapsed]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -61,25 +92,39 @@ export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayout
   return (
     <div className="min-h-screen bg-sand text-bark antialiased">
       <div className="lg:flex">
-        <div className={isNavOpen ? 'fixed inset-0 z-40 bg-black/40 lg:hidden' : 'hidden'} onClick={() => setIsNavOpen(false)} />
+        <div 
+          className={isNavOpen ? 'fixed inset-0 z-40 bg-black/40 transition-opacity lg:hidden' : 'hidden'} 
+          onClick={() => setIsNavOpen(false)}
+          role="presentation"
+        />
 
         <aside
           id="admin-sidebar"
-          className={`fixed inset-y-0 left-0 z-50 w-72 transform bg-white px-4 py-6 shadow-soft transition duration-200 lg:block lg:w-72 lg:px-6 lg:py-8 ${
+          className={`fixed inset-y-0 left-0 z-50 w-72 transform bg-white px-4 py-6 shadow-soft transition duration-200 lg:relative lg:block lg:w-72 lg:px-6 lg:py-8 lg:shadow-none ${
             isNavOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-          } min-h-screen`}
+          } min-h-screen flex flex-col`}
         >
-          <div className="mb-10 flex items-center gap-3 px-2">
-            <div className="flex h-12 w-12 items-center justify-center rounded-[1.75rem] bg-oak-100 text-oak-700 font-bold">
-              OC
+          <div className="mb-8 flex items-center justify-between px-2">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-[1.75rem] bg-oak-100 text-oak-700 font-bold">
+                OC
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Studio admin</p>
+                <h1 className="mt-2 text-2xl font-semibold text-bark">Oak Cherry</h1>
+              </div>
             </div>
-            <div>
-              <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Studio admin</p>
-              <h1 className="mt-2 text-2xl font-semibold text-bark">Oak Cherry Kraft</h1>
-            </div>
+            <button
+              type="button"
+              onClick={() => setIsNavOpen(false)}
+              aria-label="Close sidebar"
+              className="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-full border border-bark/10 text-bark hover:bg-sand transition"
+            >
+              <X size={20} />
+            </button>
           </div>
 
-          <nav className="space-y-2">
+          <nav className="space-y-2 flex-1">
             {navItems.map((item) => (
               <NavLink
                 key={item.path}
@@ -97,7 +142,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayout
             ))}
           </nav>
 
-          <div className="mt-8 border-t border-bark/10 pt-6">
+          <div className="border-t border-bark/10 pt-6">
             <button
               type="button"
               onClick={handleSignOut}
@@ -119,11 +164,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayout
                 aria-label="Toggle admin navigation"
                 className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-bark/10 bg-white text-bark shadow-soft transition hover:bg-bark/5"
               >
-                <span className="flex h-5 w-5 flex-col justify-between">
-                  <span className="block h-0.5 w-full rounded-full bg-bark" />
-                  <span className="block h-0.5 w-full rounded-full bg-bark" />
-                  <span className="block h-0.5 w-full rounded-full bg-bark" />
-                </span>
+                <Menu size={20} />
               </button>
 
               <p className="text-sm font-semibold uppercase tracking-[0.35em] text-bark/60">Admin menu</p>

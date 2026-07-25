@@ -478,9 +478,7 @@ export function QuoteForm({ className = '', defaultValues }: QuoteFormProps) {
                 ) : null}
                 {status === 'submitting' ? (
                   <div className="rounded-[1.5rem] border border-bark/10 bg-sand/70 p-4 text-bark/75">Sending your request…</div>
-                ) : (
-                  <p className="text-sm leading-7 text-bark/75">We simulate form submission now. This workflow is ready to connect to Supabase or another backend with minimal changes.</p>
-                )}
+                ) : null}
               </div>
             </div>
           </div>

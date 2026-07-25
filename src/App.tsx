@@ -1,24 +1,28 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Route, Routes, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { ErrorBoundary, Layout } from './components/layout';
-import { About } from './pages/About';
-import { Contact } from './pages/Contact';
-import { Configurator } from './pages/Configurator';
 import { Home } from './pages/Home';
-import { NotFound } from './pages/NotFound';
-import { ProductDetail } from './pages/ProductDetail';
-import { Products } from './pages/Products';
-import { ProjectPortfolio } from './pages/ProjectPortfolio';
-import { ProjectDetail } from './pages/ProjectDetail';
-import { QuoteRequest } from './pages/QuoteRequest';
 import { Login } from './pages/admin/Login';
-import { Dashboard } from './pages/admin/Dashboard';
-import { Quotes } from './pages/admin/Quotes';
 import { AdminLayout } from './components/admin/AdminLayout';
 import { ProtectedRoute } from './components/admin/ProtectedRoute';
-import { Analytics, Contacts, Settings } from './pages/admin/AdminPagePlaceholder';
-import { ProductsAdmin } from './pages/admin/Products';
+
+// Lazy-load non-critical public pages
+const About = lazy(() => import('./pages/About').then(m => ({ default: m.About })));
+const Contact = lazy(() => import('./pages/Contact').then(m => ({ default: m.Contact })));
+const Configurator = lazy(() => import('./pages/Configurator').then(m => ({ default: m.Configurator })));
+const NotFound = lazy(() => import('./pages/NotFound').then(m => ({ default: m.NotFound })));
+const ProductDetail = lazy(() => import('./pages/ProductDetail').then(m => ({ default: m.ProductDetail })));
+const Products = lazy(() => import('./pages/Products').then(m => ({ default: m.Products })));
+const ProjectPortfolio = lazy(() => import('./pages/ProjectPortfolio').then(m => ({ default: m.ProjectPortfolio })));
+const ProjectDetail = lazy(() => import('./pages/ProjectDetail').then(m => ({ default: m.ProjectDetail })));
+const QuoteRequest = lazy(() => import('./pages/QuoteRequest').then(m => ({ default: m.QuoteRequest })));
+
+// Lazy-load admin pages
+const Dashboard = lazy(() => import('./pages/admin/Dashboard').then(m => ({ default: m.Dashboard })));
+const Quotes = lazy(() => import('./pages/admin/Quotes').then(m => ({ default: m.Quotes })));
+const ProductsAdmin = lazy(() => import('./pages/admin/Products').then(m => ({ default: m.ProductsAdmin })));
+const { Analytics, Contacts, Settings } = require('./pages/admin/AdminPagePlaceholder');
 
 const pageTransition = {
   initial: { opacity: 0, y: 18 },
@@ -26,6 +30,12 @@ const pageTransition = {
   exit: { opacity: 0, y: -10 },
   transition: { duration: 0.32, ease: [0.22, 1, 0.36, 1] as const },
 };
+
+const LoadingFallback = () => (
+  <div className="flex h-96 items-center justify-center">
+    <div className="h-8 w-8 animate-spin rounded-full border-4 border-bark/20 border-t-bark" />
+  </div>
+);
 
 export default function App() {
   const location = useLocation();
@@ -51,7 +61,9 @@ export default function App() {
               path="products"
               element={
                 <motion.div {...pageTransition} className="w-full">
-                  <Products />
+                  <Suspense fallback={<LoadingFallback />}>
+                    <Products />
+                  </Suspense>
                 </motion.div>
               }
             />
@@ -59,7 +71,9 @@ export default function App() {
               path="products/:category"
               element={
                 <motion.div {...pageTransition} className="w-full">
-                  <Products />
+                  <Suspense fallback={<LoadingFallback />}>
+                    <Products />
+                  </Suspense>
                 </motion.div>
               }
             />
@@ -67,7 +81,9 @@ export default function App() {
               path="products/:category/:slug"
               element={
                 <motion.div {...pageTransition} className="w-full">
-                  <ProductDetail />
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ProductDetail />
+                  </Suspense>
                 </motion.div>
               }
             />
@@ -75,7 +91,9 @@ export default function App() {
               path="projects"
               element={
                 <motion.div {...pageTransition} className="w-full">
-                  <ProjectPortfolio />
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ProjectPortfolio />
+                  </Suspense>
                 </motion.div>
               }
             />
@@ -83,7 +101,9 @@ export default function App() {
               path="projects/:projectId"
               element={
                 <motion.div {...pageTransition} className="w-full">
-                  <ProjectDetail />
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ProjectDetail />
+                  </Suspense>
                 </motion.div>
               }
             />
@@ -91,7 +111,9 @@ export default function App() {
               path="quote"
               element={
                 <motion.div {...pageTransition} className="w-full">
-                  <QuoteRequest />
+                  <Suspense fallback={<LoadingFallback />}>
+                    <QuoteRequest />
+                  </Suspense>
                 </motion.div>
               }
             />
@@ -99,7 +121,9 @@ export default function App() {
               path="configurator"
               element={
                 <motion.div {...pageTransition} className="w-full">
-                  <Configurator />
+                  <Suspense fallback={<LoadingFallback />}>
+                    <Configurator />
+                  </Suspense>
                 </motion.div>
               }
             />
@@ -107,7 +131,9 @@ export default function App() {
               path="about"
               element={
                 <motion.div {...pageTransition} className="w-full">
-                  <About />
+                  <Suspense fallback={<LoadingFallback />}>
+                    <About />
+                  </Suspense>
                 </motion.div>
               }
             />
@@ -115,7 +141,9 @@ export default function App() {
               path="contact"
               element={
                 <motion.div {...pageTransition} className="w-full">
-                  <Contact />
+                  <Suspense fallback={<LoadingFallback />}>
+                    <Contact />
+                  </Suspense>
                 </motion.div>
               }
             />
@@ -123,7 +151,9 @@ export default function App() {
               path="*"
               element={
                 <motion.div {...pageTransition} className="w-full">
-                  <NotFound />
+                  <Suspense fallback={<LoadingFallback />}>
+                    <NotFound />
+                  </Suspense>
                 </motion.div>
               }
             />
@@ -150,7 +180,9 @@ export default function App() {
               index
               element={
                 <motion.div {...pageTransition} className="w-full">
-                  <Dashboard />
+                  <Suspense fallback={<LoadingFallback />}>
+                    <Dashboard />
+                  </Suspense>
                 </motion.div>
               }
             />
@@ -158,7 +190,9 @@ export default function App() {
               path="quotes"
               element={
                 <motion.div {...pageTransition} className="w-full">
-                  <Quotes />
+                  <Suspense fallback={<LoadingFallback />}>
+                    <Quotes />
+                  </Suspense>
                 </motion.div>
               }
             />
@@ -166,7 +200,9 @@ export default function App() {
               path="contacts"
               element={
                 <motion.div {...pageTransition} className="w-full">
-                  <Contacts />
+                  <Suspense fallback={<LoadingFallback />}>
+                    <Contacts />
+                  </Suspense>
                 </motion.div>
               }
             />
@@ -174,7 +210,9 @@ export default function App() {
               path="products"
               element={
                 <motion.div {...pageTransition} className="w-full">
-                  <ProductsAdmin />
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ProductsAdmin />
+                  </Suspense>
                 </motion.div>
               }
             />
@@ -182,7 +220,9 @@ export default function App() {
               path="analytics"
               element={
                 <motion.div {...pageTransition} className="w-full">
-                  <Analytics />
+                  <Suspense fallback={<LoadingFallback />}>
+                    <Analytics />
+                  </Suspense>
                 </motion.div>
               }
             />
@@ -190,7 +230,9 @@ export default function App() {
               path="settings"
               element={
                 <motion.div {...pageTransition} className="w-full">
-                  <Settings />
+                  <Suspense fallback={<LoadingFallback />}>
+                    <Settings />
+                  </Suspense>
                 </motion.div>
               }
             />
