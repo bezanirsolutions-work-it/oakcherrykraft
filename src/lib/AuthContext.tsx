@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { data, error: profileError } = await supabase
           .from('profiles')
           .select('role')
-          .eq('user_id', session.user.id)
+          .eq('id', session.user.id)
           .single();
 
         if (!mounted) return;

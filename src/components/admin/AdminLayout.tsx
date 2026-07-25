@@ -74,7 +74,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayout
 
       if (!session?.user?.id) return;
 
-      const { data } = await supabase.from('profiles').select('full_name').eq('user_id', session.user.id).single();
+      const { data } = await supabase.from('profiles').select('full_name').eq('id', session.user.id).single();
 
       if (data?.full_name) {
         setAdminName(data.full_name);
