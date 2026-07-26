@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import type { Location } from 'history';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import {
@@ -53,11 +54,31 @@ const baseConfiguration: Partial<QuoteFormValues> = {
   additionalNotes: '',
 };
 
+interface ConfiguratorPrefillProduct {
+  name?: string;
+  productName?: string;
+  category?: string;
+  wood?: string;
+  material?: string;
+  finish?: string;
+  cover_image?: string;
+  image?: string;
+  image_urls?: string[];
+}
+
+interface ConfiguratorLocationState {
+  selectedProduct?: ConfiguratorPrefillProduct;
+}
+
+interface ConfiguratorLocation extends Location {
+  state?: ConfiguratorLocationState;
+}
+
 export function Configurator() {
-  const location = useLocation();
+  const location = useLocation() as ConfiguratorLocation;
   const navigate = useNavigate();
 
-  const routeState = location.state as { selectedProduct?: Record<string, unknown> } | null;
+  const routeState = location.state ?? null;
   const searchParams = new URLSearchParams(location.search);
   const incomingProductName =
     (routeState?.selectedProduct?.name as string | undefined) ??
@@ -183,9 +204,11 @@ export function Configurator() {
   };
 
   const selectedProductObj = routeState?.selectedProduct ?? null;
-  const productImageUrl:
-    | string
-    | undefined = (selectedProductObj && (selectedProductObj.cover_image || selectedProductObj.image || (selectedProductObj.image_urls && selectedProductObj.image_urls[0]))) ?? undefined;
+  const productImageUrl: string | undefined =
+    selectedProductObj?.cover_image ||
+    selectedProductObj?.image ||
+    selectedProductObj?.image_urls?.[0] ||
+    undefined;
 
   const stepIndicator = stepDefinitions.map((item, index) => (
     <li key={item.label} className="flex items-center gap-3 text-sm text-bark/70">
