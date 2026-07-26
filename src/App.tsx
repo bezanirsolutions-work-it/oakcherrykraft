@@ -23,7 +23,7 @@ const Dashboard = lazy(() => import('./pages/admin/Dashboard').then(m => ({ defa
 const Quotes = lazy(() => import('./pages/admin/Quotes').then(m => ({ default: m.Quotes })));
 const ProductsAdmin = lazy(() => import('./pages/admin/Products').then(m => ({ default: m.ProductsAdmin })));
 const Analytics = lazy(() => import('./pages/admin/AdminPagePlaceholder').then(m => ({ default: m.Analytics })));
-const Contacts = lazy(() => import('./pages/admin/AdminPagePlaceholder').then(m => ({ default: m.Contacts })));
+const Contacts = lazy(() => import('./pages/admin/Contacts').then(m => ({ default: m.Contacts })));
 const Settings = lazy(() => import('./pages/admin/AdminPagePlaceholder').then(m => ({ default: m.Settings })));
 
 const pageTransition = {
