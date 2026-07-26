@@ -1791,7 +1791,7 @@ export function ProductsAdmin() {
   };
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[1.35fr_0.9fr]">
+    <div className="space-y-8">
       <Helmet>
         <title>Admin Products | Oak Cherry Kraft</title>
         <meta name="description" content="Admin product catalog with a read-only product detail panel for Oak Cherry Kraft." />
@@ -1968,7 +1968,7 @@ export function ProductsAdmin() {
             className="w-full"
           />
         ) : (
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {filteredProductList.map((product, index) => {
               const isSelected = selectedProductIds.includes(product.id);
               return (
