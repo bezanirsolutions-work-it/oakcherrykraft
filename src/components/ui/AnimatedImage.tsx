@@ -9,6 +9,7 @@ interface AnimatedImageProps {
   overlay?: boolean;
   priority?: boolean;
   aspectRatio?: string;
+  objectFit?: 'cover' | 'contain';
 }
 
 export function AnimatedImage({
@@ -18,6 +19,7 @@ export function AnimatedImage({
   overlay = false,
   priority = false,
   aspectRatio,
+  objectFit = 'cover',
 }: AnimatedImageProps) {
   return (
     <motion.div
@@ -36,8 +38,11 @@ export function AnimatedImage({
         src={src}
         alt={alt}
         loading={priority ? 'eager' : 'lazy'}
-        className={cn('h-full w-full object-cover transition duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]',
-          overlay ? 'group-hover:scale-[1.01]' : '')}
+        className={cn(
+          'h-full w-full transition duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]',
+          objectFit === 'contain' ? 'object-contain' : 'object-cover',
+          overlay ? 'group-hover:scale-[1.01]' : ''
+        )}
       />
       {overlay ? (
         <div className="absolute inset-0 bg-gradient-to-t from-bark/25 via-transparent to-transparent" aria-hidden="true" />
