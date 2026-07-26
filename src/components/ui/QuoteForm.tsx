@@ -38,6 +38,10 @@ const quoteSchema = z.object({
   phone: z.string().min(8, 'Enter a valid phone number'),
   category: z.string().min(1, 'Select a furniture category'),
   productType: z.string().min(1, 'Select a project type'),
+  product: z.string().optional(),
+  colour: z.string().optional(),
+  legStyle: z.string().optional(),
+  accessories: z.string().optional(),
   width: z.number({ invalid_type_error: 'Enter a width' }).positive('Width must be greater than 0').optional().or(z.literal(0)),
   depth: z.number({ invalid_type_error: 'Enter a depth' }).positive('Depth must be greater than 0').optional().or(z.literal(0)),
   height: z.number({ invalid_type_error: 'Enter a height' }).positive('Height must be greater than 0').optional().or(z.literal(0)),
@@ -59,6 +63,10 @@ const initialFormValues: QuoteFormValues = {
   phone: '',
   category: '',
   productType: '',
+  product: '',
+  colour: '',
+  legStyle: '',
+  accessories: '',
   width: 0,
   depth: 0,
   height: 0,
@@ -77,7 +85,13 @@ interface QuoteFormProps {
   defaultValues?: Partial<QuoteFormValues>;
 }
 
-export function QuoteForm({ className = '', defaultValues }: QuoteFormProps) {
+interface QuoteFormProps {
+  className?: string;
+  defaultValues?: Partial<QuoteFormValues>;
+  onSuccess?: () => void;
+}
+
+export function QuoteForm({ className = '', defaultValues, onSuccess }: QuoteFormProps) {
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -117,8 +131,9 @@ export function QuoteForm({ className = '', defaultValues }: QuoteFormProps) {
   async function onSubmit(values: QuoteFormValues) {
     setStatus('submitting');
     setFeedbackMessage('');
-
+    const quoteRequestId = crypto.randomUUID();
     const payload = {
+      id: quoteRequestId,
       full_name: values.name,
       email: values.email,
       phone: values.phone,
@@ -128,6 +143,7 @@ export function QuoteForm({ className = '', defaultValues }: QuoteFormProps) {
       budget: values.budgetRange,
       notes: values.additionalNotes ?? '',
       configuration: {
+        product: values.product ?? null,
         category: values.category,
         productType: values.productType,
         width: values.width,
@@ -135,6 +151,9 @@ export function QuoteForm({ className = '', defaultValues }: QuoteFormProps) {
         height: values.height,
         woodSpecies: values.woodSpecies,
         finish: values.finish,
+        colour: values.colour ?? null,
+        legStyle: values.legStyle ?? null,
+        accessories: values.accessories ?? null,
         quantity: values.quantity,
         deliveryLocation: values.deliveryLocation,
         preferredDate: values.preferredDate,
@@ -153,6 +172,22 @@ export function QuoteForm({ className = '', defaultValues }: QuoteFormProps) {
       return;
     }
 
+    // save configurator selection for admin review
+    const { error: selectionError } = await supabase.from('configurator_selections').insert({
+      quote_request_id: quoteRequestId,
+      material: values.woodSpecies ?? null,
+      finish: values.finish ?? null,
+      colour: values.colour ?? null,
+      accessories: values.accessories ? values.accessories.split(',').map((s) => s.trim()) : [],
+      estimated_price: null,
+    });
+
+    if (selectionError) {
+      setStatus('error');
+      setFeedbackMessage(selectionError.message || 'There was a problem saving your configurator selections.');
+      return;
+    }
+
     setStatus('success');
     setFeedbackMessage('Your quote request has been received. Our team will review your brief and follow up within 1–2 business days.');
     reset({
@@ -161,11 +196,15 @@ export function QuoteForm({ className = '', defaultValues }: QuoteFormProps) {
       phone: '',
       category: '',
       productType: '',
+      product: '',
       width: 0,
       depth: 0,
       height: 0,
       woodSpecies: '',
       finish: '',
+      colour: '',
+      legStyle: '',
+      accessories: '',
       quantity: 1,
       deliveryLocation: '',
       preferredDate: '',
@@ -174,6 +213,8 @@ export function QuoteForm({ className = '', defaultValues }: QuoteFormProps) {
       inspirationImage: undefined,
     });
     setPreviewUrl(null);
+
+    if (onSuccess) onSuccess();
   }
 
   return (

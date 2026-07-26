@@ -74,7 +74,7 @@ export function ProjectDetail() {
                   <Link to="/contact">Request estimates</Link>
                 </Button>
                 <Button variant="secondary" asChild icon={<ArrowUpRight size={17} aria-hidden="true" />}>
-                  <Link to="/quote">Request quote</Link>
+                  <Link to="/request-quote">Request quote</Link>
                 </Button>
               </div>
             </Card>

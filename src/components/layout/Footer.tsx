@@ -23,7 +23,7 @@ export function Footer() {
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oak-700">Explore</p>
             <div className="mt-5 flex flex-col gap-4">
               <Link to="/products" className="text-bark/80 transition hover:text-bark">Products</Link>
-              <Link to="/about" className="text-bark/80 transition hover:text-bark">Our story</Link>
+              <Link to="/configuration-selector" className="text-bark/80 transition hover:text-bark">Design your furniture</Link>
               <Link to="/contact" className="text-bark/80 transition hover:text-bark">Contact studio</Link>
             </div>
           </div>

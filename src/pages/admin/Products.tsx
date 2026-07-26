@@ -1231,7 +1231,7 @@ export function ProductsAdmin() {
           : item
       )
     );
-    setDrawerMode('view');
+    setDrawerMode(null);
   };
 
   const handleCreate = async () => {
@@ -1742,6 +1742,34 @@ export function ProductsAdmin() {
                   </div>
                 </div>
               ))}
+            </div>
+          ) : null}
+
+          {!isCreateMode && selectedImageFiles.length > 0 ? (
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <Button
+                type="button"
+                onClick={handleUploadImages}
+                disabled={isUploadingImages || isProcessing}
+                className="rounded-full px-5 py-3"
+              >
+                {isUploadingImages ? 'Saving images...' : 'Save images'}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setSelectedImageFiles([]);
+                  setImagePreviews([]);
+                  setSelectedUploadCoverIndex(0);
+                  setImageError(null);
+                  setImageMessage(null);
+                }}
+                disabled={isUploadingImages || isProcessing}
+                className="rounded-full px-5 py-3"
+              >
+                Cancel
+              </Button>
             </div>
           ) : null}
 
