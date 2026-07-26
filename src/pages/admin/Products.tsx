@@ -211,8 +211,23 @@ const productMaterialOptions = [
 const productFinishOptions = ['Natural Oil', 'Matte', 'Satin', 'Gloss', 'Painted', 'Stained', 'Lacquered', 'Waxed'];
 const productColourOptions = ['Natural', 'Amber', 'Chocolate', 'Espresso', 'Black', 'White', 'Grey', 'Blue', 'Green', 'Red'];
 
+
 const optionsWithCurrentValue = (options: string[], currentValue: string) =>
   currentValue && !options.includes(currentValue) ? [currentValue, ...options] : options;
+
+const generateSeoTitle = (name: string, category: string) => `${name} | ${category} | Oak Cherry Kraft`;
+const generateMetaDescription = (name: string, category: string, material: string, finish: string) => {
+  const finishText = finish ? ` with a ${finish.toLowerCase()} finish` : '';
+  const materialText = material && material !== 'Custom Timber' ? ` crafted from ${material.toLowerCase()}` : '';
+  return `${name} is a premium ${category.toLowerCase()}${materialText}${finishText}, designed for elegant, handcrafted living spaces. Contact Oak Cherry Kraft for a bespoke quote.`;
+};
+
+const generateAltText = (name: string, material: string, finish: string, colour: string) => {
+  const materialText = material && material !== 'Custom Timber' ? ` in ${material.toLowerCase()}` : '';
+  const finishText = finish ? ` with a ${finish.toLowerCase()} finish` : '';
+  const colourText = colour ? ` in ${colour.toLowerCase()}` : '';
+  return `${name}${materialText}${finishText}${colourText}`.trim();
+};
 
 export function ProductsAdmin() {
   const blankProductValues: Product = {
@@ -287,7 +302,7 @@ export function ProductsAdmin() {
   const [draggedGalleryIndex, setDraggedGalleryIndex] = useState<number | null>(null);
   const [galleryOrder, setGalleryOrder] = useState<string[]>([]);
   const galleryOrderRef = useRef<string[]>([]);
-  const imageBucket = import.meta.env.VITE_SUPABASE_IMAGE_BUCKET ?? 'product-images';
+  const bucket = (import.meta.env.VITE_SUPABASE_IMAGE_BUCKET || 'product-images').trim() || 'product-images';
   const maxImageSize = 8 * 1024 * 1024;
   const acceptedImageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'];
 
@@ -299,7 +314,7 @@ export function ProductsAdmin() {
       if (publicIndex >= 0 && segments.length > publicIndex + 2) {
         return segments.slice(publicIndex + 2).join('/');
       }
-      const bucketIndex = segments.findIndex((segment) => segment === imageBucket);
+      const bucketIndex = segments.findIndex((segment) => segment === bucket);
       if (bucketIndex >= 0) {
         return segments.slice(bucketIndex + 1).join('/');
       }
@@ -314,7 +329,7 @@ export function ProductsAdmin() {
     const path = getStoragePathFromPublicUrl(imageUrl);
     if (!path) return false;
 
-    const { error } = await supabase.storage.from(imageBucket).remove([path]);
+    const { error } = await supabase.storage.from(bucket).remove([path]);
     return !error;
   };
 
@@ -851,16 +866,57 @@ export function ProductsAdmin() {
 
     for (let index = 0; index < files.length; index += 1) {
       const file = files[index];
-      const path = `products/${productId}/${Date.now()}-${getSafeFileName(file)}`;
+      const filename = getSafeFileName(file);
+      const path = `products/${productId}/${Date.now()}-${filename}`;
       setUploadProgress(`Uploading ${index + 1} of ${files.length}...`);
 
-      const { error: uploadError } = await supabase.storage.from(imageBucket).upload(path, file);
-      if (uploadError) {
-        throw new Error(uploadError.message);
+      console.log('Upload start', {
+        productId,
+        bucket,
+        path,
+        file: {
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          isFile: file instanceof File,
+        },
+      });
+
+      if (!(file instanceof File)) {
+        throw new Error('Upload target is not a File object.');
       }
 
-      const publicUrlResult = supabase.storage.from(imageBucket).getPublicUrl(path);
+      if (!file.size || file.size <= 0) {
+        throw new Error('Upload target is an empty file.');
+      }
+
+      if (!file.type || !['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'].includes(file.type)) {
+        throw new Error(`Unsupported file type for upload: ${file.type || 'unknown'}`);
+      }
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      console.log('Auth session:', sessionData);
+      console.log('Bucket:', bucket);
+      console.log('Uploading:', filename);
+
+      const uploadResult = await supabase.storage.from(bucket).upload(path, file, { upsert: false });
+      console.log('Upload result:', uploadResult);
+      console.log('Upload data:', uploadResult.data);
+      console.log('Upload error:', uploadResult.error);
+
+      if (uploadResult.error) {
+        console.error('Upload error message:', uploadResult.error.message);
+        console.error('Upload error statusCode:', (uploadResult.error as { statusCode?: number }).statusCode);
+        console.error('Upload error payload:', JSON.stringify(uploadResult.error));
+        throw new Error(uploadResult.error.message);
+      }
+
+      const listResult = await supabase.storage.from(bucket).list();
+      console.log('Bucket list after upload:', listResult);
+
+      const publicUrlResult = supabase.storage.from(bucket).getPublicUrl(path);
       const publicUrlData = publicUrlResult.data;
+      console.log('Public URL:', publicUrlData?.publicUrl ?? null);
       if (!publicUrlData?.publicUrl) {
         throw new Error('Unable to get image public URL.');
       }
@@ -2223,11 +2279,11 @@ export function ProductsAdmin() {
                       </div>
                     </div>
 
-                    <div className="rounded-[1.5rem] border border-bark/10 bg-sand p-5">
+                    <div className="sticky top-0 z-10 rounded-[1.5rem] border border-bark/10 bg-sand/95 p-5 backdrop-blur-sm">
                       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                           <p className="text-sm font-semibold text-bark">Save changes</p>
-                          <p className="mt-1 text-sm text-bark/70">The image gallery remains read-only.</p>
+                          <p className="mt-1 text-sm text-bark/70">Product metadata is saved here; image edits are saved instantly as you replace, delete, or upload files.</p>
                         </div>
                         <Button
                           type="button"
