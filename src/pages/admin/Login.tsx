@@ -15,15 +15,35 @@ export function Login() {
     setError(null);
     setLoading(true);
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const result = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
+    console.log('signInWithPassword result:', result);
+    console.log('signInWithPassword data:', result.data);
+    console.log('signInWithPassword error:', result.error);
+    console.log('signInWithPassword session:', result.data?.session);
+    console.log('signInWithPassword user:', result.data?.user);
+
     setLoading(false);
 
-    if (signInError) {
-      setError(signInError.message);
+    if (result.error) {
+      setError(result.error.message);
+      return;
+    }
+
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    console.log('Session after login:', sessionData);
+
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    console.log('User after login:', userData);
+    console.log('User error after login:', userError);
+
+    const session = result.data?.session ?? sessionData.session;
+
+    if (sessionError || !session?.access_token) {
+      setError('Supabase did not create a valid admin session. Please try again.');
       return;
     }
 

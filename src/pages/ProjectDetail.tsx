@@ -39,22 +39,30 @@ export function ProjectDetail() {
         <SectionHeader eyebrow="Project details" title={project.title} description={project.description} />
         <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-start lg:gap-16">
           <div className="space-y-8">
-            <AnimatedImage src={project.image} alt={project.title} aspectRatio="16 / 10" overlay />
+            <AnimatedImage src={project.image} alt={project.title} aspectRatio="16 / 10" overlay objectFit="contain" />
             <div className="grid gap-6 sm:grid-cols-2">
               <Card>
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oak-700">Project type</p>
-                <p className="mt-3 text-lg font-semibold text-bark">Featured commission</p>
+                <p className="mt-3 text-lg font-semibold text-bark">{project.category || 'Featured commission'}</p>
               </Card>
               <Card>
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oak-700">Location</p>
-                <p className="mt-3 text-lg font-semibold text-bark">Nigeria</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oak-700">Style</p>
+                <p className="mt-3 text-lg font-semibold text-bark">{project.style || 'Architectural custom woodwork'}</p>
+              </Card>
+              <Card>
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oak-700">Configuration</p>
+                <p className="mt-3 text-lg font-semibold text-bark">{project.configuration || 'Custom layout'}</p>
+              </Card>
+              <Card>
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oak-700">Tread thickness</p>
+                <p className="mt-3 text-lg font-semibold text-bark">{project.treadThickness || 'Custom solid timber'}</p>
               </Card>
             </div>
           </div>
           <div className="space-y-6">
             <Card>
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oak-700">Overview</p>
-              <p className="mt-4 text-base leading-8 text-bark/75">This project demonstrates our ability to deliver refined furniture solutions across residential and hospitality settings, using thoughtful details and premium materials.</p>
+              <p className="mt-4 text-base leading-8 text-bark/75">{project.description}</p>
             </Card>
             <Card className="bg-sand">
               <div className="flex items-center gap-3 text-bark/80">
@@ -72,6 +80,49 @@ export function ProjectDetail() {
             </Card>
           </div>
         </div>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oak-700">Details</p>
+            <div className="mt-4 space-y-4 text-bark/75">
+              {project.structure ? (
+                <div>
+                  <p className="font-semibold text-bark">Structure</p>
+                  <p>{project.structure}</p>
+                </div>
+              ) : null}
+              {project.installation ? (
+                <div>
+                  <p className="font-semibold text-bark">Installation</p>
+                  <p>{project.installation}</p>
+                </div>
+              ) : null}
+              {project.summary ? (
+                <div>
+                  <p className="font-semibold text-bark">Highlights</p>
+                  <p>{project.summary}</p>
+                </div>
+              ) : null}
+            </div>
+          </Card>
+          <Card>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oak-700">Features</p>
+            <ul className="mt-4 space-y-3 text-bark/75 list-disc list-inside">
+              {(project.features || []).map((feature) => (
+                <li key={feature}>{feature}</li>
+              ))}
+            </ul>
+          </Card>
+        </div>
+        {project.specifications?.length ? (
+          <Card>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oak-700">Specifications</p>
+            <ul className="mt-4 space-y-3 text-bark/75 list-disc list-inside">
+              {project.specifications.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </Card>
+        ) : null}
       </motion.section>
     </PageContainer>
   );

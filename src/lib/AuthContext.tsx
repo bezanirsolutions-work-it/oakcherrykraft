@@ -17,12 +17,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    const checkAdminStatus = async () => {
+    const checkAdminStatus = async (sessionOverride?: { user?: { id?: string } } | null) => {
       try {
-        const {
-          data: { session },
-          error: authError,
-        } = await supabase.auth.getSession();
+        const session = sessionOverride ?? (await supabase.auth.getSession()).data.session;
+        const authError = sessionOverride ? null : (await supabase.auth.getSession()).error;
 
         if (!mounted) return;
 
@@ -60,10 +58,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    checkAdminStatus();
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
+      void checkAdminStatus(session);
+    });
+
+    void checkAdminStatus();
 
     return () => {
       mounted = false;
+      authListener.subscription.unsubscribe();
     };
   }, []);
 
