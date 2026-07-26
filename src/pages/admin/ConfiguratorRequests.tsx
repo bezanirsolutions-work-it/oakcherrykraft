@@ -20,7 +20,7 @@ interface ConfiguratorRequestRow {
   accessories: string[] | null;
   estimated_price: number | null;
   created_at: string | null;
-  quote_requests?: QuoteReference;
+  quote_requests?: QuoteReference[];
 }
 
 export function ConfiguratorRequests() {
@@ -35,7 +35,7 @@ export function ConfiguratorRequests() {
       setError(null);
 
       const { data, error: fetchError } = await supabase
-        .from('configurator_selections')
+        .from<ConfiguratorRequestRow>('configurator_selections')
         .select(
           `id, quote_request_id, material, finish, colour, accessories, estimated_price, created_at, quote_requests(id, full_name, email, status)`
         )
@@ -45,7 +45,7 @@ export function ConfiguratorRequests() {
         setError(fetchError.message);
         setRequests([]);
       } else {
-        setRequests((data as ConfiguratorRequestRow[] | null) ?? []);
+        setRequests(data ?? []);
       }
 
       setLoading(false);
@@ -59,16 +59,16 @@ export function ConfiguratorRequests() {
     if (!query) return requests;
 
     return requests.filter((request) => {
+      const quote = request.quote_requests?.[0];
       const fields = [
         request.quote_request_id,
         request.material,
         request.finish,
         request.colour,
         request.accessories?.join(', '),
-        request.quote_requests?.full_name,
-        request.quote_requests?.email,
-        request.quote_requests?.status,
-      ];
+        quote?.full_name,
+        quote?.email,
+        quote?.status,
 
       return fields.some((value) => typeof value === 'string' && value.toLowerCase().includes(query));
     });
@@ -152,20 +152,24 @@ export function ConfiguratorRequests() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-bark/10 bg-white">
-                {filteredRequests.map((request) => (
-                  <tr key={request.id} className="hover:bg-sand/50 transition-colors">
-                    <td className="px-4 py-4 font-medium text-bark">{request.quote_request_id ?? request.id}</td>
-                    <td className="px-4 py-4 text-bark/75">
-                      <div>{request.quote_requests?.full_name ?? 'Unknown'}</div>
-                      <div className="text-xs text-bark/50">{request.quote_requests?.email ?? 'No email'}</div>
-                    </td>
-                    <td className="px-4 py-4 text-bark/75">{request.material ?? '—'}</td>
-                    <td className="px-4 py-4 text-bark/75">{request.finish ?? '—'}</td>
-                    <td className="px-4 py-4 text-bark/75">{request.colour ?? '—'}</td>
-                    <td className="px-4 py-4 text-bark/75">{request.estimated_price != null ? `₦${request.estimated_price.toFixed(0)}` : 'Not estimated'}</td>
-                    <td className="px-4 py-4 text-bark/75">{request.created_at ? new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(request.created_at)) : '—'}</td>
-                  </tr>
-                ))}
+                {filteredRequests.map((request) => {
+                  const quote = request.quote_requests?.[0];
+
+                  return (
+                    <tr key={request.id} className="hover:bg-sand/50 transition-colors">
+                      <td className="px-4 py-4 font-medium text-bark">{request.quote_request_id ?? request.id}</td>
+                      <td className="px-4 py-4 text-bark/75">
+                        <div>{quote?.full_name ?? 'Unknown'}</div>
+                        <div className="text-xs text-bark/50">{quote?.email ?? 'No email'}</div>
+                      </td>
+                      <td className="px-4 py-4 text-bark/75">{request.material ?? '—'}</td>
+                      <td className="px-4 py-4 text-bark/75">{request.finish ?? '—'}</td>
+                      <td className="px-4 py-4 text-bark/75">{request.colour ?? '—'}</td>
+                      <td className="px-4 py-4 text-bark/75">{request.estimated_price != null ? `₦${request.estimated_price.toFixed(0)}` : 'Not estimated'}</td>
+                      <td className="px-4 py-4 text-bark/75">{request.created_at ? new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(request.created_at)) : '—'}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
