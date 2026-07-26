@@ -83,7 +83,7 @@ export function HeroSection({ children }: HeroSectionProps) {
             </motion.div>
             <motion.div variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } }}>
               <Button variant="secondary" size="sm" asChild className="w-full sm:w-auto">
-                <Link to="/quote">Request a quote</Link>
+                <Link to="/request-quote">Request a quote</Link>
               </Button>
             </motion.div>
           </motion.div>
@@ -114,21 +114,19 @@ export function HeroSection({ children }: HeroSectionProps) {
           initial={{ opacity: 0, x: 18 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.85, ease: 'easeOut' }}
-          className="group relative mx-auto w-full max-w-xl overflow-hidden rounded-[2.25rem] border border-bark/10 bg-white/90 shadow-elevated"
+          className="group relative mx-auto w-full max-w-xl overflow-hidden rounded-[2.25rem] border border-bark/10 bg-white/90 shadow-elevated aspect-[784/1372]"
         >
           <div className="absolute inset-0 bg-gradient-to-br from-amber-100/60 via-transparent to-transparent opacity-90" aria-hidden="true" />
-          <div className="relative overflow-hidden rounded-[2.25rem]">
-            <img
-              src="https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&w=1400&q=85"
-              alt="Elegant living room with handcrafted wood furniture"
-              className="h-[360px] w-full object-cover transition duration-700 ease-brand group-hover:scale-[1.01] sm:h-[440px] lg:h-[520px]"
-              loading="eager"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-bark/20 via-transparent to-transparent" aria-hidden="true" />
-            <div className="absolute bottom-4 left-4 right-4 rounded-[1.75rem] border border-white/70 bg-white/90 p-4 shadow-soft backdrop-blur-sm sm:bottom-6 sm:left-6 sm:right-6 sm:p-5">
-              <p className="text-xs uppercase tracking-[0.32em] text-bark/50">Studio selection</p>
-              <p className="mt-2 text-sm font-semibold leading-6 text-bark">Oak dining table with sculpted, hand-finished curves.</p>
-            </div>
+          <img
+            src="/assets/hero/intro-picture.png"
+            alt="Intro picture for Oak Cherry Kraft home page"
+            className="h-full w-full object-contain bg-sand transition duration-700 ease-brand group-hover:scale-[1.01]"
+            loading="eager"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-bark/20 via-transparent to-transparent" aria-hidden="true" />
+          <div className="absolute bottom-4 left-4 right-4 rounded-[1.75rem] border border-white/70 bg-white/90 p-4 shadow-soft backdrop-blur-sm sm:bottom-6 sm:left-6 sm:right-6 sm:p-5">
+            <p className="text-xs uppercase tracking-[0.32em] text-bark/50">Studio selection</p>
+            <p className="mt-2 text-sm font-semibold leading-6 text-bark">Sculpted, hand-finished curves for a refined dining experience.</p>
           </div>
         </motion.div>
       </div>

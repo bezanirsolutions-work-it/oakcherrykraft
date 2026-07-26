@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import {
@@ -18,18 +19,25 @@ const stepDefinitions = [
   { label: 'Category', description: 'Choose the furniture family that fits your project.' },
   { label: 'Type', description: 'Pick the project type to guide the design direction.' },
   { label: 'Dimensions', description: 'Set the ideal width, depth, and height for the space.' },
-  { label: 'Material', description: 'Choose the wood species that feels most luxurious.' },
-  { label: 'Finish', description: 'Select a finish that complements your interior.' },
-  { label: 'Quantity', description: 'Tell us how many pieces you need.' },
+  { label: 'Wood species', description: 'Choose the timber that feels most luxurious.' },
+  { label: 'Finish', description: 'Select a finish that brings out the grain and the character of the wood.' },
+  { label: 'Quantity', description: 'Decide how many matching pieces your space needs.' },
   { label: 'Budget', description: 'Share your investment range so we can tailor the proposal.' },
   { label: 'Delivery', description: 'Where should we install your custom furniture?' },
-  { label: 'Schedule', description: 'Choose a completion window and share your contact details.' },
-  { label: 'Review', description: 'Confirm the configurator selections before requesting a quote.' },
+  { label: 'Details', description: 'Provide your contact details, completion window, and notes.' },
+  { label: 'Review', description: 'Confirm the configurator selections before continuing to the quote request.' },
 ];
 
+const colours = ['Natural', 'Warm brown', 'Smoky grey', 'Charcoal', 'Black', 'Cream'];
+const legStyles = ['Tapered legs', 'Sleigh base', 'Metal frame', 'Turned legs', 'Pedestal', 'Minimal profile'];
+
 const baseConfiguration: Partial<QuoteFormValues> = {
+  product: '',
   category: '',
   productType: '',
+  colour: '',
+  legStyle: '',
+  accessories: '',
   width: 120,
   depth: 60,
   height: 75,
@@ -46,8 +54,45 @@ const baseConfiguration: Partial<QuoteFormValues> = {
 };
 
 export function Configurator() {
-  const [step, setStep] = useState(0);
-  const [configuration, setConfiguration] = useState<Partial<QuoteFormValues>>(baseConfiguration);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const routeState = location.state as { selectedProduct?: Record<string, unknown> } | null;
+  const searchParams = new URLSearchParams(location.search);
+  const incomingProductName =
+    (routeState?.selectedProduct?.name as string | undefined) ??
+    (routeState?.selectedProduct?.productName as string | undefined) ??
+    searchParams.get('productName') ??
+    '';
+  const incomingCategory =
+    (routeState?.selectedProduct?.category as string | undefined) ??
+    searchParams.get('productCategory') ??
+    '';
+  const incomingWood =
+    (routeState?.selectedProduct?.wood as string | undefined) ??
+    (routeState?.selectedProduct?.material as string | undefined) ??
+    '';
+  const incomingFinish =
+    (routeState?.selectedProduct?.finish as string | undefined) ??
+    searchParams.get('finish') ??
+    '';
+  const hasSelectedProduct = Boolean(incomingProductName || incomingCategory);
+
+  const [step, setStep] = useState(hasSelectedProduct ? 1 : 0);
+  const [configuration, setConfiguration] = useState<Partial<QuoteFormValues>>(() => ({
+    ...baseConfiguration,
+    ...(incomingProductName ? { product: incomingProductName } : {}),
+    ...(incomingCategory ? { category: incomingCategory } : {}),
+    ...(incomingWood ? { woodSpecies: incomingWood } : {}),
+    ...(incomingFinish ? { finish: incomingFinish } : {}),
+  }));
+  const [selectedProductName, setSelectedProductName] = useState(incomingProductName);
+
+  useEffect(() => {
+    if (incomingProductName) {
+      setSelectedProductName(incomingProductName);
+    }
+  }, [incomingProductName]);
   const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [submissionMessage, setSubmissionMessage] = useState('');
 
@@ -80,11 +125,15 @@ export function Configurator() {
 
   const summaryItems = useMemo(
     () => [
+      { label: 'Product', value: configuration.product || 'Not selected' },
       { label: 'Category', value: configuration.category || 'Not selected' },
       { label: 'Project type', value: configuration.productType || 'Not selected' },
       { label: 'Dimensions', value: configuration.width && configuration.depth && configuration.height ? `${configuration.width} × ${configuration.depth} × ${configuration.height} cm` : 'Not set' },
       { label: 'Wood species', value: configuration.woodSpecies || 'Not selected' },
       { label: 'Finish', value: configuration.finish || 'Not selected' },
+      { label: 'Colour', value: configuration.colour || 'Not selected' },
+      { label: 'Leg style', value: configuration.legStyle || 'Not selected' },
+      { label: 'Accessories', value: configuration.accessories || 'None' },
       { label: 'Quantity', value: configuration.quantity ? `${configuration.quantity}` : 'Not set' },
       { label: 'Budget', value: configuration.budgetRange || 'Not selected' },
       { label: 'Delivery', value: configuration.deliveryLocation || 'Not provided' },
@@ -129,52 +178,14 @@ export function Configurator() {
   });
 
   const submitDesign = async () => {
-    setSubmissionStatus('submitting');
-    setSubmissionMessage('');
-
-    const quoteRequestId = crypto.randomUUID();
-    const payload = {
-      id: quoteRequestId,
-      ...buildQuoteRequestPayload(configuration),
-    };
-
-    console.log('QUOTE PAYLOAD', payload);
-
-    const { error: quoteError } = await supabase
-      .from('quote_requests')
-      .insert(payload);
-
-    if (quoteError) {
-      console.error(JSON.stringify(quoteError, null, 2));
-      setSubmissionStatus('error');
-      setSubmissionMessage(
-        quoteError?.message || 'There was a problem submitting your quote request. Please try again.',
-      );
-      return;
-    }
-
-    const { error: selectionError } = await supabase.from('configurator_selections').insert({
-      quote_request_id: quoteRequestId,
-      material: configuration.woodSpecies ?? null,
-      finish: configuration.finish ?? null,
-      colour: null,
-      accessories: [],
-      estimated_price: 0,
-    });
-
-    if (selectionError) {
-      setSubmissionStatus('error');
-      setSubmissionMessage(
-        selectionError.message || 'There was a problem saving your configurator selections. Please try again.',
-      );
-      return;
-    }
-
-    setSubmissionStatus('success');
-    setSubmissionMessage('Your quote request has been submitted successfully. We will contact you shortly.');
-    setConfiguration(baseConfiguration);
-    setStep(0);
+    // route to the canonical request-quote page and hand over the completed configuration
+    navigate('/request-quote', { state: { prefill: configuration } });
   };
+
+  const selectedProductObj = routeState?.selectedProduct ?? null;
+  const productImageUrl:
+    | string
+    | undefined = (selectedProductObj && (selectedProductObj.cover_image || selectedProductObj.image || (selectedProductObj.image_urls && selectedProductObj.image_urls[0]))) ?? undefined;
 
   const stepIndicator = stepDefinitions.map((item, index) => (
     <li key={item.label} className="flex items-center gap-3 text-sm text-bark/70">
@@ -387,20 +398,68 @@ export function Configurator() {
           </div>
         );
       case 9:
+        const reviewGroups = [
+          {
+            title: 'Product details',
+            items: [
+              { label: 'Product', value: configuration.product || 'Custom design' },
+              { label: 'Category', value: configuration.category || 'Not selected' },
+              { label: 'Project type', value: configuration.productType || 'Not selected' },
+              { label: 'Quantity', value: configuration.quantity ? `${configuration.quantity}` : 'Not set' },
+            ],
+          },
+          {
+            title: 'Material & finish',
+            items: [
+              { label: 'Wood species', value: configuration.woodSpecies || 'Not selected' },
+              { label: 'Finish', value: configuration.finish || 'Not selected' },
+              { label: 'Colour', value: configuration.colour || 'Not selected' },
+              { label: 'Leg style', value: configuration.legStyle || 'Not selected' },
+              { label: 'Accessories', value: configuration.accessories || 'None' },
+            ],
+          },
+          {
+            title: 'Project scope',
+            items: [
+              { label: 'Dimensions', value: configuration.width && configuration.depth && configuration.height ? `${configuration.width} × ${configuration.depth} × ${configuration.height} cm` : 'Not set' },
+              { label: 'Budget', value: configuration.budgetRange || 'Not selected' },
+              { label: 'Delivery', value: configuration.deliveryLocation || 'Not provided' },
+              { label: 'Completion date', value: configuration.preferredDate || 'Not selected' },
+            ],
+          },
+        ];
+
         return (
           <div className="space-y-6">
             <p className="text-base leading-7 text-bark/75">Review your choices before continuing to the quote request page.</p>
-            <div className="space-y-4 rounded-[1.5rem] border border-bark/10 bg-white p-6 shadow-sm">
-              {summaryItems.map((item) => (
-                <div key={item.label} className="grid gap-2 sm:grid-cols-[170px_1fr] text-sm text-bark/80">
-                  <span className="font-semibold text-bark">{item.label}</span>
-                  <span>{item.value}</span>
+            {productImageUrl ? (
+              <div className="overflow-hidden rounded-[1.75rem] border border-bark/10 bg-white shadow-sm">
+                <img src={productImageUrl} alt={selectedProductName ?? 'Selected product preview'} className="h-56 w-full object-cover" />
+                <div className="space-y-2 p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oak-700">Product preview</p>
+                  <p className="text-lg font-semibold text-bark">{selectedProductName || 'Custom design'}</p>
+                  <p className="text-sm leading-6 text-bark/70">Review the product inspiration we will use to guide your quote and material selection.</p>
+                </div>
+              </div>
+            ) : null}
+            <div className="grid gap-4 lg:grid-cols-3">
+              {reviewGroups.map((group) => (
+                <div key={group.title} className="rounded-[1.75rem] border border-bark/10 bg-sand/60 p-6">
+                  <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-oak-700">{group.title}</h3>
+                  <div className="mt-4 space-y-4 text-sm text-bark/80">
+                    {group.items.map((item) => (
+                      <div key={item.label} className="grid gap-2 sm:grid-cols-[150px_1fr]">
+                        <span className="font-semibold text-bark">{item.label}</span>
+                        <span>{item.value}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
-            <div className="rounded-[1.5rem] border border-bark/10 bg-sand/60 p-6 text-sm text-bark/80">
+            <div className="rounded-[1.5rem] border border-bark/10 bg-white p-6 shadow-sm">
               <p className="font-semibold text-bark">Almost there.</p>
-              <p className="mt-2">When you finish, we will submit this quote request and save your configurator selections for the studio to review.</p>
+              <p className="mt-2 text-sm leading-7 text-bark/70">Once submitted, your configuration and quote request will be saved for the studio to review and respond with a tailored proposal.</p>
             </div>
           </div>
         );
@@ -412,11 +471,11 @@ export function Configurator() {
   return (
     <PageContainer className="space-y-10 pb-20">
       <Helmet>
-        <title>Furniture configurator | Oak Cherry Kraft</title>
+        <title>Design your furniture | Oak Cherry Kraft</title>
         <meta name="description" content="Build your premium custom furniture specification and send a quote request with tailored selections." />
       </Helmet>
 
-      <Breadcrumb items={[{ label: 'Home', path: '/' }, { label: 'Configurator' }]} />
+      <Breadcrumb items={[{ label: 'Home', path: '/' }, { label: 'Design Your Furniture' }]} />
 
       <section className="grid gap-10 xl:grid-cols-[0.95fr_0.45fr] xl:items-start">
         <motion.div
@@ -426,8 +485,16 @@ export function Configurator() {
           className="space-y-8"
         >
           <div className="space-y-4">
+            {selectedProductName ? (
+              <div className="mb-4 rounded-[1.5rem] border border-bark/10 bg-white p-4 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oak-700">Customising</p>
+                <p className="mt-2 font-semibold text-bark">{selectedProductName}</p>
+                <p className="mt-1 text-sm text-bark/70">Auto-applied from product — you can edit any selection below.</p>
+              </div>
+            ) : null}
+
             <SectionHeader
-              eyebrow="Configurator"
+              eyebrow="Design Your Furniture"
               title="Design your bespoke furniture experience"
               description="Move through a refined studio workflow built to capture your materials, scale, and craft preferences before you request a quote."
             />

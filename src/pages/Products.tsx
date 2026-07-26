@@ -309,19 +309,33 @@ export function Products() {
                       </span>
                       <span className="font-semibold text-bark">{getDisplayPrice(product)}</span>
                     </div>
-                    <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <Button
-                        variant="link"
-                        size="sm"
-                        asChild
-                        className="px-0"
-                        icon={<ArrowUpRight size={16} aria-hidden="true" />}
-                      >
-                        <Link to={`/products/${categorySlug}/${productSlug}`}>View product</Link>
-                      </Button>
-                      <Button variant="secondary" size="sm" asChild className="px-0" icon={<ArrowUpRight size={16} aria-hidden="true" />}>
-                        <Link to="/quote">Request quote</Link>
-                      </Button>
+                    <div className="mt-5 space-y-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                        <Button
+                          variant="link"
+                          size="sm"
+                          asChild
+                          className="px-0"
+                          icon={<ArrowUpRight size={16} aria-hidden="true" />}
+                        >
+                          <Link to={`/products/${categorySlug}/${productSlug}`}>View product</Link>
+                        </Button>
+                        <Button variant="secondary" size="sm" asChild className="px-0" icon={<ArrowUpRight size={16} aria-hidden="true" />}>
+                          <Link to="/request-quote">Request quote</Link>
+                        </Button>
+                      </div>
+                      <div className="rounded-[1.75rem] border border-oak-200 bg-oak-50 p-5 text-sm text-bark/80">
+                        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oak-700">Want a custom version?</p>
+                        <p className="mt-3 leading-6">Design Your Furniture to create a bespoke version with your preferred dimensions, wood, finish and style.</p>
+                        <Button variant="secondary" size="sm" asChild className="mt-5" icon={<ArrowUpRight size={16} aria-hidden="true" />}>
+                          <Link
+                            to={`/configuration-selector?product=${encodeURIComponent(productSlug)}&productName=${encodeURIComponent(product.name || '')}`}
+                            state={{ selectedProduct: product }}
+                          >
+                            Start designing
+                          </Link>
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </motion.article>

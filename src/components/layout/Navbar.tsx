@@ -7,7 +7,8 @@ import logoPath from '../../../public/assets/logo/LOGO.png';
 const links = [
   { label: 'Home', path: '/' },
   { label: 'Products', path: '/products' },
-  { label: 'Portfolio', path: '/projects' },
+  { label: 'Design Your Furniture', path: '/configuration-selector' },
+  { label: 'Gallery', path: '/projects' },
   { label: 'About', path: '/about' },
   { label: 'Contact', path: '/contact' },
 ];
@@ -49,7 +50,7 @@ export function Navbar() {
         <nav aria-label="Primary navigation" className="hidden items-center gap-7 text-sm font-medium md:flex">
           {navItems}
           <Link
-            to="/quote"
+            to="/request-quote"
             className="btn-base btn-primary h-11 px-5 text-sm font-semibold"
           >
             Request quote
@@ -78,7 +79,7 @@ export function Navbar() {
           >
             <div className="flex flex-col gap-4">{navItems}</div>
             <Link
-              to="/quote"
+              to="/request-quote"
               className="btn-base btn-primary mt-4 inline-flex h-11 w-full items-center justify-center px-5 text-sm font-semibold"
               onClick={() => setOpen(false)}
             >

@@ -235,7 +235,10 @@ export function ProductDetail() {
 
           <div className="mt-8 flex flex-col gap-4 sm:flex-row">
             <Button asChild>
-              <Link to="/quote">Request a quote</Link>
+              <Link to="/request-quote">Request a quote</Link>
+            </Button>
+            <Button asChild>
+              <Link to="/configuration-selector" state={{ selectedProduct: product }}>Design Your Furniture</Link>
             </Button>
             <Button variant="secondary" asChild icon={<ArrowUpRight size={17} aria-hidden="true" />}>
               <Link to="/projects">View portfolio</Link>

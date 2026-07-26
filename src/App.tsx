@@ -21,6 +21,7 @@ const QuoteRequest = lazy(() => import('./pages/QuoteRequest').then(m => ({ defa
 // Lazy-load admin pages
 const Dashboard = lazy(() => import('./pages/admin/Dashboard').then(m => ({ default: m.Dashboard })));
 const Quotes = lazy(() => import('./pages/admin/Quotes').then(m => ({ default: m.Quotes })));
+const ConfiguratorRequests = lazy(() => import('./pages/admin/ConfiguratorRequests').then(m => ({ default: m.ConfiguratorRequests })));
 const ProductsAdmin = lazy(() => import('./pages/admin/Products').then(m => ({ default: m.ProductsAdmin })));
 const Analytics = lazy(() => import('./pages/admin/AdminPagePlaceholder').then(m => ({ default: m.Analytics })));
 const Contacts = lazy(() => import('./pages/admin/Contacts').then(m => ({ default: m.Contacts })));
@@ -110,6 +111,17 @@ export default function App() {
               }
             />
             <Route
+              path="request-quote"
+              element={
+                <motion.div {...pageTransition} className="w-full">
+                  <Suspense fallback={<LoadingFallback />}>
+                    <QuoteRequest />
+                  </Suspense>
+                </motion.div>
+              }
+            />
+            {/* Backwards compatibility: support old /quote link as alias */}
+            <Route
               path="quote"
               element={
                 <motion.div {...pageTransition} className="w-full">
@@ -121,6 +133,16 @@ export default function App() {
             />
             <Route
               path="configurator"
+              element={
+                <motion.div {...pageTransition} className="w-full">
+                  <Suspense fallback={<LoadingFallback />}>
+                    <Configurator />
+                  </Suspense>
+                </motion.div>
+              }
+            />
+            <Route
+              path="configuration-selector"
               element={
                 <motion.div {...pageTransition} className="w-full">
                   <Suspense fallback={<LoadingFallback />}>
@@ -194,6 +216,16 @@ export default function App() {
                 <motion.div {...pageTransition} className="w-full">
                   <Suspense fallback={<LoadingFallback />}>
                     <Quotes />
+                  </Suspense>
+                </motion.div>
+              }
+            />
+            <Route
+              path="configurator"
+              element={
+                <motion.div {...pageTransition} className="w-full">
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ConfiguratorRequests />
                   </Suspense>
                 </motion.div>
               }

@@ -11,6 +11,7 @@ interface AdminLayoutProps {
 const navItems = [
   { label: 'Dashboard', path: '/admin' },
   { label: 'Quotes', path: '/admin/quotes' },
+  { label: 'Configurator Requests', path: '/admin/configurator' },
   { label: 'Contact Messages', path: '/admin/contacts' },
   { label: 'Products', path: '/admin/products' },
   { label: 'Settings', path: '/admin/settings' },
