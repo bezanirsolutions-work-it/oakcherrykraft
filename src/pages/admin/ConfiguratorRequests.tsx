@@ -69,6 +69,7 @@ export function ConfiguratorRequests() {
         quote?.full_name,
         quote?.email,
         quote?.status,
+      ];
 
       return fields.some((value) => typeof value === 'string' && value.toLowerCase().includes(query));
     });
