@@ -20,6 +20,7 @@ const contactItems = [
   { label: 'Call the studio', value: '07035000174 / 08034291245', href: 'tel:+2347035000174', Icon: Phone },
   { label: 'WhatsApp', value: '08034291245', href: 'https://wa.me/2348034291245', Icon: MessageCircle },
   { label: 'Email', value: 'oakcherrykraft@gmail.com', href: 'mailto:oakcherrykraft@gmail.com', Icon: Mail },
+  { label: 'Address', value: 'FHA Guzape, Abuja, Federal Capital Territory, Nigeria', href: 'https://www.google.com/maps/search/?api=1&query=FHA+Guzape,+Abuja,+Federal+Capital+Territory,+Nigeria', Icon: MapPin },
   { label: 'Instagram', value: '@oakcherrykraft', href: 'https://www.instagram.com/oakcherrykraft/?hl=en', Icon: Instagram },
 ];
 
@@ -151,8 +152,8 @@ export function Contact() {
           <div className="absolute inset-0 opacity-50" style={{ backgroundImage: 'linear-gradient(rgba(123,79,42,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(123,79,42,0.12) 1px, transparent 1px)', backgroundSize: '42px 42px' }} aria-hidden="true" />
           <div className="relative">
             <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-bark text-sand" aria-hidden="true"><MapPin size={21} /></span>
-            <h2 className="mt-6 font-display text-3xl font-semibold text-bark">Serving clients across Nigeria.</h2>
-            <p className="mt-3 max-w-md text-base leading-8 text-bark/70">Our studio works with clients in Abuja, Lagos, Kaduna, and beyond. Delivery and professional installation are available nationwide.</p>
+            <h2 className="mt-6 font-display text-3xl font-semibold text-bark">FHA Guzape, Abuja</h2>
+            <p className="mt-3 max-w-md text-base leading-8 text-bark/70">FHA Guzape, Abuja, Federal Capital Territory, Nigeria.</p>
           </div>
         </motion.div>
         <motion.div variants={fadeIn} whileHover={{ y: -4 }} className="transition-transform duration-300">

@@ -28,7 +28,16 @@ export const productTypes = [
 
 export const woodSpecies = ['Oak', 'Cherry', 'Walnut', 'Mahogany', 'Teak', 'Mixed species'];
 
-export const finishes = ['Natural oil', 'Matte lacquer', 'Satin lacquer', 'Hand-rubbed wax', 'Raw edge'];
+export const finishes = [
+  'Natural oil',
+  'Matte lacquer',
+  'Satin lacquer',
+  'Hand-rubbed wax',
+  'Raw edge',
+  'Beeswax',
+  'Resin Finish',
+  'Rough Wood Finish',
+];
 
 export const budgetRanges = ['Under ₦500,000', '₦500,000–₦1,200,000', '₦1,200,000–₦2,500,000', 'Above ₦2,500,000'];
 

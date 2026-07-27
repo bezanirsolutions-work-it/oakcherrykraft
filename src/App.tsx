@@ -25,7 +25,7 @@ const ConfiguratorRequests = lazy(() => import('./pages/admin/ConfiguratorReques
 const ProductsAdmin = lazy(() => import('./pages/admin/Products').then(m => ({ default: m.ProductsAdmin })));
 const Analytics = lazy(() => import('./pages/admin/AdminPagePlaceholder').then(m => ({ default: m.Analytics })));
 const Contacts = lazy(() => import('./pages/admin/Contacts').then(m => ({ default: m.Contacts })));
-const Settings = lazy(() => import('./pages/admin/AdminPagePlaceholder').then(m => ({ default: m.Settings })));
+const Settings = lazy(() => import('./pages/admin/Settings').then(m => ({ default: m.Settings })));
 
 const pageTransition = {
   initial: { opacity: 0, y: 18 },

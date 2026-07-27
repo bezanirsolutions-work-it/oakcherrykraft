@@ -1,4 +1,4 @@
-import { ArrowUpRight, Facebook, Instagram, Linkedin, Mail } from 'lucide-react';
+import { ArrowUpRight, Facebook, Instagram, Linkedin, Mail, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export function Footer() {
@@ -12,6 +12,13 @@ export function Footer() {
             <p className="mt-5 max-w-md leading-7 text-bark/75">
               Handcrafted furniture made in Nigeria, transforming premium and discarded wood into beautiful pieces designed to last.
             </p>
+            <div className="mt-6 flex items-start gap-3 text-sm text-bark/75">
+              <MapPin size={18} className="mt-1 text-oak-700" aria-hidden="true" />
+              <div>
+                <p className="font-semibold text-bark">FHA Guzape</p>
+                <p>Abuja, Federal Capital Territory, Nigeria</p>
+              </div>
+            </div>
             <div className="mt-6 flex items-center gap-3">
               <a href="https://www.instagram.com/oakcherrykraft/?hl=en" target="_blank" rel="noreferrer noopener" aria-label="Oak Cherry Kraft on Instagram (@oakcherrykraft)" className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-bark/10 bg-white text-bark transition hover:-translate-y-1 hover:shadow-soft focus:outline-none focus-visible:ring-4 focus-visible:ring-oak-200"><Instagram size={17} /></a>
               <a href="https://www.facebook.com/oakcherrykraft" target="_blank" rel="noreferrer noopener" aria-label="Oak Cherry Kraft on Facebook" className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-bark/10 bg-white text-bark transition hover:-translate-y-1 hover:shadow-soft focus:outline-none focus-visible:ring-4 focus-visible:ring-oak-200"><Facebook size={17} /></a>

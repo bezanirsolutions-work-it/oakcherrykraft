@@ -208,9 +208,19 @@ const productMaterialOptions = [
   'Veneer',
   'Mixed Wood',
 ];
-const productFinishOptions = ['Natural Oil', 'Matte', 'Satin', 'Gloss', 'Painted', 'Stained', 'Lacquered', 'Waxed'];
-const productColourOptions = ['Natural', 'Amber', 'Chocolate', 'Espresso', 'Black', 'White', 'Grey', 'Blue', 'Green', 'Red'];
-
+const productFinishOptions = [
+  'Natural Oil',
+  'Matte',
+  'Satin',
+  'Gloss',
+  'Painted',
+  'Stained',
+  'Lacquered',
+  'Waxed',
+  'Beeswax',
+  'Resin Finish',
+  'Rough Wood Finish',
+];
 
 const optionsWithCurrentValue = (options: string[], currentValue: string) =>
   currentValue && !options.includes(currentValue) ? [currentValue, ...options] : options;
@@ -1193,6 +1203,7 @@ export function ProductsAdmin() {
       price: normalizePriceValue(formValues.price),
       price_label: safeString(formValues.price_label),
       material: safeString(formValues.material),
+      wood: safeString(formValues.wood),
       finish: safeString(formValues.finish),
       colour: safeString(formValues.colour),
       dimensions: updatedDimensions,
@@ -1256,6 +1267,7 @@ export function ProductsAdmin() {
       price: normalizePriceValue(createFormValues.price),
       price_label: safeString(createFormValues.price_label),
       material: safeString(createFormValues.material),
+      wood: safeString(createFormValues.wood),
       finish: safeString(createFormValues.finish),
       colour: safeString(createFormValues.colour),
       dimensions: buildDimensionsString(createFormValues),
@@ -1553,42 +1565,57 @@ export function ProductsAdmin() {
         </label>
         <label className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
           <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Material</span>
-          <select
+          <input
+            list="product-materials"
             value={currentValue('material')}
             onChange={(event) => handleCurrentInputChange('material', event.target.value)}
             className={fieldInputClass('material')}
-          >
-            <option value="">Select material</option>
-            {optionsWithCurrentValue(productMaterialOptions, currentValue('material')).map((option) => (
-              <option key={option} value={option}>{option}</option>
+            placeholder="e.g. Solid Oak"
+          />
+          <datalist id="product-materials">
+            {productMaterialOptions.map((option) => (
+              <option key={option} value={option} />
             ))}
-          </select>
+          </datalist>
+        </label>
+        <label className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
+          <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Wood species</span>
+          <input
+            list="product-wood-species"
+            value={currentValue('wood')}
+            onChange={(event) => handleCurrentInputChange('wood', event.target.value)}
+            className={fieldInputClass('wood')}
+            placeholder="e.g. Cherry"
+          />
+          <datalist id="product-wood-species">
+            {productWoodSpeciesOptions.map((option) => (
+              <option key={option} value={option} />
+            ))}
+          </datalist>
         </label>
         <label className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
           <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Finish</span>
-          <select
+          <input
+            list="product-finishes"
             value={currentValue('finish')}
             onChange={(event) => handleCurrentInputChange('finish', event.target.value)}
             className={fieldInputClass('finish')}
-          >
-            <option value="">Select finish</option>
-            {optionsWithCurrentValue(productFinishOptions, currentValue('finish')).map((option) => (
-              <option key={option} value={option}>{option}</option>
+            placeholder="e.g. Matte"
+          />
+          <datalist id="product-finishes">
+            {productFinishOptions.map((option) => (
+              <option key={option} value={option} />
             ))}
-          </select>
+          </datalist>
         </label>
         <label className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
           <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Colour</span>
-          <select
+          <input
             value={currentValue('colour')}
             onChange={(event) => handleCurrentInputChange('colour', event.target.value)}
             className={fieldInputClass('colour')}
-          >
-            <option value="">Select colour</option>
-            {optionsWithCurrentValue(productColourOptions, currentValue('colour')).map((option) => (
-              <option key={option} value={option}>{option}</option>
-            ))}
-          </select>
+            placeholder="Optional"
+          />
         </label>
       </div>
 
@@ -1622,16 +1649,18 @@ export function ProductsAdmin() {
         </label>
         <label className="min-w-0 rounded-[1.5rem] border border-bark/10 bg-sand p-3">
           <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Unit</span>
-          <select
+          <input
+            list="dimension-units"
             value={currentValue('dimensionUnit')}
             onChange={(event) => handleCurrentInputChange('dimensionUnit', event.target.value)}
             className={fieldInputClass('dimensionUnit')}
-          >
-            <option value="">Unit</option>
+            placeholder="e.g. cm"
+          />
+          <datalist id="dimension-units">
             {productDimensionUnits.map((option) => (
-              <option key={option} value={option}>{option}</option>
+              <option key={option} value={option} />
             ))}
-          </select>
+          </datalist>
         </label>
       </div>
 

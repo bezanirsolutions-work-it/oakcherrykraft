@@ -4,6 +4,8 @@ import { ArrowUpRight, CheckCircle2, Eye, Heart, Leaf } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { PageContainer } from '../components/layout/PageContainer';
 import { AnimatedImage, Button, Card, SectionHeader } from '../components/ui';
+import founderVideo from '../../assets/videos/founder.mp4';
+import replaceChairImage from '../../REPLACE CHAIR.jpeg';
 
 const trustPoints = [
   'Premium hardwoods selected for grain, strength, and character.',
@@ -67,7 +69,19 @@ export function About() {
       </section>
 
       <section className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-16">
-        <div className="order-2 lg:order-1"><AnimatedImage src="https://images.unsplash.com/photo-1601058268499-e52658b8bb88?auto=format&fit=crop&w=1400&q=85" alt="Artisan working with wood in a workshop" aspectRatio="4 / 5" overlay /></div>
+        <div className="order-2 lg:order-1">
+          <div className="overflow-hidden rounded-[2rem] border border-bark/10 bg-sand shadow-soft">
+            <video
+              className="w-full rounded-[2rem]"
+              controls
+              preload="metadata"
+              poster="/assets/about-page.jpeg"
+            >
+              <source src={founderVideo} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        </div>
         <motion.div initial={{ opacity: 0, x: 24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.7, ease: 'easeOut' }} className="order-1 space-y-6 lg:order-2">
           <SectionHeader eyebrow="Company story" title="From ordinary timber to extraordinary furniture." description="Founded in 2023, Oak Cherry Kraft Artistry Limited was born from a passion for transforming ordinary timber into extraordinary furniture. Inspired by nature and driven by creativity, our workshop combines traditional woodworking techniques with contemporary design to craft furniture that tells a story." />
           <p className="text-base leading-8 text-bark/70">Every grain of wood carries character, every curve is carefully sculpted, and every piece is handcrafted to become part of the memories made in homes, offices, hotels, and commercial spaces.</p>
@@ -87,7 +101,7 @@ export function About() {
             <AnimatedImage src="https://images.unsplash.com/photo-1531058020387-3be344556be6?auto=format&fit=crop&w=1400&q=85" alt="Woodworking tools and workshop materials" aspectRatio="16 / 10" overlay />
           </motion.div>
           <motion.div variants={fadeIn} whileHover={{ scale: 1.02 }} className="transition-transform duration-300">
-            <AnimatedImage src="https://images.unsplash.com/photo-1581539250439-c96689b516dd?auto=format&fit=crop&w=1100&q=85" alt="Close detail of crafted wooden furniture" aspectRatio="4 / 5" overlay />
+            <AnimatedImage src={replaceChairImage} alt="Chair detail from the Oak Cherry Kraft workshop" objectFit="contain" overlay />
           </motion.div>
         </motion.div>
       </section>
