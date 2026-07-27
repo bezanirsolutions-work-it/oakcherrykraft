@@ -77,7 +77,7 @@ const testimonials = [
 
 export function Home() {
   return (
-    <PageContainer className="space-y-0 pb-16 sm:pb-20">
+    <PageContainer className="space-y-0 pb-16 sm:pb-20 pt-6">
       <Helmet>
         <title>Oak Cherry Kraft | Handcrafted furniture & bespoke commissions</title>
         <meta
@@ -100,7 +100,7 @@ export function Home() {
           eyebrow="Explore the collection"
           title="Furniture for the way you want to live."
           description="From a statement dining table to a complete bespoke installation, each piece is made to feel unmistakably yours."
-          className="mb-10"
+          className="mb-6"
         />
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.12 }} variants={sectionStagger} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {categoryCards.map((category) => (
@@ -147,7 +147,7 @@ export function Home() {
             </Button>
           </div>
 
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.12 }} variants={sectionStagger} className="mt-8 grid gap-5 lg:grid-cols-3">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.12 }} variants={sectionStagger} className="mt-6 grid gap-5 lg:grid-cols-3">
             {featuredProducts.map((product) => (
               <motion.article
                 key={product.id}
@@ -181,7 +181,7 @@ export function Home() {
 
       <section className="section-gap">
         <div className="container-wide">
-          <div className="grid gap-10 xl:grid-cols-[0.95fr_1.05fr] xl:items-center xl:gap-12">
+          <div className="grid gap-7 xl:grid-cols-[0.95fr_1.05fr] xl:items-center xl:gap-10">
             <motion.div
               initial={{ opacity: 0, x: -22 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -203,7 +203,7 @@ export function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-              className="space-y-6"
+              className="space-y-4"
             >
               <SectionHeader
                 eyebrow="Meet the Founder"
@@ -292,7 +292,7 @@ export function Home() {
           eyebrow="Client stories"
           title="The details people remember."
           description="Our work is measured not only in finish and form, but in how beautifully it becomes part of everyday life."
-          className="mb-10"
+          className="mb-8"
         />
         <div className="grid gap-5 lg:grid-cols-3">
           {testimonials.map((testimonial, index) => (
@@ -313,7 +313,7 @@ export function Home() {
             inverse
             className="mx-auto"
           />
-          <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row sm:justify-center">
+          <div className="mt-6 flex flex-col justify-center gap-4 sm:flex-row sm:justify-center">
             <Button size="lg" asChild>
               <Link to="/request-quote">Get free consultation</Link>
             </Button>

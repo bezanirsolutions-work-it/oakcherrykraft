@@ -187,15 +187,15 @@ section {
   }
 
   .section-gap {
-    @apply py-16 md:py-24;
+    @apply py-16 md:py-20;
   }
 
   .section-gap-sm {
-    @apply py-10 md:py-16;
+    @apply py-10 md:py-14;
   }
 
   .section-gap-lg {
-    @apply py-24 md:py-32;
+    @apply py-20 md:py-24;
   }
 
   .container-narrow {

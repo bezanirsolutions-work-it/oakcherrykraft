@@ -39,7 +39,34 @@ export function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string>('');
+  const [displayName, setDisplayName] = useState<string>('Ade');
   const mountedRef = useRef(true);
+
+  const fetchUserName = async () => {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData?.session?.user?.id;
+    const fallbackName = sessionData?.session?.user?.user_metadata?.full_name;
+
+    if (!userId) {
+      if (fallbackName && mountedRef.current) {
+        setDisplayName(fallbackName.toString().trim().split(' ')[0] || 'Ade');
+      }
+      return;
+    }
+
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('user_id', userId)
+      .single();
+
+    if (!mountedRef.current) return;
+
+    const profileName = profileData?.full_name ?? fallbackName;
+    if (profileName) {
+      setDisplayName(profileName.toString().trim().split(' ')[0] || 'Ade');
+    }
+  };
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -103,6 +130,7 @@ export function Dashboard() {
   };
 
   useEffect(() => {
+    fetchUserName();
     fetchDashboardData();
 
     return () => {
@@ -128,10 +156,10 @@ export function Dashboard() {
       <section className="rounded-[2rem] border border-bark/10 bg-white p-8 shadow-soft">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.35em] text-bark/60">Welcome back</p>
-            <h1 className="mt-3 text-4xl font-semibold tracking-tight text-bark">Dashboard overview</h1>
+            <p className="text-sm uppercase tracking-[0.35em] text-bark/60">Welcome, {displayName} 👋</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight text-bark">Welcome, {displayName} 👋</h1>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-bark/70">
-              Your latest activity summary and quick actions for Oak Cherry Kraft.
+              Here&apos;s what&apos;s happening at Oak Cherry Kraft today.
             </p>
           </div>
 

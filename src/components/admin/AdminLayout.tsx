@@ -1,6 +1,7 @@
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { X, Menu } from 'lucide-react';
+import { Globe2, X, Menu } from 'lucide-react';
+import { Button } from '../ui';
 import { supabase } from '../../lib/supabase';
 
 interface AdminLayoutProps {
@@ -182,6 +183,19 @@ export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayout
                 </div>
 
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
+                  <Button
+                    asChild
+                    variant="secondary"
+                    size="sm"
+                    className="group rounded-full px-4 transition hover:bg-bark/5"
+                  >
+                    <a href="/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2">
+                      <span className="sr-only">View Website</span>
+                      <Globe2 size={16} className="text-bark transition group-hover:text-bark" />
+                      <span className="hidden sm:inline">View Website</span>
+                    </a>
+                  </Button>
+
                   <div className="rounded-[1.5rem] border border-bark/10 bg-sand px-4 py-3 text-sm text-bark">
                     <p className="text-xs uppercase tracking-[0.35em] text-bark/60">{adminName}</p>
                     <p className="mt-2 font-semibold">Studio admin</p>

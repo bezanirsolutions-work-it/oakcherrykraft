@@ -21,10 +21,10 @@ export function HeroSection({ children }: HeroSectionProps) {
   const imageY = useTransform(scrollYProgress, [0, 1], [0, 80]);
 
   return (
-    <section ref={heroRef} className="relative overflow-hidden bg-sand py-14 text-bark sm:py-20 lg:py-28">
+    <section ref={heroRef} className="relative overflow-hidden bg-sand py-8 text-bark sm:py-12 lg:py-14">
       <div className="hero-wood-texture absolute inset-0 opacity-30" aria-hidden="true" />
-      <div className="container-wide relative grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-14">
-        <div className="space-y-7">
+      <div className="container-wide relative grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-12">
+        <div className="space-y-6">
           <motion.p
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -95,13 +95,13 @@ export function HeroSection({ children }: HeroSectionProps) {
                 initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.16 + index * 0.08, ease: 'easeOut' }}
-                className="flex h-full flex-col rounded-[1.5rem] border border-bark/10 bg-white/90 p-3 shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-medium sm:rounded-[2rem] sm:p-4"
+                className="flex h-full min-h-[12rem] flex-col rounded-[1.5rem] border border-bark/10 bg-white/90 p-3 shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-medium sm:rounded-[2rem] sm:p-4"
               >
                 <div className="flex flex-shrink-0 items-start gap-2">
                   <span className="icon-surface shrink-0 bg-bark/5 text-bark">
                     <Icon size={16} aria-hidden="true" className="sm:size-[18px]" />
                   </span>
-                  <p className="min-w-0 flex-1 text-[0.625rem] leading-3 tracking-[0.1em] text-bark/60 sm:text-xs sm:leading-4 sm:tracking-[0.15em]">{label}</p>
+                  <p className="min-w-0 flex-1 whitespace-nowrap text-[0.62rem] leading-4 tracking-[0.12em] text-bark/60 sm:text-[0.68rem] sm:leading-5 sm:tracking-[0.13em]">{label}</p>
                 </div>
                 <p className="mt-2 truncate text-xl font-bold tracking-tight text-bark sm:mt-3 sm:text-2xl">{value}</p>
               </motion.article>
