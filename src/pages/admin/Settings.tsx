@@ -184,7 +184,7 @@ export function Settings() {
     setError(null);
 
     const payload = buildSettingsPayload(values);
-    const { error: upsertError } = await supabase.from('settings').upsert(payload, { onConflict: ['key'] });
+    const { error: upsertError } = await supabase.from('settings').upsert(payload, { onConflict: 'key' });
 
     if (upsertError) {
       setError(upsertError.message);
