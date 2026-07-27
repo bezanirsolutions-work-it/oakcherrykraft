@@ -208,7 +208,7 @@ const productMaterialOptions = [
   'Veneer',
   'Mixed Wood',
 ];
-const productFinishOptions = [
+const productFinishOptions: string[] = [
   'Natural Oil',
   'Matte',
   'Satin',
@@ -220,6 +220,19 @@ const productFinishOptions = [
   'Beeswax',
   'Resin Finish',
   'Rough Wood Finish',
+];
+
+const productWoodSpeciesOptions: string[] = [
+  'Cherry',
+  'Oak',
+  'Walnut',
+  'Teak',
+  'Mahogany',
+  'Maple',
+  'Birch',
+  'Pine',
+  'Ash',
+  'Beech',
 ];
 
 const optionsWithCurrentValue = (options: string[], currentValue: string) =>
@@ -1521,7 +1534,7 @@ export function ProductsAdmin() {
             className={fieldInputClass('category')}
           >
             <option value="">Select category</option>
-            {optionsWithCurrentValue(productCategoryOptions, currentValue('category')).map((option) => (
+            {optionsWithCurrentValue(productCategoryOptions, currentValue('category')).map((option: string) => (
               <option key={option} value={option}>{option}</option>
             ))}
           </select>
@@ -1535,7 +1548,7 @@ export function ProductsAdmin() {
             className={fieldInputClass('status')}
           >
             <option value="">Select status</option>
-            {optionsWithCurrentValue(productStatusOptions, currentValue('status')).map((option) => (
+            {optionsWithCurrentValue(productStatusOptions, currentValue('status')).map((option: string) => (
               <option key={option} value={option}>{option}</option>
             ))}
           </select>
@@ -1573,7 +1586,7 @@ export function ProductsAdmin() {
             placeholder="e.g. Solid Oak"
           />
           <datalist id="product-materials">
-            {productMaterialOptions.map((option) => (
+            {productMaterialOptions.map((option: string) => (
               <option key={option} value={option} />
             ))}
           </datalist>
@@ -1588,7 +1601,7 @@ export function ProductsAdmin() {
             placeholder="e.g. Cherry"
           />
           <datalist id="product-wood-species">
-            {productWoodSpeciesOptions.map((option) => (
+            {productWoodSpeciesOptions.map((option: string) => (
               <option key={option} value={option} />
             ))}
           </datalist>
@@ -1603,7 +1616,7 @@ export function ProductsAdmin() {
             placeholder="e.g. Matte"
           />
           <datalist id="product-finishes">
-            {productFinishOptions.map((option) => (
+            {productFinishOptions.map((option: string) => (
               <option key={option} value={option} />
             ))}
           </datalist>
@@ -1657,7 +1670,7 @@ export function ProductsAdmin() {
             placeholder="e.g. cm"
           />
           <datalist id="dimension-units">
-            {productDimensionUnits.map((option) => (
+            {productDimensionUnits.map((option: string) => (
               <option key={option} value={option} />
             ))}
           </datalist>
