@@ -35,7 +35,7 @@ export function ConfiguratorRequests() {
       setError(null);
 
       const { data, error: fetchError } = await supabase
-        .from<ConfiguratorRequestRow>('configurator_selections')
+        .from('configurator_selections')
         .select(
           `id, quote_request_id, material, finish, colour, accessories, estimated_price, created_at, quote_requests(id, full_name, email, status)`
         )

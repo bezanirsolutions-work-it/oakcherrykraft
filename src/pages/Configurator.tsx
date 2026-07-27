@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import type { Location } from 'history';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import {
@@ -70,31 +69,28 @@ interface ConfiguratorLocationState {
   selectedProduct?: ConfiguratorPrefillProduct;
 }
 
-interface ConfiguratorLocation extends Location {
-  state?: ConfiguratorLocationState;
-}
-
 export function Configurator() {
-  const location = useLocation() as ConfiguratorLocation;
+  const location = useLocation();
+  const locationState = location.state as ConfiguratorLocationState | null;
   const navigate = useNavigate();
 
-  const routeState = location.state ?? null;
+  const routeState = locationState;
   const searchParams = new URLSearchParams(location.search);
   const incomingProductName =
-    (routeState?.selectedProduct?.name as string | undefined) ??
-    (routeState?.selectedProduct?.productName as string | undefined) ??
+    routeState?.selectedProduct?.name ??
+    routeState?.selectedProduct?.productName ??
     searchParams.get('productName') ??
     '';
   const incomingCategory =
-    (routeState?.selectedProduct?.category as string | undefined) ??
+    routeState?.selectedProduct?.category ??
     searchParams.get('productCategory') ??
     '';
   const incomingWood =
-    (routeState?.selectedProduct?.wood as string | undefined) ??
-    (routeState?.selectedProduct?.material as string | undefined) ??
+    routeState?.selectedProduct?.wood ??
+    routeState?.selectedProduct?.material ??
     '';
   const incomingFinish =
-    (routeState?.selectedProduct?.finish as string | undefined) ??
+    routeState?.selectedProduct?.finish ??
     searchParams.get('finish') ??
     '';
   const hasSelectedProduct = Boolean(incomingProductName || incomingCategory);
