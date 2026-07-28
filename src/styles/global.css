@@ -226,7 +226,7 @@ section {
   }
 
   .btn-primary {
-    @apply bg-bark text-sand hover:bg-bark/90;
+    @apply bg-bark text-sand shadow-[0_10px_30px_rgba(46,36,28,0.18)] hover:bg-bark/95;
   }
 
   .btn-secondary {

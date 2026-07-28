@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, Filter } from 'lucide-react';
 import { projects } from '../data/projects';
+import { PageHeader } from '../components/layout/PageHeader';
 import { PageContainer } from '../components/layout/PageContainer';
 import { AnimatedImage, Badge, Button, Card, Breadcrumb, EmptyState, SectionHeader } from '../components/ui';
 
@@ -27,7 +28,8 @@ export function ProjectPortfolio() {
         <title>Portfolio | Oak Cherry Kraft</title>
         <meta name="description" content="Browse our portfolio of crafted furniture and bespoke project installations." />
       </Helmet>
-      <Breadcrumb items={[{ label: 'Home', path: '/' }, { label: 'Portfolio' }]} />
+      <PageHeader title="Project Portfolio" subtitle="Browse completed commissions and get inspired by projects that balance craft, comfort, and architectural presence." showBreadcrumb />
+      <Breadcrumb items={[{ label: 'Home', path: '/' }, { label: 'Portfolio' }]} className="pt-6" />
       <motion.section initial="hidden" animate="visible" variants={fadeIn} className="space-y-8">
         <SectionHeader eyebrow="Project portfolio" title="A curated selection of our recent work" description="Browse completed commissions and get inspired by projects that balance craft, comfort, and architectural presence." />
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

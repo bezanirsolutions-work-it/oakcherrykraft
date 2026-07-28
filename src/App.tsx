@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Route, Routes, useLocation } from 'react-router-dom';
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense } from 'react';
 import { ErrorBoundary, Layout } from './components/layout';
 import { Home } from './pages/Home';
 import { Login } from './pages/admin/Login';
@@ -42,10 +42,6 @@ const LoadingFallback = () => (
 
 export default function App() {
   const location = useLocation();
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [location.pathname]);
 
   return (
     <ErrorBoundary>

@@ -18,7 +18,7 @@ interface ConfiguratorRequestRow {
   finish: string | null;
   colour: string | null;
   accessories: string[] | null;
-  estimated_price: number | null;
+  estimated_price: string | null;
   created_at: string | null;
   quote_requests?: QuoteReference[];
 }
@@ -166,7 +166,7 @@ export function ConfiguratorRequests() {
                       <td className="px-4 py-4 text-bark/75">{request.material ?? '—'}</td>
                       <td className="px-4 py-4 text-bark/75">{request.finish ?? '—'}</td>
                       <td className="px-4 py-4 text-bark/75">{request.colour ?? '—'}</td>
-                      <td className="px-4 py-4 text-bark/75">{request.estimated_price != null ? `₦${request.estimated_price.toFixed(0)}` : 'Not estimated'}</td>
+                      <td className="px-4 py-4 text-bark/75">{request.estimated_price ?? 'Not estimated'}</td>
                       <td className="px-4 py-4 text-bark/75">{request.created_at ? new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(request.created_at)) : '—'}</td>
                     </tr>
                   );

@@ -3,9 +3,11 @@ import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ArrowUpRight } from 'lucide-react';
+import { PageHeader } from '../components/layout/PageHeader';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Breadcrumb, Button, QuoteForm, SectionHeader } from '../components/ui';
 import type { QuoteFormValues } from '../components/ui/QuoteForm';
+import { getEstimatedPriceRange } from '../utils/priceEstimator';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 24 },
@@ -24,7 +26,8 @@ export function QuoteRequest() {
         <title>Request a quote | Oak Cherry Kraft</title>
         <meta name="description" content="Submit a quote request for bespoke furniture, custom installations, and tailored design support." />
       </Helmet>
-      <Breadcrumb items={[{ label: 'Home', path: '/' }, { label: 'Request quote' }]} />
+      <PageHeader title="Request a Quote" subtitle="Share your space, materials, and timeframe. Our studio will respond with a tailored proposal and next steps." showBreadcrumb />
+      <Breadcrumb items={[{ label: 'Home', path: '/' }, { label: 'Request quote' }]} className="pt-6" />
 
       <motion.section initial="hidden" animate="visible" variants={fadeIn} className="space-y-8">
         <SectionHeader eyebrow="Request a quote" title="Tell us about your furniture project" description="Share your space, materials, and timeframe. Our studio will respond with a tailored proposal and next steps." />

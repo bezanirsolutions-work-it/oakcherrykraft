@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS public.configurator_selections (
   finish text,
   colour text,
   accessories jsonb,
-  estimated_price numeric(10,2) NOT NULL DEFAULT 0 CHECK (estimated_price >= 0)
+  estimated_price text NOT NULL DEFAULT '₦100,000 – ₦500,000'
 );
 
 -- Contact messages table.

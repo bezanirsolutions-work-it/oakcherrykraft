@@ -2,6 +2,7 @@ import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, CheckCircle2, Eye, Heart, Leaf } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { PageHeader } from '../components/layout/PageHeader';
 import { PageContainer } from '../components/layout/PageContainer';
 import { AnimatedImage, Button, Card, SectionHeader } from '../components/ui';
 import founderVideo from '../../assets/videos/founder.mp4';
@@ -34,11 +35,13 @@ export function About() {
         <title>About | Oak Cherry Kraft</title>
         <meta name="description" content="Learn about Oak Cherry Kraft Artistry Limited, our craftsmanship, process, and furniture philosophy." />
       </Helmet>
+      <PageHeader title="Crafted with Passion. Built to Last." subtitle="At Oak Cherry Kraft Artistry Limited, we believe furniture should do more than fill a room—it should define it." />
+
       <section className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-14">
         <motion.div initial={{ opacity: 0, x: -24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7, ease: 'easeOut' }} className="space-y-7">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oak-700">Our story</p>
-          <h1 className="font-display text-5xl font-semibold leading-[1.02] tracking-[-0.03em] text-bark sm:text-6xl">Crafted with Passion. Built to Last.</h1>
-          <p className="max-w-xl text-lg leading-8 text-bark/70">At Oak Cherry Kraft Artistry Limited, we believe furniture should do more than fill a room—it should define it.</p>
+          <h2 className="font-display text-4xl font-semibold leading-[1.02] tracking-[-0.03em] text-bark sm:text-5xl">A studio approach to furniture that feels personal and lasting.</h2>
+          <p className="max-w-xl text-lg leading-8 text-bark/70">We work closely with each client to shape pieces that fit their architecture, rhythm, and the way they want to live.</p>
           <Button asChild icon={<ArrowUpRight size={17} aria-hidden="true" />}><Link to="/contact">Start a conversation</Link></Button>
         </motion.div>
         <AnimatedImage src="/assets/about-page.jpeg" alt="Oak Cherry Kraft workshop and furniture" aspectRatio="3 / 5" overlay priority objectFit="contain" className="bg-sand object-center" />

@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, Check, Clock3, Search } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
+import { PageHeader } from '../components/layout/PageHeader';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Button, EmptyState, LoadingState, SectionHeader } from '../components/ui';
 import { supabase } from '../lib/supabase';
@@ -193,6 +194,12 @@ export function Products() {
           content="Discover our published furniture collection with live catalogue filtering by category, search, and product details."
         />
       </Helmet>
+
+      <PageHeader
+        title={selectedCategory ? selectedCategory.label : 'Furniture Built to Feel Natural, Lasting, and Beautifully Scaled'}
+        subtitle="Explore considered pieces for dining, living, bedroom, and custom spaces. Every published design is made to order and can be tailored to your space."
+        showBreadcrumb
+      />
 
       <motion.section
         initial="hidden"

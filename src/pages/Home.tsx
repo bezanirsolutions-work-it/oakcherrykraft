@@ -1,15 +1,19 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { motion } from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
   ArrowUpRight,
   ChevronRight,
   Leaf,
   MapPin,
+  MessageSquare,
   Ruler,
   ShieldCheck,
   Sparkles,
   Truck,
+  Hammer,
+  CheckCircle2,
 } from 'lucide-react';
 import {
   CallToActionSection,
@@ -17,12 +21,14 @@ import {
   FeaturedProjectsSection,
   HeroSection,
   TestimonialsSection,
+  WhyChooseSection,
 } from '../components/sections';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Button, Card, SectionHeader } from '../components/ui';
 import { SectionTitle } from '../components/base/SectionTitle';
 import { products } from '../data/products';
 import { projects as featuredProjects } from '../data/projects';
+import { supabase } from '../lib/supabase';
 
 const reveal = {
   hidden: { opacity: 0, y: 24 },
@@ -46,16 +52,165 @@ const categoryCards = [
   { title: 'Outdoor Furniture', description: 'Durable outdoor forms for slow mornings, open-air dinners, and generous hosting.', image: '/assets/outdoor-furniture.jpeg' },
 ];
 
-const featuredProducts = products.slice(0, 3);
+const heroTrustBadges = [
+  { title: 'Custom Furniture Crafted to Order', description: 'Every piece is made to your exact specification with meticulous craftsmanship.' },
+  { title: 'Sustainably Sourced Hardwood', description: 'Premium timbers selected for beauty, durability, and responsible sourcing.' },
+  { title: 'Premium Residential & Commercial Projects', description: 'Projects designed to suit upscale homes, offices, and hospitality interiors.' },
+  { title: 'Designed & Built in Nigeria', description: 'Local craftsmanship with a luxury finish for discerning clients across the region.' },
+];
+
+interface Product {
+  id: string;
+  name: string;
+  category: string;
+  summary?: string;
+  price?: string;
+  wood?: string;
+  availability?: string;
+  image?: string;
+  cover_image?: string;
+  image_urls?: string[];
+  slug?: string;
+  status?: string;
+  is_active?: boolean;
+  featured?: boolean;
+  is_featured?: boolean;
+  featured_product?: boolean;
+}
+
+const defaultFeaturedProducts: Product[] = products.slice(0, 3);
+
+interface Project {
+  id: string;
+  title: string;
+  category: string;
+  description: string;
+  summary: string;
+  image: string;
+  location?: string;
+  material?: string;
+  finish?: string;
+  completion?: string;
+}
+
+const featuredProjectItem = featuredProjects[0] as Project;
+
+const projectOfMonth: Project = featuredProjects.length > 0
+  ? {
+      ...featuredProjectItem,
+      location: featuredProjectItem.location ?? 'Lekki, Lagos',
+      material: featuredProjectItem.material ?? 'Mahogany & White Oak',
+      finish: featuredProjectItem.finish ?? 'Hand-rubbed oil & beeswax',
+      completion: featuredProjectItem.completion ?? '10 weeks',
+    }
+  : {
+      id: 'project-of-the-month',
+      title: 'Luxury Dining Suite in Lekki',
+      category: 'Residential',
+      description: 'An elegant dining collection with hand-carved timber details, designed to anchor a refined home interior with warmth and precision.',
+      summary: 'A premium dining room commission combining rich wood, bespoke joinery, and a calm, luxurious finish.',
+      image: '/assets/hero/intro-picture.png',
+      location: 'Lekki, Lagos',
+      material: 'Mahogany & Oak',
+      finish: 'Hand-rubbed oil & beeswax',
+      completion: '11 weeks',
+    };
+
+const materialSwatches = [
+  { name: 'Mahogany', description: 'Rich, warm undertones with deep luxury.', color: '#5b2b1e', previewImage: '/assets/19.jpeg' },
+  { name: 'Walnut', description: 'Soft brown depth with velvety grain.', color: '#4a2b1d', previewImage: '/assets/living-room-cover.jpeg' },
+  { name: 'Oak', description: 'Timeless golden warmth with crisp character.', color: '#aa7f57', previewImage: '/assets/hero/intro-picture.png' },
+  { name: 'Teak', description: 'Warm amber glow with durable appeal.', color: '#8f6236', previewImage: '/assets/outdoor-furniture.jpeg' },
+  { name: 'Ebony', description: 'Bold dark finish with dramatic presence.', color: '#18120e' },
+  { name: 'White Ash', description: 'Creamy neutral tone with subtle texture.', color: '#d9c9b1' },
+  { name: 'Beeswax', description: 'Soft sheen and gentle honey warmth.', color: '#c79c50' },
+  { name: 'Natural Oil', description: 'Matte richness that reveals grain beautifully.', color: '#b89a72' },
+  { name: 'Resin Finish', description: 'Smooth polished surface with glass-like depth.', color: '#8e6a52' },
+  { name: 'Rough Wood Finish', description: 'Textured surface with tactile natural character.', color: '#b9a083' },
+];
+
+const projectTimeline = [
+  {
+    title: 'Consultation',
+    description: 'Define your vision with a personal studio brief.',
+    Icon: MessageSquare,
+  },
+  {
+    title: 'Measurements',
+    description: 'Detailed site dimensions ensure a precise fit.',
+    Icon: Ruler,
+  },
+  {
+    title: 'Design Approval',
+    description: 'Review drawings and confirm the final direction.',
+    Icon: CheckCircle2,
+  },
+  {
+    title: 'Material Selection',
+    description: 'Choose premium timbers, finishes, and detailing.',
+    Icon: Leaf,
+  },
+  {
+    title: 'Craftsmanship',
+    description: 'Skilled joinery and finishing brings the design to life.',
+    Icon: Hammer,
+  },
+  {
+    title: 'Quality Inspection',
+    description: 'Final checks ensure every detail meets our standards.',
+    Icon: ShieldCheck,
+  },
+  {
+    title: 'Delivery & Installation',
+    description: 'Careful delivery and final installation at your site.',
+    Icon: Truck,
+  },
+];
+
+const statistics = [
+  { label: 'Projects Completed', value: 250 },
+  { label: 'Happy Clients', value: 150 },
+  { label: 'Years Experience', value: 12 },
+  { label: 'States Served', value: 8 },
+];
 
 const founderValues = [
-  { title: 'Premium Quality Materials', Icon: ShieldCheck },
-  { title: 'Expert Craftsmanship', Icon: Leaf },
-  { title: 'Bespoke Furniture Design', Icon: Ruler },
-  { title: 'Timeless & Sustainable Solutions', Icon: Sparkles },
-  { title: 'Personalised Client Experience', Icon: MapPin },
-  { title: 'Exceptional Attention to Detail', Icon: Truck },
+  { title: 'Craftsmanship', Icon: Sparkles },
+  { title: 'Quality Assurance', Icon: ShieldCheck },
+  { title: 'Thoughtful Design', Icon: Leaf },
 ];
+
+function useCounter(target: number, active: boolean) {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (!active) return;
+
+    let start: number | null = null;
+    let frame = 0;
+    const duration = 1800;
+
+    const step = (timestamp: number) => {
+      if (start === null) start = timestamp;
+      const progress = Math.min((timestamp - start) / duration, 1);
+      setCount(Math.round(progress * target));
+
+      if (progress < 1) {
+        frame = requestAnimationFrame(step);
+      }
+    };
+
+    frame = requestAnimationFrame(step);
+
+    return () => cancelAnimationFrame(frame);
+  }, [active, target]);
+
+  return count;
+}
+
+function formatStat(value: number) {
+  return `${value}+`;
+}
 
 const testimonials = [
   {
@@ -76,6 +231,60 @@ const testimonials = [
 ];
 
 export function Home() {
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>(defaultFeaturedProducts);
+  const [isFeaturedLoading, setIsFeaturedLoading] = useState(true);
+  const [featuredError, setFeaturedError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchFeaturedProducts = async () => {
+      setIsFeaturedLoading(true);
+      setFeaturedError(null);
+
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('status', 'published')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Featured products query error:', error);
+        setFeaturedError(error.message);
+        setIsFeaturedLoading(false);
+        return;
+      }
+
+      const activeProducts = (data ?? []) as Product[];
+      const featuredItems = activeProducts.filter(
+        (product) =>
+          product.featured === true ||
+          product.is_featured === true ||
+          product.featured_product === true
+      );
+
+      setFeaturedProducts(
+        featuredItems.length > 0 ? featuredItems.slice(0, 4) : activeProducts.slice(0, 4)
+      );
+      setIsFeaturedLoading(false);
+    };
+
+    fetchFeaturedProducts();
+  }, []);
+
+  const [selectedSwatch, setSelectedSwatch] = useState(materialSwatches[0]);
+  const previewImage = useMemo(() => selectedSwatch.previewImage ?? projectOfMonth.image, [selectedSwatch]);
+  const statsRef = useRef<HTMLDivElement | null>(null);
+  const statsInView = useInView(statsRef, { once: true, amount: 0.25 });
+  const [statsStarted, setStatsStarted] = useState(false);
+
+  useEffect(() => {
+    if (statsInView) setStatsStarted(true);
+  }, [statsInView]);
+
+  const statCounts = statistics.map((stat) => useCounter(stat.value, statsStarted));
+
+  const displayFeaturedProducts = featuredProducts.length > 0 ? featuredProducts : defaultFeaturedProducts;
+
   return (
     <PageContainer className="space-y-0 pb-16 sm:pb-20 pt-6">
       <Helmet>
@@ -86,14 +295,21 @@ export function Home() {
         />
       </Helmet>
 
-      <HeroSection>
-        <SectionTitle
-          level={1}
-          eyebrow="Oak Cherry Kraft Artistry Limited"
-          title="Handcrafted Furniture That Defines Exceptional Living"
-          description="Transform your home, office, or commercial space with bespoke furniture designed by master craftsmen. Every piece combines timeless elegance, premium craftsmanship, and lasting durability."
-        />
-      </HeroSection>
+      <HeroSection />
+
+      <section className="container-wide mt-14 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        {heroTrustBadges.map((badge) => (
+          <Card key={badge.title} className="flex min-h-[220px] flex-col gap-4 rounded-[1.75rem] border border-bark/10 bg-white p-6 shadow-soft">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f4ece2] text-[#aa7f57]">
+              <Sparkles className="h-6 w-6" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-base font-semibold text-bark">{badge.title}</h3>
+              <p className="text-sm leading-6 text-bark/70">{badge.description}</p>
+            </div>
+          </Card>
+        ))}
+      </section>
 
       <FeaturedCollectionsSection>
         <SectionHeader
@@ -148,7 +364,7 @@ export function Home() {
           </div>
 
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.12 }} variants={sectionStagger} className="mt-6 grid gap-5 lg:grid-cols-3">
-            {featuredProducts.map((product) => (
+            {displayFeaturedProducts.map((product) => (
               <motion.article
                 key={product.id}
                 variants={reveal}
@@ -156,7 +372,7 @@ export function Home() {
               >
                 <div className="relative aspect-[4/3] overflow-hidden">
                   <img
-                    src={product.image}
+                    src={product.cover_image || product.image || product.image_urls?.[0] || ''}
                     alt={product.name}
                     loading="lazy"
                     decoding="async"
@@ -179,9 +395,171 @@ export function Home() {
         </div>
       </section>
 
+      <section className="section-gap bg-sand/40">
+        <div className="container-wide">
+          <div className="grid gap-8 xl:grid-cols-[1.05fr_0.95fr] xl:items-center xl:gap-12">
+            <motion.div
+              initial={{ opacity: 0, x: -18 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+              className="group relative overflow-hidden rounded-[2rem] border border-bark/10 bg-white shadow-soft"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/80 to-transparent" aria-hidden="true" />
+              <img
+                src={projectOfMonth.image}
+                alt={projectOfMonth.title}
+                loading="lazy"
+                decoding="async"
+                className="relative h-full w-full object-cover transition duration-700 ease-brand group-hover:scale-105"
+              />
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+              className="space-y-6"
+            >
+              <div className="inline-flex rounded-full border border-bark/10 bg-white px-4 py-2 text-sm font-semibold text-bark shadow-sm">
+                Project of the Month
+              </div>
+              <div className="space-y-4">
+                <p className="text-xs uppercase tracking-[0.35em] text-bark/50">Featured project</p>
+                <h2 className="text-4xl font-semibold text-bark sm:text-5xl">{projectOfMonth.title}</h2>
+                <p className="max-w-2xl text-base leading-8 text-bark/75">{projectOfMonth.description}</p>
+                <p className="max-w-2xl text-base leading-8 text-bark/75">Handcrafted for a refined residential interior, this custom dining suite brings soft sculptural lines, layered timber finishes, and thoughtful joinery into a warm home setting.</p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-[1.75rem] border border-bark/10 bg-white p-5 shadow-soft">
+                  <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Client location</p>
+                  <p className="mt-2 text-base font-semibold text-bark">{projectOfMonth.location}</p>
+                </div>
+                <div className="rounded-[1.75rem] border border-bark/10 bg-white p-5 shadow-soft">
+                  <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Material</p>
+                  <p className="mt-2 text-base font-semibold text-bark">{projectOfMonth.material}</p>
+                </div>
+                <div className="rounded-[1.75rem] border border-bark/10 bg-white p-5 shadow-soft">
+                  <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Finish</p>
+                  <p className="mt-2 text-base font-semibold text-bark">{projectOfMonth.finish}</p>
+                </div>
+                <div className="rounded-[1.75rem] border border-bark/10 bg-white p-5 shadow-soft">
+                  <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Completion time</p>
+                  <p className="mt-2 text-base font-semibold text-bark">{projectOfMonth.completion}</p>
+                </div>
+              </div>
+              <Button size="lg" asChild>
+                <Link to={`/projects/${projectOfMonth.id}`}>View Full Project</Link>
+              </Button>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       <section className="section-gap">
         <div className="container-wide">
-          <div className="grid gap-7 xl:grid-cols-[0.95fr_1.05fr] xl:items-center xl:gap-10">
+          <div className="grid gap-10 xl:grid-cols-[0.9fr_1.1fr] xl:items-start">
+            <div className="space-y-6">
+              <SectionHeader
+                eyebrow="Choose your finish"
+                title="Material Swatches"
+                description="Explore premium timber and finish options with subtle texture inspiration for your bespoke furniture project."
+                className="max-w-3xl"
+              />
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+                {materialSwatches.map((swatch) => (
+                  <button
+                    key={swatch.name}
+                    type="button"
+                    onMouseEnter={() => setSelectedSwatch(swatch)}
+                    onFocus={() => setSelectedSwatch(swatch)}
+                    className="group rounded-[1.75rem] border border-bark/10 bg-white p-4 text-left shadow-soft transition duration-300 hover:-translate-y-1 hover:border-oak-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-oak-200"
+                  >
+                    <div
+                      aria-hidden="true"
+                      className="h-20 w-20 rounded-full shadow-inner"
+                      style={{ backgroundColor: swatch.color }}
+                    />
+                    <p className="mt-4 font-semibold text-bark">{swatch.name}</p>
+                    <p className="mt-2 text-sm leading-6 text-bark/70">{swatch.description}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 22 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+              className="relative overflow-hidden rounded-[2rem] border border-bark/10 bg-sand shadow-soft"
+            >
+              <img
+                src={previewImage}
+                alt={`${selectedSwatch.name} finish preview`}
+                loading="lazy"
+                decoding="async"
+                className="h-full w-full object-cover transition duration-700 ease-brand hover:scale-105"
+              />
+              <div className="absolute inset-x-0 bottom-0 rounded-b-[2rem] bg-gradient-to-t from-bark/90 to-transparent p-6 text-sand">
+                <p className="text-sm uppercase tracking-[0.35em] text-sand/80">Selected finish</p>
+                <p className="mt-2 text-2xl font-semibold">{selectedSwatch.name}</p>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      <WhyChooseSection>
+        <div className="grid gap-10 xl:grid-cols-[0.55fr_0.45fr] xl:items-start">
+          <div className="space-y-6">
+            <SectionHeader
+              eyebrow="How we build"
+              title="How We Bring Your Vision to Life"
+              description="An elegant, step-by-step process that ensures clarity, quality, and a refined final outcome."
+              className="max-w-3xl"
+            />
+            <div className="space-y-6">
+              {projectTimeline.map((step, index) => (
+                <motion.div
+                  key={step.title}
+                  initial={{ opacity: 0, y: 22 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.25 }}
+                  transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1], delay: index * 0.08 }}
+                  className="relative overflow-hidden rounded-[1.75rem] border border-bark/10 bg-white p-6 shadow-soft"
+                >
+                  <div className="absolute left-5 top-5 flex h-11 w-11 items-center justify-center rounded-2xl bg-oak-100 text-oak-700">
+                    <step.Icon size={18} aria-hidden="true" />
+                  </div>
+                  <div className="ml-16 space-y-2">
+                    <h3 className="text-xl font-semibold text-bark">{step.title}</h3>
+                    <p className="text-sm leading-7 text-bark/70">{step.description}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+          <div className="relative">
+            <div className="absolute left-5 top-10 hidden h-[calc(100%-3rem)] w-px bg-bark/10 lg:block" />
+            <div className="grid gap-5 lg:grid-cols-1">
+              {projectTimeline.map((step, index) => (
+                <div key={step.title} className="relative rounded-[1.75rem] border border-bark/10 bg-sand p-6 shadow-soft">
+                  <div className="absolute left-5 top-5 flex h-11 w-11 items-center justify-center rounded-2xl bg-bark text-sand">
+                    <span className="text-sm font-semibold">{index + 1}</span>
+                  </div>
+                  <div className="ml-16">
+                    <p className="text-sm uppercase tracking-[0.3em] text-bark/60">Step {index + 1}</p>
+                    <h3 className="mt-3 text-xl font-semibold text-bark">{step.title}</h3>
+                    <p className="mt-2 text-sm leading-7 text-bark/70">{step.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </WhyChooseSection>
+
+      <TestimonialsSection>
             <motion.div
               initial={{ opacity: 0, x: -22 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -237,9 +615,7 @@ export function Home() {
                 ))}
               </div>
             </motion.div>
-          </div>
-        </div>
-      </section>
+      </TestimonialsSection>
 
       <FeaturedProjectsSection>
         <div className="grid gap-7">
@@ -303,6 +679,32 @@ export function Home() {
           ))}
         </div>
       </TestimonialsSection>
+
+      <section ref={statsRef} className="section-gap bg-sand/10">
+        <div className="container-wide">
+          <SectionHeader
+            eyebrow="Established excellence"
+            title="Craftsmanship backed by meaningful metrics"
+            description="Subtle, animated statistics that reflect our dedication to quality workmanship, client satisfaction, and long-lasting luxury."
+            className="mb-8 max-w-3xl"
+          />
+          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+            {statistics.map((stat, index) => (
+              <motion.article
+                key={stat.label}
+                initial={{ opacity: 0, y: 22 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.35 }}
+                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: index * 0.08 }}
+                className="rounded-[1.75rem] border border-bark/10 bg-white p-8 shadow-soft"
+              >
+                <p className="text-sm uppercase tracking-[0.3em] text-bark/60">{stat.label}</p>
+                <p className="mt-6 text-5xl font-semibold text-bark">{formatStat(statCounts[index])}</p>
+              </motion.article>
+            ))}
+          </div>
+        </div>
+      </section>
 
       <CallToActionSection>
         <div className="mx-auto max-w-3xl text-center">
