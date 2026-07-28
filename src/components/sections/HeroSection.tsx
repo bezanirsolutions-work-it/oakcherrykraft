@@ -22,6 +22,12 @@ export function HeroSection({ children }: HeroSectionProps) {
   const heroRef = useRef<HTMLElement | null>(null);
 
   const handleScrollClick = useCallback(() => {
+    const target = document.getElementById('explore-collection');
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+
     const el = heroRef.current?.nextElementSibling as HTMLElement | null;
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
@@ -93,7 +99,7 @@ export function HeroSection({ children }: HeroSectionProps) {
             </motion.div>
           </motion.div>
 
-          <motion.div variants={item} className="mt-16 grid gap-4 rounded-[22px] border border-[#d9c3a6]/70 bg-[rgba(255,250,244,0.88)] p-5 shadow-[0_16px_45px_rgba(46,36,28,0.08)] backdrop-blur-sm sm:grid-cols-2 xl:grid-cols-4 xl:gap-5">
+          <motion.div variants={item} className="mt-16 grid gap-4 rounded-[22px] border border-[#d9c3a6]/70 bg-[rgba(255,250,244,0.88)] p-5 shadow-[0_16px_45px_rgba(46,36,28,0.08)] backdrop-blur-sm sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4 xl:gap-5">
             {[
               { title: 'Crafted to Order', subtitle: 'Made just for you' },
               { title: 'Premium Hardwoods', subtitle: 'Sustainably sourced' },

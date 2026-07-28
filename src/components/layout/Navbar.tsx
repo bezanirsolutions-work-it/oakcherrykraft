@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { Link, NavLink } from 'react-router-dom';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import logoPath from '../../../public/assets/logo/LOGO.png';
 
 const links = [
@@ -15,7 +15,15 @@ const links = [
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const activeClass = 'text-bark border-bark/80';
+
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 16);
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const navItems = useMemo(
     () =>
@@ -37,13 +45,21 @@ export function Navbar() {
   );
 
   return (
-    <header className="sticky top-0 z-50 border-b border-bark/10 bg-sand/90 shadow-soft backdrop-blur-xl transition duration-300 ease-brand">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-3 sm:px-8 sm:py-4 lg:px-10">
+    <header className={`sticky top-0 z-50 border-b border-bark/10 bg-sand/90 shadow-soft backdrop-blur-xl transition duration-300 ease-brand ${isScrolled ? 'py-0' : ''}`}>
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-4 sm:px-8 sm:py-4 lg:px-10">
         <Link to="/" className="flex items-center gap-3 text-sm font-semibold tracking-tight text-bark">
-          <img src={logoPath} alt="Oak Cherry Kraft logo" className="h-10 w-10 rounded-full object-contain shadow-sm sm:h-11 sm:w-11" />
+          <img
+            src={logoPath}
+            alt="Oak Cherry Kraft logo"
+            className={`h-12 w-12 rounded-full object-contain shadow-sm transition-all duration-300 ease-brand ${isScrolled ? 'h-10 w-10' : 'sm:h-14 sm:w-14'}`}
+          />
           <div className="flex flex-col leading-tight">
-            <span className="text-[0.68rem] font-semibold uppercase tracking-[0.25em] text-bark/90 sm:text-xs">Oak Cherry Kraft</span>
-            <span className="hidden text-[0.68rem] uppercase tracking-[0.3em] text-bark/60 sm:block">Artistry Limited</span>
+            <span className="text-[0.71rem] font-semibold uppercase tracking-[0.25em] text-bark/90 sm:text-[0.78rem]">
+              Oak Cherry Kraft
+            </span>
+            <span className="hidden text-[0.68rem] uppercase tracking-[0.3em] text-bark/60 sm:block">
+              Artistry Limited
+            </span>
           </div>
         </Link>
 

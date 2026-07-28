@@ -98,7 +98,7 @@ const featuredProjectItem = featuredProjects[0] as Project;
 const projectOfMonth: Project = featuredProjects.length > 0
   ? {
       ...featuredProjectItem,
-      location: featuredProjectItem.location ?? 'Lekki, Lagos',
+      location: 'Ose Olorun Food Canteen, Abuja',
       material: featuredProjectItem.material ?? 'Mahogany & White Oak',
       finish: featuredProjectItem.finish ?? 'Hand-rubbed oil & beeswax',
       completion: featuredProjectItem.completion ?? '10 weeks',
@@ -130,11 +130,6 @@ const materialSwatches = [
 ];
 
 const projectTimeline = [
-  {
-    title: 'Consultation',
-    description: 'Define your vision with a personal studio brief.',
-    Icon: MessageSquare,
-  },
   {
     title: 'Measurements',
     description: 'Detailed site dimensions ensure a precise fit.',
@@ -312,12 +307,14 @@ export function Home() {
       </section>
 
       <FeaturedCollectionsSection>
-        <SectionHeader
-          eyebrow="Explore the collection"
-          title="Furniture for the way you want to live."
-          description="From a statement dining table to a complete bespoke installation, each piece is made to feel unmistakably yours."
-          className="mb-6"
-        />
+        <section id="explore-collection">
+          <SectionHeader
+            eyebrow="Explore the collection"
+            title="Furniture for the way you want to live."
+            description="From a statement dining table to a complete bespoke installation, each piece is made to feel unmistakably yours."
+            className="mb-6"
+          />
+        </section>
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.12 }} variants={sectionStagger} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {categoryCards.map((category) => (
             <MotionLink
@@ -518,26 +515,6 @@ export function Home() {
               description="An elegant, step-by-step process that ensures clarity, quality, and a refined final outcome."
               className="max-w-3xl"
             />
-            <div className="space-y-6">
-              {projectTimeline.map((step, index) => (
-                <motion.div
-                  key={step.title}
-                  initial={{ opacity: 0, y: 22 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.25 }}
-                  transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1], delay: index * 0.08 }}
-                  className="relative overflow-hidden rounded-[1.75rem] border border-bark/10 bg-white p-6 shadow-soft"
-                >
-                  <div className="absolute left-5 top-5 flex h-11 w-11 items-center justify-center rounded-2xl bg-oak-100 text-oak-700">
-                    <step.Icon size={18} aria-hidden="true" />
-                  </div>
-                  <div className="ml-16 space-y-2">
-                    <h3 className="text-xl font-semibold text-bark">{step.title}</h3>
-                    <p className="text-sm leading-7 text-bark/70">{step.description}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
           </div>
           <div className="relative">
             <div className="absolute left-5 top-10 hidden h-[calc(100%-3rem)] w-px bg-bark/10 lg:block" />
