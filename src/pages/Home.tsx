@@ -292,13 +292,16 @@ export function Home() {
 
       <HeroSection />
 
-      <section className="container-wide mt-14 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="container-wide mt-12 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
         {heroTrustBadges.map((badge) => (
-          <Card key={badge.title} className="flex min-h-[220px] flex-col gap-4 rounded-[1.75rem] border border-bark/10 bg-white p-6 shadow-soft">
+          <Card
+            key={badge.title}
+            className="bg-white/95 rounded-2xl border border-neutral-200 shadow-sm p-5 flex items-center gap-4 min-h-[180px] transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+          >
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f4ece2] text-[#aa7f57]">
               <Sparkles className="h-6 w-6" />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1">
               <h3 className="text-base font-semibold text-bark">{badge.title}</h3>
               <p className="text-sm leading-6 text-bark/70">{badge.description}</p>
             </div>
