@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, Clock3, MapPin } from 'lucide-react';
+import { PageHeader } from '../components/layout/PageHeader';
 import { PageContainer } from '../components/layout/PageContainer';
 import {
   AnimatedImage,
@@ -176,6 +177,7 @@ export function ProductDetail() {
         <title>{product.name} | Oak Cherry Kraft</title>
         <meta name="description" content={product.summary || product.description || 'Premium handcrafted furniture'} />
       </Helmet>
+      <PageHeader title={product.name} subtitle={product.summary || product.description} showBreadcrumb />
       <Breadcrumb
         items={[
           { label: 'Home', path: '/' },
@@ -183,6 +185,7 @@ export function ProductDetail() {
           { label: product.category, path: `/products/${categorySlug}` },
           { label: product.name },
         ]}
+        className="pt-6"
       />
       <motion.section initial="hidden" animate="visible" variants={fadeIn} className="space-y-8">
         <SectionHeader eyebrow="Product details" title={product.name} description={product.summary || product.description} />

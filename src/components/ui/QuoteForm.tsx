@@ -7,6 +7,7 @@ import { Button } from './Button';
 import { Card } from './Card';
 import { cn } from '../../lib/cn';
 import { supabase } from '../../lib/supabase';
+import { getEstimatedPriceRange } from '../../utils/priceEstimator';
 
 export const categories = [
   'Dining & entertaining',
@@ -141,6 +142,7 @@ export function QuoteForm({ className = '', defaultValues, onSuccess }: QuoteFor
     setStatus('submitting');
     setFeedbackMessage('');
     const quoteRequestId = crypto.randomUUID();
+    const estimatedPrice = getEstimatedPriceRange(values);
     const payload = {
       id: quoteRequestId,
       full_name: values.name,
@@ -149,7 +151,7 @@ export function QuoteForm({ className = '', defaultValues, onSuccess }: QuoteFor
       project_type: values.productType,
       room_type: values.category,
       dimensions: `${values.width} x ${values.depth} x ${values.height}`,
-      budget: values.budgetRange,
+      budget: values.budgetRange?.toString() ?? null,
       notes: values.additionalNotes ?? '',
       configuration: {
         product: values.product ?? null,
@@ -171,9 +173,13 @@ export function QuoteForm({ className = '', defaultValues, onSuccess }: QuoteFor
       },
     };
 
+    console.log('Quote Request Payload:', payload);
+    console.log('Estimated Price Range:', estimatedPrice, 'type:', typeof estimatedPrice);
+
     const { error } = await supabase.from('quote_requests').insert(payload);
 
     if (error) {
+      console.error('Quote Error:', error);
       setStatus('error');
       setFeedbackMessage(
         error.message || 'There was a problem submitting your request. Please try again or contact the studio directly.',
@@ -182,16 +188,21 @@ export function QuoteForm({ className = '', defaultValues, onSuccess }: QuoteFor
     }
 
     // save configurator selection for admin review
-    const { error: selectionError } = await supabase.from('configurator_selections').insert({
+    const configuratorPayload = {
       quote_request_id: quoteRequestId,
       material: values.woodSpecies ?? null,
       finish: values.finish ?? null,
       colour: values.colour ?? null,
       accessories: values.accessories ? values.accessories.split(',').map((s) => s.trim()) : [],
-      estimated_price: null,
-    });
+      estimated_price: String(estimatedPrice),
+    };
+
+    console.log('Configurator Payload:', configuratorPayload);
+
+    const { error: selectionError } = await supabase.from('configurator_selections').insert(configuratorPayload);
 
     if (selectionError) {
+      console.error('Configurator Error:', selectionError);
       setStatus('error');
       setFeedbackMessage(selectionError.message || 'There was a problem saving your configurator selections.');
       return;

@@ -10,9 +10,11 @@ import {
   Sparkles,
   Truck,
 } from 'lucide-react';
+import { PageHeader } from '../components/layout/PageHeader';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Breadcrumb, Button, Card, SectionHeader } from '../components/ui';
 import { QuoteFormValues, categories, productTypes, woodSpecies, finishes, budgetRanges } from '../components/ui/QuoteForm';
+import { getEstimatedPriceRange } from '../utils/priceEstimator';
 import { supabase } from '../lib/supabase';
 
 const stepDefinitions = [
@@ -148,6 +150,7 @@ export function Configurator() {
       { label: 'Dimensions', value: configuration.width && configuration.depth && configuration.height ? `${configuration.width} × ${configuration.depth} × ${configuration.height} cm` : 'Not set' },
       { label: 'Wood species', value: configuration.woodSpecies || 'Not selected' },
       { label: 'Finish', value: configuration.finish || 'Not selected' },
+      { label: 'Estimated price', value: getEstimatedPriceRange(configuration) },
       { label: 'Colour', value: configuration.colour || 'Not selected' },
       { label: 'Leg style', value: configuration.legStyle || 'Not selected' },
       { label: 'Accessories', value: configuration.accessories || 'None' },
@@ -494,7 +497,8 @@ export function Configurator() {
         <meta name="description" content="Build your premium custom furniture specification and send a quote request with tailored selections." />
       </Helmet>
 
-      <Breadcrumb items={[{ label: 'Home', path: '/' }, { label: 'Design Your Furniture' }]} />
+      <PageHeader title="Design Your Furniture" subtitle="Create a tailored furniture brief with premium materials, dimensions, and finish details." showBreadcrumb />
+      <Breadcrumb items={[{ label: 'Home', path: '/' }, { label: 'Design Your Furniture' }]} className="pt-6" />
 
       <section className="grid gap-10 xl:grid-cols-[0.95fr_0.45fr] xl:items-start">
         <motion.div
@@ -567,22 +571,24 @@ export function Configurator() {
                 {submissionMessage}
               </div>
             ) : null}
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex gap-3">
-                <Button type="button" variant="secondary" size="md" disabled={step === 0 || submissionStatus === 'submitting'} onClick={handlePrev}>
-                  Back
-                </Button>
-                {step < stepDefinitions.length - 1 ? (
-                  <Button type="button" size="md" disabled={!stepComplete || submissionStatus === 'submitting'} onClick={handleNext}>
-                    Continue
+            <div className="mt-8 rounded-[1.5rem] border border-bark/10 bg-sand/70 p-4 shadow-sm sm:p-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <Button type="button" variant="secondary" size="md" disabled={step === 0 || submissionStatus === 'submitting'} onClick={handlePrev}>
+                    Back
                   </Button>
-                ) : (
-                  <Button type="button" size="md" icon={<ArrowUpRight size={17} aria-hidden="true" />} disabled={submissionStatus === 'submitting'} onClick={submitDesign}>
-                    Finish and request quote
-                  </Button>
-                )}
+                  {step < stepDefinitions.length - 1 ? (
+                    <Button type="button" size="md" disabled={!stepComplete || submissionStatus === 'submitting'} onClick={handleNext}>
+                      Continue
+                    </Button>
+                  ) : (
+                    <Button type="button" size="md" className="bg-[#2E241C] text-[#F7F1E8] shadow-[0_12px_32px_rgba(46,36,28,0.22)] hover:bg-[#1f1812]" icon={<ArrowUpRight size={17} aria-hidden="true" />} disabled={submissionStatus === 'submitting'} onClick={submitDesign}>
+                      Finish and request quote
+                    </Button>
+                  )}
+                </div>
+                <p className="text-sm leading-7 text-bark/70">Finish now to save your configurator selections as a quote request with our studio.</p>
               </div>
-              <p className="text-sm leading-7 text-bark/70">Finish now to save your configurator selections as a quote request with our studio.</p>
             </div>
           </Card>
         </motion.div>

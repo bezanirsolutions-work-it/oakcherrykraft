@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Mail, MapPin, MessageCircle, Phone, Send, Clock3, Instagram } from 'lucide-react';
+import { PageHeader } from '../components/layout/PageHeader';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Button, Card, SectionHeader } from '../components/ui';
 import { supabase } from '../lib/supabase';
@@ -66,6 +67,8 @@ export function Contact() {
         <title>Contact | Oak Cherry Kraft</title>
         <meta name="description" content="Contact Oak Cherry Kraft for bespoke furniture, quotes, and project guidance across Nigeria." />
       </Helmet>
+      <PageHeader title="Let’s Build Something Beautiful Together" subtitle="Reach out to discuss custom orders, project timelines, or design support for your space. We serve discerning clients across Nigeria." />
+
       <motion.section initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={fadeIn} className="max-w-3xl">
         <SectionHeader eyebrow="Contact the studio" title="Bring your furniture vision to life with a conversation." description="Reach out to discuss custom orders, project timelines, or design support for your space. We serve discerning clients across Nigeria." />
       </motion.section>

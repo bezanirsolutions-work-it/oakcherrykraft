@@ -18,7 +18,7 @@ interface ConfiguratorSelectionRow {
   finish: string | null;
   colour: string | null;
   accessories: Record<string, unknown> | null;
-  estimated_price: number | null;
+  estimated_price: string | null;
 }
 
 const statusOptions = ['pending', 'reviewing', 'quoted', 'accepted', 'rejected'] as const;
@@ -634,9 +634,7 @@ export function Quotes() {
                       <div>
                         <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Estimated price</p>
                         <p className="mt-2 text-base font-semibold text-bark">
-                          {selectedQuote.configurator_selections[0].estimated_price != null
-                            ? `₦${selectedQuote.configurator_selections[0].estimated_price.toFixed(2)}`
-                            : 'Not provided'}
+                          {selectedQuote.configurator_selections[0].estimated_price ?? 'Not provided'}
                         </p>
                       </div>
                       <div className="sm:col-span-2">
@@ -700,7 +698,7 @@ export function Quotes() {
                           </div>
                           <div>
                             <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Estimated price</p>
-                            <p className="mt-2 text-base font-semibold text-bark">{selection.estimated_price != null ? `₦${selection.estimated_price.toFixed(2)}` : 'N/A'}</p>
+                            <p className="mt-2 text-base font-semibold text-bark">{selection.estimated_price ?? 'N/A'}</p>
                           </div>
                         </div>
                         <div className="mt-4 rounded-[1.5rem] border border-bark/10 bg-sand p-4">

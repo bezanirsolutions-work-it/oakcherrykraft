@@ -4,6 +4,7 @@ import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, MapPin } from 'lucide-react';
 import { projects } from '../data/projects';
+import { PageHeader } from '../components/layout/PageHeader';
 import { PageContainer } from '../components/layout/PageContainer';
 import { AnimatedImage, Button, Card, Breadcrumb, EmptyState, SectionHeader } from '../components/ui';
 
@@ -34,7 +35,8 @@ export function ProjectDetail() {
         <title>{project.title} | Oak Cherry Kraft</title>
         <meta name="description" content={project.description} />
       </Helmet>
-      <Breadcrumb items={[{ label: 'Home', path: '/' }, { label: 'Portfolio', path: '/projects' }, { label: project.title }]} />
+      <PageHeader title={project.title} subtitle={project.description} showBreadcrumb />
+      <Breadcrumb items={[{ label: 'Home', path: '/' }, { label: 'Portfolio', path: '/projects' }, { label: project.title }]} className="pt-6" />
       <motion.section initial="hidden" animate="visible" variants={fadeIn} className="space-y-10">
         <SectionHeader eyebrow="Project details" title={project.title} description={project.description} />
         <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-start lg:gap-16">
