@@ -44,12 +44,12 @@ const MotionLink = motion(Link);
 const founderPortrait = new URL('../../FOUNDER.jpeg', import.meta.url).href;
 
 const categoryCards = [
-  { title: 'Dining Tables', description: 'Sculptural centrepieces made for long conversations and memorable gatherings.', image: '/assets/hero/intro-picture.png' },
-  { title: 'Living Room Furniture', description: 'Warm, considered forms that bring depth and ease to everyday living.', image: '/assets/living-room-cover.jpeg' },
-  { title: 'Bedroom Furniture', description: 'Quietly luxurious pieces designed around rest, ritual, and lasting comfort.', image: '/assets/bedroom-furniture-cover.jpeg' },
-  { title: 'Office Furniture', description: 'Confident executive desks and storage that make focused work feel elevated.', image: '/assets/office-furniture-cover.jpeg' },
-  { title: 'Kitchen Furniture', description: 'Tailored cabinetry and fitted storage with practical intelligence and a beautiful material presence.', image: '/assets/19.jpeg' },
-  { title: 'Outdoor Furniture', description: 'Durable outdoor forms for slow mornings, open-air dinners, and generous hosting.', image: '/assets/outdoor-furniture.jpeg' },
+  { title: 'Dining Furniture', description: 'Sculptural centrepieces made for long conversations and memorable gatherings.', image: '/assets/hero/intro-picture.png', queryValue: 'Dining' },
+  { title: 'Living Room Furniture', description: 'Warm, considered forms that bring depth and ease to everyday living.', image: '/assets/living-room-cover.jpeg', queryValue: 'Living Room' },
+  { title: 'Bedroom Furniture', description: 'Quietly luxurious pieces designed around rest, ritual, and lasting comfort.', image: '/assets/bedroom-furniture-cover.jpeg', queryValue: 'Bedroom' },
+  { title: 'Office Furniture', description: 'Confident executive desks and storage that make focused work feel elevated.', image: '/assets/office-furniture-cover.jpeg', queryValue: 'Office' },
+  { title: 'Kitchen Furniture', description: 'Tailored cabinetry and fitted storage with practical intelligence and a beautiful material presence.', image: '/assets/19.jpeg', queryValue: 'Kitchen' },
+  { title: 'Outdoor Furniture', description: 'Durable outdoor forms for slow mornings, open-air dinners, and generous hosting.', image: '/assets/outdoor-furniture.jpeg', queryValue: null },
 ];
 
 const heroTrustBadges = [
@@ -345,7 +345,7 @@ const normalizeCategorySlug = (category: string) =>
           {categoryCards.map((category) => (
             <MotionLink
               key={category.title}
-              to="/products"
+              to={category.queryValue ? `/products?category=${encodeURIComponent(category.queryValue)}` : '/products'}
               variants={reveal}
               whileHover={{ scale: 1.02 }}
               className="group relative overflow-hidden rounded-[1.5rem] bg-bark text-sand shadow-card transition duration-300 hover:-translate-y-1 focus:outline-none focus-visible:ring-4 focus-visible:ring-oak-200"
