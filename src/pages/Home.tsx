@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion, useInView } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -16,17 +16,19 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import {
-  CallToActionSection,
   FeaturedCollectionsSection,
-  FeaturedProjectsSection,
   HeroSection,
-  TestimonialsSection,
-  WhyChooseSection,
 } from '../components/sections';
+
+const FeaturedProjectsSection = lazy(() => import('../components/sections/FeaturedProjectsSection').then((module) => ({ default: module.FeaturedProjectsSection })));
+const TestimonialsSection = lazy(() => import('../components/sections/TestimonialsSection').then((module) => ({ default: module.TestimonialsSection })));
+const WhyChooseSection = lazy(() => import('../components/sections/WhyChooseSection').then((module) => ({ default: module.WhyChooseSection })));
+const CallToActionSection = lazy(() => import('../components/sections/CallToActionSection').then((module) => ({ default: module.CallToActionSection })));
 import { PageContainer } from '../components/layout/PageContainer';
 import { Button, Card, SectionHeader } from '../components/ui';
 import { SectionTitle } from '../components/base/SectionTitle';
 import { products } from '../data/products';
+import { getCachedData } from '../lib/cache';
 import { supabase } from '../lib/supabase';
 import { fetchFeaturedProjects, fetchProjectOfMonth, type Project } from '../lib/projects';
 
@@ -44,13 +46,32 @@ const MotionLink = motion(Link);
 const founderPortrait = new URL('../../FOUNDER.jpeg', import.meta.url).href;
 
 const categoryCards = [
-  { title: 'Dining Furniture', description: 'Sculptural centrepieces made for long conversations and memorable gatherings.', image: '/assets/hero/intro-picture.png', queryValue: 'Dining' },
-  { title: 'Living Room Furniture', description: 'Warm, considered forms that bring depth and ease to everyday living.', image: '/assets/living-room-cover.jpeg', queryValue: 'Living Room' },
-  { title: 'Bedroom Furniture', description: 'Quietly luxurious pieces designed around rest, ritual, and lasting comfort.', image: '/assets/bedroom-furniture-cover.jpeg', queryValue: 'Bedroom' },
-  { title: 'Office Furniture', description: 'Confident executive desks and storage that make focused work feel elevated.', image: '/assets/office-furniture-cover.jpeg', queryValue: 'Office' },
-  { title: 'Kitchen Furniture', description: 'Tailored cabinetry and fitted storage with practical intelligence and a beautiful material presence.', image: '/assets/19.jpeg', queryValue: 'Kitchen' },
-  { title: 'Outdoor Furniture', description: 'Durable outdoor forms for slow mornings, open-air dinners, and generous hosting.', image: '/assets/outdoor-furniture.jpeg', queryValue: null },
+  { title: 'Dining Furniture', description: 'Sculptural centrepieces made for long conversations and memorable gatherings.', image: '/assets/hero/intro-picture.webp', queryValue: 'Dining' },
+  { title: 'Living Room Furniture', description: 'Warm, considered forms that bring depth and ease to everyday living.', image: '/assets/living-room-cover.webp', queryValue: 'Living Room' },
+  { title: 'Bedroom Furniture', description: 'Quietly luxurious pieces designed around rest, ritual, and lasting comfort.', image: '/assets/bedroom-furniture-cover.webp', queryValue: 'Bedroom' },
+  { title: 'Office Furniture', description: 'Confident executive desks and storage that make focused work feel elevated.', image: '/assets/office-furniture-cover.webp', queryValue: 'Office' },
+  { title: 'Kitchen Furniture', description: 'Tailored cabinetry and fitted storage with practical intelligence and a beautiful material presence.', image: '/assets/19.webp', queryValue: 'Kitchen' },
+  { title: 'Outdoor Furniture', description: 'Durable outdoor forms for slow mornings, open-air dinners, and generous hosting.', image: '/assets/outdoor-furniture.webp', queryValue: null },
 ];
+
+const featuredProductSelectColumns = [
+  'id',
+  'name',
+  'category',
+  'summary',
+  'price',
+  'wood',
+  'availability',
+  'image',
+  'cover_image',
+  'image_urls',
+  'slug',
+  'status',
+  'is_active',
+  'featured',
+  'is_featured',
+  'featured_product',
+].join(',');
 
 const heroTrustBadges = [
   { title: 'Custom Furniture Crafted to Order', description: 'Every piece is made to your exact specification with meticulous craftsmanship.' },
@@ -88,7 +109,7 @@ const defaultProjectOfMonth: Project = {
   category: 'Residential',
   location: 'Lekki, Lagos',
   status: 'Completed',
-  cover_image: '/assets/hero/intro-picture.png',
+  cover_image: '/assets/hero/intro-picture.webp',
   gallery_images: [],
   budget_range: '',
   duration: '11 weeks',
@@ -103,10 +124,10 @@ const defaultProjectOfMonth: Project = {
 };
 
 const materialSwatches = [
-  { name: 'Mahogany', description: 'Rich, warm undertones with deep luxury.', color: '#5b2b1e', previewImage: '/assets/19.jpeg' },
-  { name: 'Walnut', description: 'Soft brown depth with velvety grain.', color: '#4a2b1d', previewImage: '/assets/living-room-cover.jpeg' },
-  { name: 'Oak', description: 'Timeless golden warmth with crisp character.', color: '#aa7f57', previewImage: '/assets/hero/intro-picture.png' },
-  { name: 'Teak', description: 'Warm amber glow with durable appeal.', color: '#8f6236', previewImage: '/assets/outdoor-furniture.jpeg' },
+  { name: 'Mahogany', description: 'Rich, warm undertones with deep luxury.', color: '#5b2b1e', previewImage: '/assets/19.webp' },
+  { name: 'Walnut', description: 'Soft brown depth with velvety grain.', color: '#4a2b1d', previewImage: '/assets/living-room-cover.webp' },
+  { name: 'Oak', description: 'Timeless golden warmth with crisp character.', color: '#aa7f57', previewImage: '/assets/hero/intro-picture.webp' },
+  { name: 'Teak', description: 'Warm amber glow with durable appeal.', color: '#8f6236', previewImage: '/assets/outdoor-furniture.webp' },
   { name: 'Ebony', description: 'Bold dark finish with dramatic presence.', color: '#18120e' },
   { name: 'White Ash', description: 'Creamy neutral tone with subtle texture.', color: '#d9c9b1' },
   { name: 'Beeswax', description: 'Soft sheen and gentle honey warmth.', color: '#c79c50' },
@@ -149,10 +170,10 @@ const projectTimeline = [
 ];
 
 const statistics = [
-  { label: 'Projects Completed', value: 250 },
-  { label: 'Happy Clients', value: 150 },
-  { label: 'Years Experience', value: 12 },
-  { label: 'States Served', value: 8 },
+  { label: 'Projects Completed', value: 100 },
+  { label: 'Happy Clients', value: 100 },
+  { label: 'Years Experience', value: 3 },
+  { label: 'States Served', value: 11 },
 ];
 
 const founderValues = [
@@ -160,34 +181,6 @@ const founderValues = [
   { title: 'Quality Assurance', Icon: ShieldCheck },
   { title: 'Thoughtful Design', Icon: Leaf },
 ];
-
-function useCounter(target: number, active: boolean) {
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    if (!active) return;
-
-    let start: number | null = null;
-    let frame = 0;
-    const duration = 1800;
-
-    const step = (timestamp: number) => {
-      if (start === null) start = timestamp;
-      const progress = Math.min((timestamp - start) / duration, 1);
-      setCount(Math.round(progress * target));
-
-      if (progress < 1) {
-        frame = requestAnimationFrame(step);
-      }
-    };
-
-    frame = requestAnimationFrame(step);
-
-    return () => cancelAnimationFrame(frame);
-  }, [active, target]);
-
-  return count;
-}
 
 function formatStat(value: number) {
   return `${value}+`;
@@ -225,32 +218,35 @@ export function Home() {
       setIsFeaturedLoading(true);
       setFeaturedError(null);
 
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('status', 'published')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
+      try {
+        const activeProducts = await getCachedData<Product[]>(`products:homepage-featured`, 10 * 60 * 1000, async () => {
+          const { data, error } = await supabase
+            .from('products')
+            .select(featuredProductSelectColumns)
+            .eq('status', 'published')
+            .eq('is_active', true)
+            .order('created_at', { ascending: false });
 
-      if (error) {
+          if (error) throw error;
+          return (data ?? []) as Product[];
+        });
+
+        const featuredItems = activeProducts.filter(
+          (product) =>
+            product.featured === true ||
+            product.is_featured === true ||
+            product.featured_product === true
+        );
+
+        setFeaturedProducts(
+          featuredItems.length > 0 ? featuredItems.slice(0, 4) : activeProducts.slice(0, 4)
+        );
+      } catch (error) {
         console.error('Featured products query error:', error);
-        setFeaturedError(error.message);
+        setFeaturedError(error instanceof Error ? error.message : 'Unable to load featured products.');
+      } finally {
         setIsFeaturedLoading(false);
-        return;
       }
-
-      const activeProducts = (data ?? []) as Product[];
-      const featuredItems = activeProducts.filter(
-        (product) =>
-          product.featured === true ||
-          product.is_featured === true ||
-          product.featured_product === true
-      );
-
-      setFeaturedProducts(
-        featuredItems.length > 0 ? featuredItems.slice(0, 4) : activeProducts.slice(0, 4)
-      );
-      setIsFeaturedLoading(false);
     };
 
     fetchFeaturedProducts();
@@ -265,11 +261,12 @@ export function Home() {
         const [featured, projectOfMonthData] = await Promise.all([fetchFeaturedProjects(), fetchProjectOfMonth()]);
         if (mounted) {
           setFeaturedProjects(featured);
-          setProjectOfMonth(projectOfMonthData ?? null);
+          setProjectOfMonth(projectOfMonthData ?? defaultProjectOfMonth);
         }
       } catch (err) {
         if (mounted) {
-          setProjectsError(err instanceof Error ? err.message : 'Unable to load project highlights.');
+          setFeaturedProjects([]);
+          setProjectOfMonth(defaultProjectOfMonth);
         }
       } finally {
         if (mounted) setIsProjectsLoading(false);
@@ -284,15 +281,6 @@ export function Home() {
 
   const [selectedSwatch, setSelectedSwatch] = useState(materialSwatches[0]);
   const previewImage = useMemo(() => selectedSwatch.previewImage ?? projectOfMonth?.cover_image ?? defaultProjectOfMonth.cover_image ?? '', [selectedSwatch, projectOfMonth?.cover_image]);
-  const statsRef = useRef<HTMLDivElement | null>(null);
-  const statsInView = useInView(statsRef, { once: true, amount: 0.25 });
-  const [statsStarted, setStatsStarted] = useState(false);
-
-  useEffect(() => {
-    if (statsInView) setStatsStarted(true);
-  }, [statsInView]);
-
-  const statCounts = statistics.map((stat) => useCounter(stat.value, statsStarted));
 
 const normalizeCategorySlug = (category: string) =>
   category
@@ -514,35 +502,37 @@ const normalizeCategorySlug = (category: string) =>
         </div>
       </section>
 
-      <WhyChooseSection>
-        <div className="grid gap-10 xl:grid-cols-[0.55fr_0.45fr] xl:items-start">
-          <div className="space-y-6">
-            <SectionHeader
-              eyebrow="How we build"
-              title="How We Bring Your Vision to Life"
-              description="An elegant, step-by-step process that ensures clarity, quality, and a refined final outcome."
-              className="max-w-3xl"
-            />
-          </div>
-          <div className="relative">
-            <div className="absolute left-5 top-10 hidden h-[calc(100%-3rem)] w-px bg-bark/10 lg:block" />
-            <div className="grid gap-5 lg:grid-cols-1">
-              {projectTimeline.map((step, index) => (
-                <div key={step.title} className="relative rounded-[1.75rem] border border-bark/10 bg-sand p-6 shadow-soft">
-                  <div className="absolute left-5 top-5 flex h-11 w-11 items-center justify-center rounded-2xl bg-bark text-sand">
-                    <span className="text-sm font-semibold">{index + 1}</span>
+      <Suspense fallback={null}>
+        <WhyChooseSection>
+          <div className="grid gap-10 xl:grid-cols-[0.55fr_0.45fr] xl:items-start">
+            <div className="space-y-6">
+              <SectionHeader
+                eyebrow="How we build"
+                title="How We Bring Your Vision to Life"
+                description="An elegant, step-by-step process that ensures clarity, quality, and a refined final outcome."
+                className="max-w-3xl"
+              />
+            </div>
+            <div className="relative">
+              <div className="absolute left-5 top-10 hidden h-[calc(100%-3rem)] w-px bg-bark/10 lg:block" />
+              <div className="grid gap-5 lg:grid-cols-1">
+                {projectTimeline.map((step, index) => (
+                  <div key={step.title} className="relative rounded-[1.75rem] border border-bark/10 bg-sand p-6 shadow-soft">
+                    <div className="absolute left-5 top-5 flex h-11 w-11 items-center justify-center rounded-2xl bg-bark text-sand">
+                      <span className="text-sm font-semibold">{index + 1}</span>
+                    </div>
+                    <div className="ml-16">
+                      <p className="text-sm uppercase tracking-[0.3em] text-bark/60">Step {index + 1}</p>
+                      <h3 className="mt-3 text-xl font-semibold text-bark">{step.title}</h3>
+                      <p className="mt-2 text-sm leading-7 text-bark/70">{step.description}</p>
+                    </div>
                   </div>
-                  <div className="ml-16">
-                    <p className="text-sm uppercase tracking-[0.3em] text-bark/60">Step {index + 1}</p>
-                    <h3 className="mt-3 text-xl font-semibold text-bark">{step.title}</h3>
-                    <p className="mt-2 text-sm leading-7 text-bark/70">{step.description}</p>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      </WhyChooseSection>
+        </WhyChooseSection>
+      </Suspense>
 
       <TestimonialsSection>
             <motion.div
@@ -674,8 +664,9 @@ const normalizeCategorySlug = (category: string) =>
         </div>
       </FeaturedProjectsSection>
 
-      <TestimonialsSection>
-        <SectionHeader
+      <Suspense fallback={null}>
+        <TestimonialsSection>
+          <SectionHeader
           eyebrow="Client stories"
           title="The details people remember."
           description="Our work is measured not only in finish and form, but in how beautifully it becomes part of everyday life."
@@ -691,7 +682,7 @@ const normalizeCategorySlug = (category: string) =>
         </div>
       </TestimonialsSection>
 
-      <section ref={statsRef} className="section-gap bg-sand/10">
+      <section className="section-gap bg-sand/10">
         <div className="container-wide">
           <SectionHeader
             eyebrow="Established excellence"
@@ -710,7 +701,7 @@ const normalizeCategorySlug = (category: string) =>
                 className="rounded-[1.75rem] border border-bark/10 bg-white p-8 shadow-soft"
               >
                 <p className="text-sm uppercase tracking-[0.3em] text-bark/60">{stat.label}</p>
-                <p className="mt-6 text-5xl font-semibold text-bark">{formatStat(statCounts[index])}</p>
+                <p className="mt-6 text-5xl font-semibold text-bark">{formatStat(stat.value)}</p>
               </motion.article>
             ))}
           </div>
@@ -735,7 +726,8 @@ const normalizeCategorySlug = (category: string) =>
             </Button>
           </div>
         </div>
-      </CallToActionSection>
+        </CallToActionSection>
+      </Suspense>
     </PageContainer>
   );
 }

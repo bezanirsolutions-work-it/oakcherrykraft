@@ -44,7 +44,7 @@ export function About() {
           <p className="max-w-xl text-lg leading-8 text-bark/70">We work closely with each client to shape pieces that fit their architecture, rhythm, and the way they want to live.</p>
           <Button asChild icon={<ArrowUpRight size={17} aria-hidden="true" />}><Link to="/contact">Start a conversation</Link></Button>
         </motion.div>
-        <AnimatedImage src="/assets/about-page.jpeg" alt="Oak Cherry Kraft workshop and furniture" aspectRatio="3 / 5" overlay priority objectFit="contain" className="bg-sand object-center" />
+        <AnimatedImage src="/assets/about-page.webp" alt="Oak Cherry Kraft workshop and furniture" aspectRatio="3 / 5" overlay priority objectFit="contain" className="bg-sand object-center" />
       </section>
 
       <section className="grid gap-6 lg:grid-cols-3">
@@ -78,7 +78,7 @@ export function About() {
               className="w-full rounded-[2rem]"
               controls
               preload="metadata"
-              poster="/assets/about-page.jpeg"
+              poster="/assets/about-page.webp"
             >
               <source src={founderVideo} type="video/mp4" />
               Your browser does not support the video tag.

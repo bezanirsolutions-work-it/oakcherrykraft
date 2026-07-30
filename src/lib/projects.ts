@@ -1,3 +1,4 @@
+import { getCachedData } from './cache';
 import { supabase } from './supabase';
 
 export type ProjectStatus = 'Planning' | 'In Progress' | 'Completed' | 'Delivered';
@@ -80,46 +81,54 @@ export const normalizeProjectSlug = (value: string) =>
 const baseProjectQuery = () => supabase.from('projects').select(projectSelectColumns);
 
 export const fetchProjects = async (): Promise<Project[]> => {
-  const { data, error } = await baseProjectQuery()
-    .order('updated_at', { ascending: false })
-    .order('title', { ascending: true });
+  return getCachedData<Project[]>(`projects:list`, 10 * 60 * 1000, async () => {
+    const { data, error } = await baseProjectQuery()
+      .order('updated_at', { ascending: false })
+      .order('title', { ascending: true });
 
-  if (error) throw error;
-  return ((data ?? []) as unknown) as Project[];
+    if (error) throw error;
+    return ((data ?? []) as unknown) as Project[];
+  });
 };
 
 export const fetchFeaturedProjects = async (): Promise<Project[]> => {
-  const { data, error } = await baseProjectQuery()
-    .eq('featured_project', true)
-    .eq('show_in_gallery', true)
-    .eq('status', 'Completed')
-    .order('updated_at', { ascending: false })
-    .order('title', { ascending: true });
+  return getCachedData<Project[]>(`projects:featured`, 10 * 60 * 1000, async () => {
+    const { data, error } = await baseProjectQuery()
+      .eq('featured_project', true)
+      .eq('show_in_gallery', true)
+      .eq('status', 'Completed')
+      .order('updated_at', { ascending: false })
+      .order('title', { ascending: true });
 
-  if (error) throw error;
-  return ((data ?? []) as unknown) as Project[];
+    if (error) throw error;
+    return ((data ?? []) as unknown) as Project[];
+  });
 };
 
 export const fetchProjectOfMonth = async (): Promise<Project | null> => {
-  const { data, error } = await baseProjectQuery()
-    .eq('project_of_the_month', true)
-    .eq('show_in_gallery', true)
-    .eq('status', 'Completed')
-    .order('updated_at', { ascending: false })
-    .order('title', { ascending: true })
-    .maybeSingle();
+  return getCachedData<Project | null>(`projects:of-month`, 10 * 60 * 1000, async () => {
+    const { data, error } = await baseProjectQuery()
+      .eq('project_of_the_month', true)
+      .eq('show_in_gallery', true)
+      .eq('status', 'Completed')
+      .order('updated_at', { ascending: false })
+      .order('title', { ascending: true })
+      .maybeSingle();
 
-  if (error) throw error;
-  return (data as Project | null) ?? null;
+    if (error) throw error;
+    return (data as Project | null) ?? null;
+  });
 };
 
 export const fetchProject = async (slug: string): Promise<Project | null> => {
-  const { data, error } = await baseProjectQuery()
-    .eq('slug', slug)
-    .maybeSingle();
+  return getCachedData<Project | null>(`projects:${slug}`, 10 * 60 * 1000, async () => {
+    const { data, error } = await baseProjectQuery()
+      .eq('slug', slug)
+      .maybeSingle();
 
-  if (error) throw error;
-  return (data as Project | null) ?? null;
+    if (error) throw error;
+    return (data as Project | null) ?? null;
+  });
 };
 
 const buildProjectPayload = (project: Partial<Project>): Partial<Project> => ({

@@ -38,6 +38,7 @@ export function AnimatedImage({
         src={src}
         alt={alt}
         loading={priority ? 'eager' : 'lazy'}
+        decoding="async"
         className={cn(
           'h-full w-full transition duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]',
           objectFit === 'contain' ? 'object-contain' : 'object-cover',
