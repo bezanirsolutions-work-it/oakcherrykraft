@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { supabase } from './supabase';
+import { getProfileRole } from './profile';
 
 interface AuthContextType {
   isAdmin: boolean;
@@ -26,27 +27,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (authError || !session?.user?.id) {
           setIsAdmin(false);
+          setError(null);
           setIsLoading(false);
           return;
         }
 
-        const { data, error: profileError } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
-
-        if (!mounted) return;
-
-        if (profileError) {
+        try {
+          const role = await getProfileRole(session.user.id);
+          const resolvedRole = role ?? (session.user as { user_metadata?: { role?: string }; app_metadata?: { role?: string } }).user_metadata?.role ?? (session.user as { user_metadata?: { role?: string }; app_metadata?: { role?: string } }).app_metadata?.role;
+          if (!mounted) return;
+          setIsAdmin(resolvedRole === 'admin');
+        } catch (profileError) {
           console.error(profileError);
-          setError(profileError.message);
+          if (!mounted) return;
+          setError(profileError instanceof Error ? profileError.message : 'Unable to verify admin profile.');
           setIsAdmin(false);
           setIsLoading(false);
           return;
         }
-
-        setIsAdmin(data?.role === 'admin');
+        setError(null);
         setIsLoading(false);
       } catch (err) {
         if (mounted) {

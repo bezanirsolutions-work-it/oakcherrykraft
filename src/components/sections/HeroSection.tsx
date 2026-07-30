@@ -47,7 +47,7 @@ export function HeroSection({ children }: HeroSectionProps) {
         animate={{ opacity: 1, x: [0, 10, 0] }}
         transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
         style={{
-          left: '32%',
+          left: '72%',
           width: '78%',
           backgroundImage: "url('/assets/hero/GENERATED.png')",
           backgroundSize: 'cover',
