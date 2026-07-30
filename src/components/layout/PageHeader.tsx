@@ -22,7 +22,7 @@ export function PageHeader({ title, subtitle, height = 'min-h-[320px] sm:min-h-[
       <div
         className="absolute inset-0 z-0"
         style={{
-          backgroundImage: `linear-gradient(90deg, rgba(12,10,8,0.76) 0%, rgba(12,10,8,0.70) 42%, rgba(12,10,8,0.60) 68%, rgba(12,10,8,0.35) 100%), url('/assets/hero/GENERATED.png')`,
+          backgroundImage: `linear-gradient(90deg, rgba(12,10,8,0.76) 0%, rgba(12,10,8,0.70) 42%, rgba(12,10,8,0.60) 68%, rgba(12,10,8,0.35) 100%), url('/assets/hero/GENERATED.webp')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',

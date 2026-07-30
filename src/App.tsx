@@ -3,9 +3,10 @@ import { Route, Routes, useLocation } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { ErrorBoundary, Layout } from './components/layout';
 import { Home } from './pages/Home';
-import { Login } from './pages/admin/Login';
-import { AdminLayout } from './components/admin/AdminLayout';
-import { ProtectedRoute } from './components/admin/ProtectedRoute';
+
+const Login = lazy(() => import('./pages/admin/Login').then(m => ({ default: m.Login })));
+const AdminLayout = lazy(() => import('./components/admin/AdminLayout').then(m => ({ default: m.AdminLayout })));
+const ProtectedRoute = lazy(() => import('./components/admin/ProtectedRoute').then(m => ({ default: m.ProtectedRoute })));
 
 // Lazy-load non-critical public pages
 const About = lazy(() => import('./pages/About').then(m => ({ default: m.About })));
@@ -184,7 +185,9 @@ export default function App() {
             path="/admin/login"
             element={
               <motion.div {...pageTransition} className="w-full">
-                <Login />
+                <Suspense fallback={<LoadingFallback />}>
+                  <Login />
+                </Suspense>
               </motion.div>
             }
           />
@@ -192,9 +195,11 @@ export default function App() {
           <Route
             path="/admin"
             element={
-              <ProtectedRoute>
-                <AdminLayout />
-              </ProtectedRoute>
+              <Suspense fallback={<LoadingFallback />}>
+                <ProtectedRoute>
+                  <AdminLayout />
+                </ProtectedRoute>
+              </Suspense>
             }
           >
             <Route

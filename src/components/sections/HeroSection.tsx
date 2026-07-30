@@ -52,7 +52,7 @@ export function HeroSection({ children }: HeroSectionProps) {
           top: '0%',
           bottom: '0%',
           width: '100%',
-          backgroundImage: "url('/assets/hero/GENERATED.png')",
+          backgroundImage: "url('/assets/hero/GENERATED.webp')",
           backgroundSize: 'cover',
           backgroundPosition: 'left 45%',
           backgroundRepeat: 'no-repeat',

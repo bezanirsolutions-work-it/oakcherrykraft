@@ -17,5 +17,20 @@ export default defineConfig({
     sourcemap: false,
     cssCodeSplit: true,
     chunkSizeWarningLimit: 2000,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('framer-motion')) return 'framer-motion';
+            if (id.includes('react-router-dom')) return 'router';
+            if (id.includes('react-helmet-async')) return 'helmet';
+            if (id.includes('@supabase')) return 'supabase';
+            if (id.includes('react-hook-form') || id.includes('@hookform')) return 'forms';
+            if (id.includes('lucide-react')) return 'icons';
+            return 'vendor';
+          }
+        },
+      },
+    },
   },
 });

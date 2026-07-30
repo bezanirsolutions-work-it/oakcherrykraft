@@ -16,6 +16,7 @@ import {
   SectionHeader,
   ImageCarousel,
 } from '../components/ui';
+import { getCachedData } from '../lib/cache';
 import { supabase } from '../lib/supabase';
 
 interface Product {
@@ -45,6 +46,34 @@ interface Product {
   status?: string;
   is_active?: boolean;
 }
+
+const productSelectColumns = [
+  'id',
+  'name',
+  'slug',
+  'category',
+  'summary',
+  'description',
+  'material',
+  'finish',
+  'colour',
+  'dimensions',
+  'height',
+  'width',
+  'depth',
+  'dimensionUnit',
+  'price',
+  'price_label',
+  'wood',
+  'availability',
+  'image',
+  'cover_image',
+  'image_urls',
+  'features',
+  'specifications',
+  'status',
+  'is_active',
+].join(',');
 
 const fadeIn = {
   hidden: { opacity: 0, y: 24 },
@@ -108,27 +137,33 @@ export function ProductDetail() {
       setError(null);
 
       try {
-        const { data, error: fetchError } = await supabase
-          .from('products')
-          .select('*')
-          .eq('slug', slug)
-          .eq('status', 'published')
-          .eq('is_active', true)
-          .single();
+        const product = await getCachedData<Product | null>(`products:${slug}`, 10 * 60 * 1000, async () => {
+          const { data, error: fetchError } = await supabase
+            .from('products')
+            .select(productSelectColumns)
+            .eq('slug', slug)
+            .eq('status', 'published')
+            .eq('is_active', true)
+            .single();
 
-        if (fetchError) {
-          if (fetchError.code === 'PGRST116') {
-            setError('Product not found');
-          } else {
+          if (fetchError) {
+            if (fetchError.code === 'PGRST116') {
+              throw new Error('Product not found');
+            }
             throw fetchError;
           }
-        } else {
-          const product = data as Product;
-          if (product.status === 'archived') {
-            setError('Product not found');
-          } else {
-            setProduct(product);
+
+          const product = data as Product | null;
+          if (product?.status === 'archived') {
+            return null;
           }
+          return product;
+        });
+
+        if (!product) {
+          setError('Product not found');
+        } else {
+          setProduct(product);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load product');

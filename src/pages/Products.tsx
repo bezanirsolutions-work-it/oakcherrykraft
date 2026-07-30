@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowUpRight, Check, Clock3, Search } from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { PageHeader } from '../components/layout/PageHeader';
+import { getCachedData } from '../lib/cache';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Button, EmptyState, LoadingState, SectionHeader } from '../components/ui';
 import { supabase } from '../lib/supabase';
@@ -35,6 +36,34 @@ interface Product {
   status?: string;
   is_active?: boolean;
 }
+
+const productSelectColumns = [
+  'id',
+  'name',
+  'slug',
+  'category',
+  'summary',
+  'description',
+  'material',
+  'finish',
+  'colour',
+  'dimensions',
+  'height',
+  'width',
+  'depth',
+  'dimensionUnit',
+  'price',
+  'price_label',
+  'wood',
+  'availability',
+  'image',
+  'cover_image',
+  'image_urls',
+  'features',
+  'specifications',
+  'status',
+  'is_active',
+].join(',');
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -93,19 +122,23 @@ export function Products() {
       setError(null);
 
       try {
-        const { data, error: fetchError } = await supabase
-          .from('products')
-          .select('*')
-          .eq('status', 'published')
-          .eq('is_active', true)
-          .order('created_at', { ascending: false });
+        const data = await getCachedData<Product[]>(`products:catalog`, 10 * 60 * 1000, async () => {
+          const { data, error: fetchError } = await supabase
+            .from('products')
+            .select(productSelectColumns)
+            .eq('status', 'published')
+            .eq('is_active', true)
+            .order('created_at', { ascending: false });
 
-        if (fetchError) {
-          console.error('Supabase query error:', fetchError);
-          throw fetchError;
-        }
+          if (fetchError) {
+            console.error('Supabase query error:', fetchError);
+            throw fetchError;
+          }
 
-        setProducts((data as Product[] | null) ?? []);
+          return (data as Product[] | null) ?? [];
+        });
+
+        setProducts(data);
       } catch (fetchError) {
         console.error('Supabase fetch failed:', fetchError);
         setError('Unable to load products. Please try again later.');

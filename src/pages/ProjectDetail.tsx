@@ -191,7 +191,7 @@ export function ProjectDetail() {
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oak-700">Gallery</p>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               {project.gallery_images.map((image) => (
-                <img key={image} src={image} alt={`${project.title} gallery`} className="h-48 w-full rounded-[1.5rem] object-cover" />
+                <img key={image} src={image} alt={`${project.title} gallery`} loading="lazy" decoding="async" className="h-48 w-full rounded-[1.5rem] object-cover" />
               ))}
             </div>
           </Card>
