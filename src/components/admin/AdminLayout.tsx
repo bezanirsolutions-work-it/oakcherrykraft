@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Globe2, X, Menu } from 'lucide-react';
 import { Button } from '../ui';
 import { supabase } from '../../lib/supabase';
+import { getProfileName } from '../../lib/profile';
 
 interface AdminLayoutProps {
   children?: ReactNode;
@@ -15,6 +16,7 @@ const navItems = [
   { label: 'Configurator Requests', path: '/admin/configurator' },
   { label: 'Contact Messages', path: '/admin/contacts' },
   { label: 'Products', path: '/admin/products' },
+  { label: 'Projects', path: '/admin/projects' },
   { label: 'Settings', path: '/admin/settings' },
 ];
 
@@ -76,10 +78,13 @@ export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayout
 
       if (!session?.user?.id) return;
 
-      const { data } = await supabase.from('profiles').select('full_name').eq('id', session.user.id).single();
-
-      if (data?.full_name) {
-        setAdminName(data.full_name);
+      try {
+        const profileName = await getProfileName(session.user.id);
+        if (profileName) {
+          setAdminName(profileName);
+        }
+      } catch {
+        // fall back to the default label if the profile lookup is unavailable
       }
     };
 

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { StatCard } from '../../components/ui/StatCard';
 import { AlertCircle, Inbox, MessageCircle, MessageSquare, ShoppingCart, LayoutGrid, ClipboardList } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { getProfileName } from '../../lib/profile';
 
 interface Counts {
   quote_requests: number;
@@ -54,17 +55,18 @@ export function Dashboard() {
       return;
     }
 
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('full_name')
-      .eq('user_id', userId)
-      .single();
-
-    if (!mountedRef.current) return;
-
-    const profileName = profileData?.full_name ?? fallbackName;
-    if (profileName) {
-      setDisplayName(profileName.toString().trim().split(' ')[0] || 'Ade');
+    try {
+      const profileName = await getProfileName(userId);
+      if (!mountedRef.current) return;
+      const resolvedName = profileName ?? fallbackName;
+      if (resolvedName) {
+        setDisplayName(resolvedName.toString().trim().split(' ')[0] || 'Ade');
+      }
+    } catch {
+      if (!mountedRef.current) return;
+      if (fallbackName) {
+        setDisplayName(fallbackName.toString().trim().split(' ')[0] || 'Ade');
+      }
     }
   };
 
@@ -156,8 +158,8 @@ export function Dashboard() {
       <section className="rounded-[2rem] border border-bark/10 bg-white p-8 shadow-soft">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.35em] text-bark/60">Welcome, {displayName} 👋</p>
-            <h1 className="mt-3 text-3xl font-bold tracking-tight text-bark">Welcome, {displayName} 👋</h1>
+            <p className="text-sm uppercase tracking-[0.35em] text-bark/60">Hi Ade👋</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight text-bark">Hi Ade👋</h1>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-bark/70">
               Here&apos;s what&apos;s happening at Oak Cherry Kraft today.
             </p>

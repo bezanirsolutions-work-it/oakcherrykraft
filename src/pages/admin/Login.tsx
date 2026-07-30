@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Button } from '../../components/ui/Button';
+import { getProfileRole } from '../../lib/profile';
+
+const getAdminRole = async (userId: string) => getProfileRole(userId);
 
 export function Login() {
   const [email, setEmail] = useState('');
@@ -41,9 +44,24 @@ export function Login() {
     console.log('User error after login:', userError);
 
     const session = result.data?.session ?? sessionData.session;
+    const user = result.data?.user ?? userData.user ?? session?.user;
 
-    if (sessionError || !session?.access_token) {
+    if (sessionError || !session?.access_token || !user?.id) {
       setError('Supabase did not create a valid admin session. Please try again.');
+      return;
+    }
+
+    try {
+      const role = await getAdminRole(user.id);
+      const isAdmin = role === 'admin' || user.user_metadata?.role === 'admin' || user.app_metadata?.role === 'admin';
+
+      if (!isAdmin) {
+        setError('This account is not registered as an admin. Please sign in with an admin account or create a matching admin profile in Supabase.');
+        return;
+      }
+    } catch (adminError) {
+      console.error(adminError);
+      setError('We could not verify your admin access right now. Please try again.');
       return;
     }
 

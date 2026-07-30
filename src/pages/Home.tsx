@@ -27,8 +27,8 @@ import { PageContainer } from '../components/layout/PageContainer';
 import { Button, Card, SectionHeader } from '../components/ui';
 import { SectionTitle } from '../components/base/SectionTitle';
 import { products } from '../data/products';
-import { projects as featuredProjects } from '../data/projects';
 import { supabase } from '../lib/supabase';
+import { fetchFeaturedProjects, fetchProjectOfMonth, type Project } from '../lib/projects';
 
 const reveal = {
   hidden: { opacity: 0, y: 24 },
@@ -80,41 +80,27 @@ interface Product {
 
 const defaultFeaturedProducts: Product[] = products.slice(0, 3);
 
-interface Project {
-  id: string;
-  title: string;
-  category: string;
-  description: string;
-  summary: string;
-  image: string;
-  location?: string;
-  material?: string;
-  finish?: string;
-  completion?: string;
-}
-
-const featuredProjectItem = featuredProjects[0] as Project;
-
-const projectOfMonth: Project = featuredProjects.length > 0
-  ? {
-      ...featuredProjectItem,
-      location: 'Ose Olorun Food Canteen, Abuja',
-      material: featuredProjectItem.material ?? 'Mahogany & White Oak',
-      finish: featuredProjectItem.finish ?? 'Hand-rubbed oil & beeswax',
-      completion: featuredProjectItem.completion ?? '10 weeks',
-    }
-  : {
-      id: 'project-of-the-month',
-      title: 'Luxury Dining Suite in Lekki',
-      category: 'Residential',
-      description: 'An elegant dining collection with hand-carved timber details, designed to anchor a refined home interior with warmth and precision.',
-      summary: 'A premium dining room commission combining rich wood, bespoke joinery, and a calm, luxurious finish.',
-      image: '/assets/hero/intro-picture.png',
-      location: 'Lekki, Lagos',
-      material: 'Mahogany & Oak',
-      finish: 'Hand-rubbed oil & beeswax',
-      completion: '11 weeks',
-    };
+const defaultProjectOfMonth: Project = {
+  id: 'project-of-the-month',
+  slug: 'project-of-the-month',
+  title: 'Luxury Dining Suite in Lekki',
+  description: 'An elegant dining collection with hand-carved timber details, designed to anchor a refined home interior with warmth and precision.',
+  category: 'Residential',
+  location: 'Lekki, Lagos',
+  status: 'Completed',
+  cover_image: '/assets/hero/intro-picture.png',
+  gallery_images: [],
+  budget_range: '',
+  duration: '11 weeks',
+  completion_date: '11 weeks',
+  wood_species: 'Mahogany & Oak',
+  finish: 'Hand-rubbed oil & beeswax',
+  show_in_gallery: true,
+  featured_project: false,
+  project_of_the_month: false,
+  created_at: '',
+  updated_at: '',
+};
 
 const materialSwatches = [
   { name: 'Mahogany', description: 'Rich, warm undertones with deep luxury.', color: '#5b2b1e', previewImage: '/assets/19.jpeg' },
@@ -229,6 +215,10 @@ export function Home() {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>(defaultFeaturedProducts);
   const [isFeaturedLoading, setIsFeaturedLoading] = useState(true);
   const [featuredError, setFeaturedError] = useState<string | null>(null);
+  const [featuredProjects, setFeaturedProjects] = useState<Project[]>([]);
+  const [projectOfMonth, setProjectOfMonth] = useState<Project | null>(null);
+  const [isProjectsLoading, setIsProjectsLoading] = useState(true);
+  const [projectsError, setProjectsError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchFeaturedProducts = async () => {
@@ -266,8 +256,34 @@ export function Home() {
     fetchFeaturedProducts();
   }, []);
 
+  useEffect(() => {
+    let mounted = true;
+    const loadProjects = async () => {
+      setIsProjectsLoading(true);
+      setProjectsError(null);
+      try {
+        const [featured, projectOfMonthData] = await Promise.all([fetchFeaturedProjects(), fetchProjectOfMonth()]);
+        if (mounted) {
+          setFeaturedProjects(featured);
+          setProjectOfMonth(projectOfMonthData ?? null);
+        }
+      } catch (err) {
+        if (mounted) {
+          setProjectsError(err instanceof Error ? err.message : 'Unable to load project highlights.');
+        }
+      } finally {
+        if (mounted) setIsProjectsLoading(false);
+      }
+    };
+
+    void loadProjects();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const [selectedSwatch, setSelectedSwatch] = useState(materialSwatches[0]);
-  const previewImage = useMemo(() => selectedSwatch.previewImage ?? projectOfMonth.image, [selectedSwatch]);
+  const previewImage = useMemo(() => selectedSwatch.previewImage ?? projectOfMonth?.cover_image ?? defaultProjectOfMonth.cover_image ?? '', [selectedSwatch, projectOfMonth?.cover_image]);
   const statsRef = useRef<HTMLDivElement | null>(null);
   const statsInView = useInView(statsRef, { once: true, amount: 0.25 });
   const [statsStarted, setStatsStarted] = useState(false);
@@ -277,6 +293,13 @@ export function Home() {
   }, [statsInView]);
 
   const statCounts = statistics.map((stat) => useCounter(stat.value, statsStarted));
+
+const normalizeCategorySlug = (category: string) =>
+  category
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
 
   const displayFeaturedProducts = featuredProducts.length > 0 ? featuredProducts : defaultFeaturedProducts;
 
@@ -385,7 +408,7 @@ export function Home() {
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-sm font-medium text-bark/70">{product.wood}</p>
                     <Button variant="link" size="sm" asChild className="px-0">
-                      <Link to={`/products/${product.id}`}>View product</Link>
+                      <Link to={`/products/${normalizeCategorySlug(product.category)}/${product.slug ?? product.id}`}>View product</Link>
                     </Button>
                   </div>
                 </div>
@@ -395,66 +418,48 @@ export function Home() {
         </div>
       </section>
 
-      <section className="section-gap bg-sand/40">
-        <div className="container-wide">
-          <div className="grid gap-8 xl:grid-cols-[1.05fr_0.95fr] xl:items-center xl:gap-12">
-            <motion.div
-              initial={{ opacity: 0, x: -18 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
-              className="group relative overflow-hidden rounded-[2rem] border border-bark/10 bg-white shadow-soft"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/80 to-transparent" aria-hidden="true" />
-              <img
-                src={projectOfMonth.image}
-                alt={projectOfMonth.title}
-                loading="lazy"
-                decoding="async"
-                className="relative h-full w-full object-cover transition duration-700 ease-brand group-hover:scale-105"
-              />
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 18 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
-              className="space-y-6"
-            >
-              <div className="inline-flex rounded-full border border-bark/10 bg-white px-4 py-2 text-sm font-semibold text-bark shadow-sm">
-                Project of the Month
-              </div>
-              <div className="space-y-4">
-                <p className="text-xs uppercase tracking-[0.35em] text-bark/50">Featured project</p>
-                <h2 className="text-4xl font-semibold text-bark sm:text-5xl">{projectOfMonth.title}</h2>
-                <p className="max-w-2xl text-base leading-8 text-bark/75">{projectOfMonth.description}</p>
-                <p className="max-w-2xl text-base leading-8 text-bark/75">Handcrafted for a refined residential interior, this custom dining suite brings soft sculptural lines, layered timber finishes, and thoughtful joinery into a warm home setting.</p>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-[1.75rem] border border-bark/10 bg-white p-5 shadow-soft">
-                  <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Client location</p>
-                  <p className="mt-2 text-base font-semibold text-bark">{projectOfMonth.location}</p>
+      {projectOfMonth ? (
+        <section className="section-gap bg-sand/40">
+          <div className="container-wide">
+            <div className="grid gap-8 xl:grid-cols-[1.05fr_0.95fr] xl:items-center xl:gap-12">
+              <motion.div
+                initial={{ opacity: 0, x: -18 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+                className="group relative overflow-hidden rounded-[2rem] border border-bark/10 bg-white shadow-soft"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/80 to-transparent" aria-hidden="true" />
+                <img
+                  src={projectOfMonth.cover_image || defaultProjectOfMonth.cover_image || ''}
+                  alt={projectOfMonth.title}
+                  loading="lazy"
+                  decoding="async"
+                  className="relative h-full w-full object-cover transition duration-700 ease-brand group-hover:scale-105"
+                />
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 18 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+                className="space-y-6"
+              >
+                <div className="inline-flex rounded-full border border-bark/10 bg-white px-4 py-2 text-sm font-semibold text-bark shadow-sm">
+                  Project of the Month
                 </div>
-                <div className="rounded-[1.75rem] border border-bark/10 bg-white p-5 shadow-soft">
-                  <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Material</p>
-                  <p className="mt-2 text-base font-semibold text-bark">{projectOfMonth.material}</p>
+                <div className="space-y-4">
+                  <h2 className="text-4xl font-semibold text-bark sm:text-5xl">{projectOfMonth.title}</h2>
+                  <p className="max-w-2xl text-base leading-8 text-bark/75">{projectOfMonth.description}</p>
                 </div>
-                <div className="rounded-[1.75rem] border border-bark/10 bg-white p-5 shadow-soft">
-                  <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Finish</p>
-                  <p className="mt-2 text-base font-semibold text-bark">{projectOfMonth.finish}</p>
-                </div>
-                <div className="rounded-[1.75rem] border border-bark/10 bg-white p-5 shadow-soft">
-                  <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Completion time</p>
-                  <p className="mt-2 text-base font-semibold text-bark">{projectOfMonth.completion}</p>
-                </div>
-              </div>
-              <Button size="lg" asChild>
-                <Link to={`/projects/${projectOfMonth.id}`}>View Full Project</Link>
-              </Button>
-            </motion.div>
+                <Button size="lg" asChild>
+                  <Link to={`/projects/${projectOfMonth.slug}`}>View Full Project</Link>
+                </Button>
+              </motion.div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
 
       <section className="section-gap">
         <div className="container-wide">
@@ -611,7 +616,29 @@ export function Home() {
           </header>
 
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.12 }} variants={sectionStagger} className="mt-4 grid gap-5 lg:grid-cols-3">
-            {featuredProjects.map((project) => (
+            {isProjectsLoading ? (
+              Array.from({ length: 3 }).map((_, index) => (
+                <motion.article
+                  key={`project-skeleton-${index}`}
+                  variants={reveal}
+                  className="overflow-hidden rounded-[1.75rem] border border-bark/10 bg-white shadow-card"
+                >
+                  <div className="relative aspect-[4/3] overflow-hidden bg-bark/5">
+                    <div className="h-full w-full animate-pulse bg-bark/10" />
+                  </div>
+                  <div className="space-y-3 p-6">
+                    <div className="h-4 w-24 animate-pulse rounded-full bg-bark/10" />
+                    <div className="h-7 w-3/4 animate-pulse rounded-full bg-bark/10" />
+                    <div className="h-4 w-full animate-pulse rounded-full bg-bark/10" />
+                    <div className="h-4 w-5/6 animate-pulse rounded-full bg-bark/10" />
+                  </div>
+                </motion.article>
+              ))
+            ) : projectsError ? (
+              <div className="col-span-full rounded-[1.5rem] border border-bark/10 bg-white p-8 text-center text-sm leading-7 text-bark/70 shadow-soft">
+                {projectsError}
+              </div>
+            ) : featuredProjects.length > 0 ? featuredProjects.map((project) => (
               <motion.article
                 key={project.id}
                 variants={reveal}
@@ -619,7 +646,7 @@ export function Home() {
               >
                 <div className="relative aspect-[4/3] overflow-hidden">
                   <img
-                    src={project.image}
+                    src={project.cover_image || defaultProjectOfMonth.cover_image || ''}
                     alt={`${project.title} project in ${project.category}`}
                     loading="lazy"
                     decoding="async"
@@ -634,11 +661,15 @@ export function Home() {
                   <h3 className="text-2xl font-semibold text-bark">{project.title}</h3>
                   <p className="mt-3 text-sm leading-7 text-bark/70">{project.description}</p>
                   <Button variant="link" size="sm" asChild className="mt-5 px-0">
-                    <Link to={`/projects/${project.id}`}>View project</Link>
+                    <Link to={`/projects/${project.slug}`}>View project</Link>
                   </Button>
                 </div>
               </motion.article>
-            ))}
+            )) : (
+              <div className="col-span-full rounded-[1.5rem] border border-bark/10 bg-white p-8 text-center text-sm leading-7 text-bark/70 shadow-soft">
+                No featured projects are available right now. Please check back soon.
+              </div>
+            )}
           </motion.div>
         </div>
       </FeaturedProjectsSection>

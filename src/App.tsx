@@ -23,6 +23,7 @@ const Dashboard = lazy(() => import('./pages/admin/Dashboard').then(m => ({ defa
 const Quotes = lazy(() => import('./pages/admin/Quotes').then(m => ({ default: m.Quotes })));
 const ConfiguratorRequests = lazy(() => import('./pages/admin/ConfiguratorRequests').then(m => ({ default: m.ConfiguratorRequests })));
 const ProductsAdmin = lazy(() => import('./pages/admin/Products').then(m => ({ default: m.ProductsAdmin })));
+const ProjectsAdmin = lazy(() => import('./pages/admin/Projects').then(m => ({ default: m.Projects })));
 const Analytics = lazy(() => import('./pages/admin/AdminPagePlaceholder').then(m => ({ default: m.Analytics })));
 const Contacts = lazy(() => import('./pages/admin/Contacts').then(m => ({ default: m.Contacts })));
 const Settings = lazy(() => import('./pages/admin/Settings').then(m => ({ default: m.Settings })));
@@ -97,7 +98,7 @@ export default function App() {
               }
             />
             <Route
-              path="projects/:projectId"
+              path="projects/:slug"
               element={
                 <motion.div {...pageTransition} className="w-full">
                   <Suspense fallback={<LoadingFallback />}>
@@ -242,6 +243,16 @@ export default function App() {
                 <motion.div {...pageTransition} className="w-full">
                   <Suspense fallback={<LoadingFallback />}>
                     <ProductsAdmin />
+                  </Suspense>
+                </motion.div>
+              }
+            />
+            <Route
+              path="projects"
+              element={
+                <motion.div {...pageTransition} className="w-full">
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ProjectsAdmin />
                   </Suspense>
                 </motion.div>
               }
