@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, Check, Clock3, Search } from 'lucide-react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { PageHeader } from '../components/layout/PageHeader';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Button, EmptyState, LoadingState, SectionHeader } from '../components/ui';
@@ -73,10 +73,19 @@ const getDisplayPrice = (product: Product) => {
 
 export function Products() {
   const { category: categoryParam } = useParams<{ category?: string }>();
+  const location = useLocation();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const queryCategory = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    const value = params.get('category')?.trim();
+    return value || null;
+  }, [location.search]);
+
+  const activeCategoryFilter = queryCategory ?? categoryParam ?? null;
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -121,8 +130,8 @@ export function Products() {
     return Array.from(group.entries()).map(([slug, label]) => ({ slug, label }));
   }, [products]);
 
-  const selectedCategory = categoryParam
-    ? categories.find((item) => item.slug === categoryParam)
+  const selectedCategory = activeCategoryFilter
+    ? categories.find((item) => item.label === activeCategoryFilter || item.slug === normalizeCategorySlug(activeCategoryFilter))
     : null;
 
   const categoryOptions = useMemo(
@@ -134,7 +143,7 @@ export function Products() {
     const normalizedQuery = searchQuery.trim().toLowerCase();
 
     return products.filter((product) => {
-      if (categoryParam && normalizeCategorySlug(product.category ?? '') !== categoryParam) {
+      if (activeCategoryFilter && normalizeCategorySlug(product.category ?? '') !== normalizeCategorySlug(activeCategoryFilter)) {
         return false;
       }
 
@@ -149,9 +158,9 @@ export function Products() {
 
       return haystack.includes(normalizedQuery);
     });
-  }, [products, categoryParam, searchQuery]);
+  }, [products, activeCategoryFilter, searchQuery]);
 
-  const shouldShowCategoryNotFound = !loading && Boolean(categoryParam) && !selectedCategory;
+  const shouldShowCategoryNotFound = !loading && Boolean(activeCategoryFilter) && !selectedCategory;
 
   if (loading) {
     return (
@@ -249,7 +258,7 @@ export function Products() {
               {categoryOptions.map((option) => (
                 <Link
                   key={option.slug}
-                  to={option.slug === 'all' ? '/products' : `/products/${option.slug}`}
+                  to={option.slug === 'all' ? '/products' : `/products?category=${encodeURIComponent(option.label)}`}
                   className={`inline-flex items-center justify-center rounded-full border px-4 py-2 text-sm font-semibold transition ${
                     option.slug === (categoryParam ?? 'all')
                       ? 'border-bark bg-bark text-sand'

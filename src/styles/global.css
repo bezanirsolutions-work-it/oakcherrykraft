@@ -129,6 +129,22 @@ img {
   }
 }
 
+/* Keep the hero artwork visible and stable on small screens */
+@media (max-width: 640px) {
+  .hero-bg {
+    mask-image: none !important;
+    -webkit-mask-image: none !important;
+    left: -20% !important;
+    right: -10% !important;
+    top: 0% !important;
+    bottom: 0% !important;
+    width: 130% !important;
+    background-size: cover !important;
+    background-position: 18% center !important;
+    opacity: 0.95 !important;
+  }
+}
+
 section {
   position: relative;
 }

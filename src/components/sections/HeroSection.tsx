@@ -42,16 +42,19 @@ export function HeroSection({ children }: HeroSectionProps) {
       }}
     >
       <motion.div
-        className="pointer-events-none absolute inset-y-0 z-0 h-full"
+        className="pointer-events-none absolute inset-y-0 z-0 h-full hero-bg"
         initial={{ opacity: 0, x: 0 }}
         animate={{ opacity: 1, x: [0, 10, 0] }}
         transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
         style={{
-          left: '72%',
-          width: '78%',
+          left: '0%',
+          right: '0%',
+          top: '0%',
+          bottom: '0%',
+          width: '100%',
           backgroundImage: "url('/assets/hero/GENERATED.png')",
           backgroundSize: 'cover',
-          backgroundPosition: 'center right',
+          backgroundPosition: 'left 45%',
           backgroundRepeat: 'no-repeat',
           maskImage: 'linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.12) 10%, rgba(0,0,0,0.7) 38%, rgba(0,0,0,1) 100%)',
           WebkitMaskImage: 'linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.12) 10%, rgba(0,0,0,0.7) 38%, rgba(0,0,0,1) 100%)',
