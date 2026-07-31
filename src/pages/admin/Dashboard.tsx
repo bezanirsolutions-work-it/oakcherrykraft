@@ -16,14 +16,14 @@ interface QuoteRequestRow {
   id: string;
   full_name: string;
   project_type: string | null;
-  created_at: string;
+  created_at: string | null;
 }
 
 interface ContactMessageRow {
   id: string;
   name: string;
   subject: string | null;
-  created_at: string;
+  created_at: string | null;
 }
 
 const initialCounts: Counts = {
@@ -140,12 +140,14 @@ export function Dashboard() {
     };
   }, []);
 
-  const formatDate = (value: string) =>
-    new Intl.DateTimeFormat('en-US', {
+  const formatDate = (value: string | null | undefined) => {
+    if (!value) return '';
+    return new Intl.DateTimeFormat('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
     }).format(new Date(value));
+  };
 
   const getLastUpdatedText = () => {
     if (lastUpdated) return lastUpdated;

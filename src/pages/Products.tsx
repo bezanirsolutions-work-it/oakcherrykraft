@@ -7,63 +7,8 @@ import { PageHeader } from '../components/layout/PageHeader';
 import { getCachedData } from '../lib/cache';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Button, EmptyState, LoadingState, SectionHeader } from '../components/ui';
+import { normalizeProducts, productSelectColumns, type Product } from '../lib/products';
 import { supabase } from '../lib/supabase';
-
-interface Product {
-  id: string;
-  name: string;
-  slug?: string;
-  category: string;
-  summary?: string;
-  description?: string;
-  material?: string;
-  finish?: string;
-  colour?: string;
-  dimensions?: string;
-  height?: string;
-  width?: string;
-  depth?: string;
-  dimensionUnit?: string;
-  price?: string;
-  price_label?: string;
-  wood?: string;
-  availability?: string;
-  image?: string;
-  cover_image?: string;
-  image_urls?: string[];
-  features?: string[];
-  specifications?: string[];
-  status?: string;
-  is_active?: boolean;
-}
-
-const productSelectColumns = [
-  'id',
-  'name',
-  'slug',
-  'category',
-  'summary',
-  'description',
-  'material',
-  'finish',
-  'colour',
-  'dimensions',
-  'height',
-  'width',
-  'depth',
-  'dimensionUnit',
-  'price',
-  'price_label',
-  'wood',
-  'availability',
-  'image',
-  'cover_image',
-  'image_urls',
-  'features',
-  'specifications',
-  'status',
-  'is_active',
-].join(',');
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -82,7 +27,7 @@ const normalizeCategorySlug = (category: string) =>
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9-]/g, '');
 
-const formatPriceValue = (value?: string) => {
+const formatPriceValue = (value?: string | null) => {
   if (!value?.trim()) return '';
   const numeric = value.replace(/[^0-9.-]/g, '');
   if (!numeric || Number.isNaN(Number(numeric))) return value.trim();
@@ -135,7 +80,7 @@ export function Products() {
             throw fetchError;
           }
 
-          return (data as Product[] | null) ?? [];
+          return normalizeProducts(data);
         });
 
         setProducts(data);
@@ -337,7 +282,7 @@ export function Products() {
                   <div className="relative aspect-[4/3] overflow-hidden bg-surface-strong">
                     <img
                       src={displayImage}
-                      alt={product.name}
+                      alt={product.name ?? ''}
                       loading={index === 0 ? 'eager' : 'lazy'}
                       decoding="async"
                       className="h-full w-full object-cover transition duration-700 ease-brand group-hover:scale-105"

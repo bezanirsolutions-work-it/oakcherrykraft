@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Archive, ArrowUpRight, Check, Clock3, Eye, Image, Layers, Paintbrush, Pencil, Search, Tag, Text, Trash2, X, CalendarDays } from 'lucide-react';
 import { Button, EmptyState, LoadingState, ImageCarousel } from '../../components/ui';
 import { supabase } from '../../lib/supabase';
+import type { Database } from '../../lib/database';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -25,34 +26,20 @@ const overlayVariants = {
   visible: { opacity: 1, transition: { duration: 0.2 } },
 };
 
-interface Product {
-  id: string;
-  name: string;
-  slug?: string;
-  category: string;
-  summary?: string;
-  status?: string;
-  price?: string;
-  price_label?: string;
-  material?: string;
-  finish?: string;
-  colour?: string;
-  dimensions?: string;
-  height?: string;
-  width?: string;
-  depth?: string;
-  dimensionUnit?: string;
-  description?: string;
-  features?: string[];
-  specifications?: string[];
-  image_urls?: string[];
-  cover_image?: string;
-  image?: string;
-  images?: string[];
-  created_at?: string;
-  updated_at?: string;
-  wood?: string;
-}
+type ProductRow = Database['public']['Tables']['products']['Row'];
+
+type Product = ProductRow;
+
+type ProductTextField = {
+  [K in keyof Product]: Product[K] extends string | null | undefined ? K : never;
+}[keyof Product];
+
+type ProductBooleanField = {
+  [K in keyof Product]: Product[K] extends boolean | null | undefined ? K : never;
+}[keyof Product];
+
+type ProductInsertPayload = Database['public']['Tables']['products']['Insert'];
+type ProductUpdatePayload = Database['public']['Tables']['products']['Update'];
 
 const productDimensionUnits = ['mm', 'cm', 'm', 'in', 'ft'];
 
@@ -255,30 +242,35 @@ const generateAltText = (name: string, material: string, finish: string, colour:
 export function ProductsAdmin() {
   const blankProductValues: Product = {
     id: '',
-    name: '',
-    category: '',
-    summary: '',
-    status: 'draft',
-    price: '',
-    price_label: '',
-    material: '',
-    finish: '',
-    colour: '',
-    dimensions: '',
-    height: '',
-    width: '',
-    depth: '',
-    dimensionUnit: '',
-    description: '',
+    created_at: null,
+    updated_at: null,
+    name: null,
+    slug: null,
+    category: null,
+    summary: null,
+    description: null,
+    price: null,
+    status: null,
+    availability: null,
+    is_active: null,
+    featured: null,
+    is_featured: null,
+    featured_product: null,
+    cover_image: null,
+    image_urls: [],
+    dimensions: null,
+    material: null,
+    wood: null,
+    finish: null,
+    colour: null,
+    height: null,
+    width: null,
+    depth: null,
+    dimensionUnit: null,
+    price_label: null,
+    image: null,
     features: [],
     specifications: [],
-    image_urls: [],
-    cover_image: '',
-    image: '',
-    images: [],
-    created_at: '',
-    updated_at: '',
-    wood: '',
   };
 
   const [productList, setProductList] = useState<Product[]>([]);
@@ -434,7 +426,7 @@ export function ProductsAdmin() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      const allProducts = (data as Product[]) || [];
+      const allProducts = (data ?? []) as Product[];
       setProductList(allProducts);
       if (allProducts.length > 0 && !selectedProductId) {
         setSelectedProductId(allProducts[0].id);
@@ -556,7 +548,7 @@ export function ProductsAdmin() {
 
   const persistGalleryOrder = async (nextOrder: string[]) => {
     if (!selectedProduct) return;
-    const currentOrder = selectedProduct.image_urls ?? selectedProduct.images ?? [];
+    const currentOrder = selectedProduct.image_urls ?? [];
     if (arraysEqual(nextOrder, currentOrder)) return;
 
     setIsUploadingImages(true);
@@ -581,7 +573,6 @@ export function ProductsAdmin() {
     setFormValues((current) => ({
       ...current,
       image_urls: nextOrder,
-      images: nextOrder,
       cover_image: current.cover_image || current.image || nextOrder[0] || '',
       image: current.cover_image || current.image || nextOrder[0] || '',
     }));
@@ -591,7 +582,6 @@ export function ProductsAdmin() {
           ? {
               ...item,
               image_urls: nextOrder,
-              images: nextOrder,
               cover_image: item.cover_image || item.image || nextOrder[0] || '',
               image: item.cover_image || item.image || nextOrder[0] || '',
               updated_at: new Date().toISOString(),
@@ -627,7 +617,7 @@ export function ProductsAdmin() {
       return;
     }
 
-    const images = selectedProduct.image_urls ?? selectedProduct.images ?? [];
+    const images = selectedProduct.image_urls ?? [];
     const coverImage = selectedProduct.cover_image ?? selectedProduct.image;
     const ordered = coverImage ? [coverImage, ...images] : images;
     const newOrder = Array.from(new Set(ordered.filter(Boolean)));
@@ -636,8 +626,8 @@ export function ProductsAdmin() {
   }, [selectedProduct]);
 
   const filteredProductList = productList.filter((product) =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (product.name ?? '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (product.category ?? '').toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.summary?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -750,35 +740,39 @@ export function ProductsAdmin() {
   useEffect(() => {
     if (!selectedProduct) return;
 
-    const dimensionParts = parseDimensionsString(selectedProduct.dimensions);
+    const dimensionParts = parseDimensionsString(selectedProduct.dimensions ?? '');
 
     setFormValues({
       id: selectedProduct.id,
+      created_at: selectedProduct.created_at ?? null,
+      updated_at: selectedProduct.updated_at ?? null,
       name: selectedProduct.name,
-      slug: selectedProduct.slug ?? '',
+      slug: selectedProduct.slug ?? null,
       category: selectedProduct.category,
-      summary: selectedProduct.summary ?? '',
-      status: selectedProduct.status ?? '',
-      price: selectedProduct.price ?? '',
-      price_label: selectedProduct.price_label ?? '',
-      material: selectedProduct.material ?? selectedProduct.wood ?? '',
-      finish: selectedProduct.finish ?? '',
-      colour: selectedProduct.colour ?? '',
-      dimensions: selectedProduct.dimensions ?? '',
+      summary: selectedProduct.summary ?? null,
+      description: selectedProduct.description ?? null,
+      material: selectedProduct.material ?? null,
+      finish: selectedProduct.finish ?? null,
+      colour: selectedProduct.colour ?? null,
+      dimensions: selectedProduct.dimensions ?? null,
       height: dimensionParts.height,
       width: dimensionParts.width,
       depth: dimensionParts.depth,
       dimensionUnit: dimensionParts.dimensionUnit,
-      description: selectedProduct.description ?? '',
+      price: selectedProduct.price ?? null,
+      price_label: selectedProduct.price_label ?? null,
+      wood: selectedProduct.wood ?? null,
+      availability: selectedProduct.availability ?? null,
+      image: selectedProduct.image ?? null,
+      cover_image: selectedProduct.cover_image ?? null,
+      image_urls: selectedProduct.image_urls ?? [],
       features: selectedProduct.features ?? [],
       specifications: selectedProduct.specifications ?? [],
-      image_urls: selectedProduct.image_urls ?? selectedProduct.images ?? [],
-      cover_image: selectedProduct.cover_image ?? selectedProduct.image ?? '',
-      image: selectedProduct.image ?? '',
-      images: selectedProduct.images ?? [],
-      created_at: selectedProduct.created_at ?? '',
-      updated_at: selectedProduct.updated_at ?? '',
-      wood: selectedProduct.wood ?? '',
+      status: selectedProduct.status ?? null,
+      is_active: selectedProduct.is_active ?? null,
+      featured: selectedProduct.featured ?? null,
+      is_featured: selectedProduct.is_featured ?? null,
+      featured_product: selectedProduct.featured_product ?? null,
     });
 
     setFormFeaturesText((selectedProduct.features ?? []).join('\n'));
@@ -790,7 +784,7 @@ export function ProductsAdmin() {
   const galleryImages = useMemo(() => {
     if (!selectedProduct) return [] as string[];
     if (galleryOrder.length > 0) return galleryOrder;
-    const images = selectedProduct.image_urls ?? selectedProduct.images ?? [];
+    const images = selectedProduct.image_urls ?? [];
     const coverImage = selectedProduct.cover_image ?? selectedProduct.image;
     if (coverImage && !images.includes(coverImage)) {
       return [coverImage, ...images];
@@ -810,9 +804,8 @@ export function ProductsAdmin() {
 
     setFormValues((current) => ({
       ...current,
-      image_urls: selectedProduct.image_urls ?? selectedProduct.images ?? [],
+      image_urls: selectedProduct.image_urls ?? [],
       cover_image: selectedProduct.cover_image ?? selectedProduct.image ?? '',
-      images: selectedProduct.images ?? [],
       image: selectedProduct.image ?? '',
     }));
   }, [selectedProduct]);
@@ -826,7 +819,7 @@ export function ProductsAdmin() {
     };
   }, [selectedImageFiles]);
 
-  const updateFormField = (field: keyof Product, value: string, isCreate: boolean) => {
+  const updateFormField = (field: ProductTextField, value: string, isCreate: boolean) => {
     const setter = isCreate ? setCreateFormValues : setFormValues;
     const errorSetter = isCreate ? setCreateFormErrors : setFormErrors;
 
@@ -851,8 +844,8 @@ export function ProductsAdmin() {
     errorSetter((current) => ({ ...current, [field]: '' }));
   };
 
-  const handleInputChange = (field: keyof Product, value: string) => updateFormField(field, value, false);
-  const handleCreateInputChange = (field: keyof Product, value: string) => updateFormField(field, value, true);
+  const handleInputChange = (field: ProductTextField, value: string) => updateFormField(field, value, false);
+  const handleCreateInputChange = (field: ProductTextField, value: string) => updateFormField(field, value, true);
 
   const parseMultilineList = (value: string) =>
     value
@@ -967,7 +960,7 @@ export function ProductsAdmin() {
 
     try {
       const uploadedUrls = await uploadImagesToStorage(selectedImageFiles);
-      const updatedImages = [...(selectedProduct.image_urls ?? selectedProduct.images ?? []), ...uploadedUrls];
+      const updatedImages = [...(selectedProduct.image_urls ?? []), ...uploadedUrls];
       const coverUrl = selectedProduct.cover_image || selectedProduct.image || uploadedUrls[0] || '';
 
       const { error: updateError } = await supabase
@@ -1070,7 +1063,7 @@ export function ProductsAdmin() {
     setImageError(null);
     setImageMessage(null);
 
-    const remainingImages = (selectedProduct.image_urls ?? selectedProduct.images ?? []).filter((src) => src !== imageUrl);
+    const remainingImages = (selectedProduct.image_urls ?? []).filter((src) => src !== imageUrl);
     const currentCover = selectedProduct.cover_image ?? selectedProduct.image ?? '';
     const nextCover = currentCover === imageUrl ? remainingImages[0] ?? '' : currentCover;
 
@@ -1139,7 +1132,7 @@ export function ProductsAdmin() {
     try {
       const uploadedUrls = await uploadImagesToStorage([singleFile], selectedProduct.id);
       const [newUrl] = uploadedUrls;
-      const currentImages = selectedProduct.image_urls ?? selectedProduct.images ?? [];
+      const currentImages = selectedProduct.image_urls ?? [];
       const updatedImages = currentImages.map((src) => (src === oldImageUrl ? newUrl : src));
       const isReplacingCover = (selectedProduct.cover_image ?? selectedProduct.image) === oldImageUrl;
       const nextCover = isReplacingCover ? newUrl : selectedProduct.cover_image ?? selectedProduct.image ?? updatedImages[0] ?? '';
@@ -1208,7 +1201,7 @@ export function ProductsAdmin() {
     setSaveError(null);
 
     const updatedDimensions = buildDimensionsString(formValues);
-    const updatePayload: Partial<Product> = omitUndefined({
+    const updatePayload: Partial<ProductUpdatePayload> = omitUndefined({
       name: safeString(formValues.name),
       slug: safeString(formValues.slug),
       category: safeString(formValues.category),
@@ -1223,7 +1216,7 @@ export function ProductsAdmin() {
       description: safeString(formValues.description),
       features: parseMultilineList(formFeaturesText),
       specifications: parseMultilineList(formSpecificationsText),
-      image_urls: formValues.image_urls ?? formValues.images ?? [],
+      image_urls: formValues.image_urls ?? [],
       cover_image: formValues.cover_image ?? formValues.image ?? '',
     });
 
@@ -1247,11 +1240,11 @@ export function ProductsAdmin() {
     setProductList((current) =>
       current.map((item) =>
         item.id === selectedProduct.id
-          ? {
+          ? ({
               ...item,
               ...updatePayload,
               updated_at: new Date().toISOString(),
-            }
+            } as Product)
           : item
       )
     );
@@ -1272,9 +1265,9 @@ export function ProductsAdmin() {
     setCreateMessage(null);
     setCreateError(null);
 
-    const insertPayload: Partial<Product> = omitUndefined({
+    const insertPayload: Partial<ProductInsertPayload> = omitUndefined({
       name: safeString(createFormValues.name),
-      slug: slugEdited.create ? safeString(createFormValues.slug) : await ensureUniqueSlug(createFormValues.name),
+      slug: slugEdited.create ? safeString(createFormValues.slug) : await ensureUniqueSlug(createFormValues.name ?? ''),
       category: safeString(createFormValues.category),
       status: safeString(createFormValues.status),
       price: normalizePriceValue(createFormValues.price),
@@ -1291,8 +1284,7 @@ export function ProductsAdmin() {
       cover_image: createFormValues.cover_image ?? '',
     });
 
-    // Ensure we do not send an explicit `id` field in the insert payload
-    const payloadToInsert = { ...insertPayload } as Partial<Product>;
+    const payloadToInsert: Partial<ProductInsertPayload> = { ...insertPayload };
     delete (payloadToInsert as any).id;
 
     const { data, error: insertError } = await supabase
@@ -1309,7 +1301,7 @@ export function ProductsAdmin() {
       return;
     }
 
-    let newProduct = data as Product;
+    let newProduct: ProductRow = data;
     let imageUploadFailed = false;
 
     if (selectedImageFiles.length > 0) {
@@ -1335,7 +1327,7 @@ export function ProductsAdmin() {
     }
 
     setIsProcessing(false);
-    setProductList((current) => [newProduct, ...current]);
+    setProductList((current) => [{ ...newProduct, name: newProduct.name ?? '', category: newProduct.category ?? '', id: newProduct.id } as Product, ...current]);
     setSelectedProductId(newProduct.id);
     setDrawerMode(null);
     setCreateFormValues(blankProductValues);
@@ -1478,12 +1470,19 @@ export function ProductsAdmin() {
   const currentFeaturesText = isCreate ? createFeaturesText : formFeaturesText;
   const currentSpecificationsText = isCreate ? createSpecificationsText : formSpecificationsText;
   const currentError = (field: keyof Product) => currentFormErrors[field] ?? '';
-  const currentValue = (field: keyof Product) => {
-    const value = currentFormValues[field];
-    return Array.isArray(value) ? value.join(', ') : value ?? '';
+
+  const currentTextValue = (key: keyof Product): string => {
+    const value = drawerMode === 'create' ? createFormValues[key] : formValues[key];
+    return typeof value === 'string' ? value : '';
   };
+
+  const currentCheckboxValue = (key: keyof Product): boolean => {
+    const value = drawerMode === 'create' ? createFormValues[key] : formValues[key];
+    return value === true;
+  };
+
   const isSlugEdited = slugEdited[drawerMode === 'create' ? 'create' : 'edit'];
-  const handleCurrentInputChange = (field: keyof Product, value: string) => {
+  const handleCurrentInputChange = (field: ProductTextField, value: string) => {
     if (drawerMode === 'create') {
       handleCreateInputChange(field, value);
     } else {
@@ -1508,7 +1507,7 @@ export function ProductsAdmin() {
         <label className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
           <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Name</span>
           <input
-            value={currentValue('name')}
+            value={currentTextValue('name')}
             onChange={(event) => handleCurrentInputChange('name', event.target.value)}
             className={fieldInputClass('name')}
           />
@@ -1517,7 +1516,7 @@ export function ProductsAdmin() {
         <label className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
           <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Slug</span>
           <input
-            value={currentValue('slug')}
+            value={currentTextValue('slug')}
             readOnly
             className={`${fieldInputClass('slug')} cursor-not-allowed bg-bark/5`}
             placeholder="auto-generated from name"
@@ -1529,12 +1528,12 @@ export function ProductsAdmin() {
         <label className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
           <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Category</span>
           <select
-            value={currentValue('category')}
+            value={currentTextValue('category')}
             onChange={(event) => handleCurrentInputChange('category', event.target.value)}
             className={fieldInputClass('category')}
           >
             <option value="">Select category</option>
-            {optionsWithCurrentValue(productCategoryOptions, currentValue('category')).map((option: string) => (
+            {optionsWithCurrentValue(productCategoryOptions, currentTextValue('category')).map((option: string) => (
               <option key={option} value={option}>{option}</option>
             ))}
           </select>
@@ -1543,12 +1542,12 @@ export function ProductsAdmin() {
         <label className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
           <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Status</span>
           <select
-            value={currentValue('status')}
+            value={currentTextValue('status')}
             onChange={(event) => handleCurrentInputChange('status', event.target.value)}
             className={fieldInputClass('status')}
           >
             <option value="">Select status</option>
-            {optionsWithCurrentValue(productStatusOptions, currentValue('status')).map((option: string) => (
+            {optionsWithCurrentValue(productStatusOptions, currentTextValue('status')).map((option: string) => (
               <option key={option} value={option}>{option}</option>
             ))}
           </select>
@@ -1558,7 +1557,7 @@ export function ProductsAdmin() {
           <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Price</span>
           <input
             type="text"
-            value={currentValue('price')}
+            value={currentTextValue('price')}
             onChange={(event) => handleCurrentInputChange('price', event.target.value)}
             placeholder="e.g. 450000"
             className={fieldInputClass('price')}
@@ -1569,7 +1568,7 @@ export function ProductsAdmin() {
           <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Price label</span>
           <input
             type="text"
-            value={currentValue('price_label')}
+            value={currentTextValue('price_label')}
             onChange={(event) => handleCurrentInputChange('price_label', event.target.value)}
             placeholder="e.g. Contact for Quote"
             className={fieldInputClass('price_label')}
@@ -1580,7 +1579,7 @@ export function ProductsAdmin() {
           <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Material</span>
           <input
             list="product-materials"
-            value={currentValue('material')}
+            value={currentTextValue('material')}
             onChange={(event) => handleCurrentInputChange('material', event.target.value)}
             className={fieldInputClass('material')}
             placeholder="e.g. Solid Oak"
@@ -1595,7 +1594,7 @@ export function ProductsAdmin() {
           <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Wood species</span>
           <input
             list="product-wood-species"
-            value={currentValue('wood')}
+            value={currentTextValue('wood')}
             onChange={(event) => handleCurrentInputChange('wood', event.target.value)}
             className={fieldInputClass('wood')}
             placeholder="e.g. Cherry"
@@ -1610,7 +1609,7 @@ export function ProductsAdmin() {
           <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Finish</span>
           <input
             list="product-finishes"
-            value={currentValue('finish')}
+            value={currentTextValue('finish')}
             onChange={(event) => handleCurrentInputChange('finish', event.target.value)}
             className={fieldInputClass('finish')}
             placeholder="e.g. Matte"
@@ -1624,7 +1623,7 @@ export function ProductsAdmin() {
         <label className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
           <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Colour</span>
           <input
-            value={currentValue('colour')}
+            value={currentTextValue('colour')}
             onChange={(event) => handleCurrentInputChange('colour', event.target.value)}
             className={fieldInputClass('colour')}
             placeholder="Optional"
@@ -1636,7 +1635,7 @@ export function ProductsAdmin() {
         <label className="min-w-0 rounded-[1.5rem] border border-bark/10 bg-sand p-3">
           <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Height</span>
           <input
-            value={currentValue('height')}
+            value={currentTextValue('height')}
             onChange={(event) => handleCurrentInputChange('height', event.target.value)}
             placeholder="Optional"
             className={fieldInputClass('height')}
@@ -1645,7 +1644,7 @@ export function ProductsAdmin() {
         <label className="min-w-0 rounded-[1.5rem] border border-bark/10 bg-sand p-3">
           <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Width</span>
           <input
-            value={currentValue('width')}
+            value={currentTextValue('width')}
             onChange={(event) => handleCurrentInputChange('width', event.target.value)}
             placeholder="Optional"
             className={fieldInputClass('width')}
@@ -1654,7 +1653,7 @@ export function ProductsAdmin() {
         <label className="min-w-0 rounded-[1.5rem] border border-bark/10 bg-sand p-3">
           <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Depth</span>
           <input
-            value={currentValue('depth')}
+            value={currentTextValue('depth')}
             onChange={(event) => handleCurrentInputChange('depth', event.target.value)}
             placeholder="Optional"
             className={fieldInputClass('depth')}
@@ -1664,7 +1663,7 @@ export function ProductsAdmin() {
           <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Unit</span>
           <input
             list="dimension-units"
-            value={currentValue('dimensionUnit')}
+            value={currentTextValue('dimensionUnit')}
             onChange={(event) => handleCurrentInputChange('dimensionUnit', event.target.value)}
             className={fieldInputClass('dimensionUnit')}
             placeholder="e.g. cm"
@@ -1681,7 +1680,7 @@ export function ProductsAdmin() {
         <label className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
           <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Description</span>
           <textarea
-            value={currentValue('description')}
+            value={currentTextValue('description')}
             onChange={(event) => handleCurrentInputChange('description', event.target.value)}
             rows={5}
             className={fieldTextAreaClass('description')}
@@ -1828,7 +1827,7 @@ export function ProductsAdmin() {
             </div>
             {existingImages.length > 0 ? (
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                {existingImages.map((src, index) => {
+                {existingImages.map((src: string, index: number) => {
                   const isCover = selectedCoverImage === src;
                   return (
                     <div
@@ -1890,7 +1889,7 @@ export function ProductsAdmin() {
     );
   };
 
-  const selectedStatus = currentValue('status') || selectedProduct?.status || 'Not provided';
+  const selectedStatus = currentTextValue('status') || selectedProduct?.status || 'Not provided';
 
   const validateFormValues = (values: Product) => {
     const errors: Record<string, string> = {};
@@ -1977,7 +1976,7 @@ export function ProductsAdmin() {
               <label className="inline-flex items-center gap-2 text-sm font-semibold text-bark">
                 <input
                   type="checkbox"
-                  checked={isAllSelected}
+                  checked={currentCheckboxValue('is_active')}
                   onChange={handleSelectAll}
                   className="h-4 w-4 rounded border-bark/20 text-oak-700 focus:ring-oak-500"
                 />
@@ -2110,7 +2109,7 @@ export function ProductsAdmin() {
                   <div className="relative aspect-[4/3] overflow-hidden bg-surface-strong">
                     <img
                       src={product.cover_image || product.image || product.image_urls?.[0] || ''}
-                      alt={product.name}
+                      alt={product.name ?? ''}
                       loading={index === 0 ? 'eager' : 'lazy'}
                       className="h-full w-full object-cover transition duration-700 ease-brand group-hover:scale-105"
                     />
@@ -2222,7 +2221,7 @@ export function ProductsAdmin() {
                       {drawerMode === 'create' ? 'Create a product' : drawerMode === 'view' ? selectedProduct?.name : 'Edit selected product'}
                     </h2>
                   </div>
-                  <span className={`rounded-full px-3 py-2 text-xs font-semibold ${statusBadgeClass(drawerMode === 'create' ? createFormValues.status : selectedStatus)}`}>
+                  <span className={`rounded-full px-3 py-2 text-xs font-semibold ${statusBadgeClass(drawerMode === 'create' ? safeString(createFormValues.status) : selectedStatus)}`}>
                     {drawerMode === 'create' ? createFormValues.status || 'Draft' : selectedStatus}
                   </span>
                   <button
@@ -2271,7 +2270,7 @@ export function ProductsAdmin() {
                     <div className="rounded-[1.5rem] border border-bark/10 bg-sand">
                       {galleryImages.length > 0 ? (
                         <div>
-                          <ImageCarousel images={galleryImages} alt={selectedProduct.name} />
+                          <ImageCarousel images={galleryImages} alt={selectedProduct?.name ?? ''} />
                           <div className="p-5">
                             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oak-700">{selectedProduct.category}</p>
                             <p className="mt-2 text-sm leading-7 text-bark/70">{selectedProduct.summary ?? 'Not provided'}</p>
