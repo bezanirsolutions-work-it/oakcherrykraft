@@ -29,6 +29,7 @@ import { Button, Card, SectionHeader } from '../components/ui';
 import { SectionTitle } from '../components/base/SectionTitle';
 import { products } from '../data/products';
 import { getCachedData } from '../lib/cache';
+import { featuredProductSelectColumns, normalizeProducts, type Product } from '../lib/products';
 import { supabase } from '../lib/supabase';
 import { fetchFeaturedProjects, fetchProjectOfMonth, type Project } from '../lib/projects';
 
@@ -54,25 +55,6 @@ const categoryCards = [
   { title: 'Outdoor Furniture', description: 'Durable outdoor forms for slow mornings, open-air dinners, and generous hosting.', image: '/assets/outdoor-furniture.webp', queryValue: null },
 ];
 
-const featuredProductSelectColumns = [
-  'id',
-  'name',
-  'category',
-  'summary',
-  'price',
-  'wood',
-  'availability',
-  'image',
-  'cover_image',
-  'image_urls',
-  'slug',
-  'status',
-  'is_active',
-  'featured',
-  'is_featured',
-  'featured_product',
-].join(',');
-
 const heroTrustBadges = [
   { title: 'Custom Furniture Crafted to Order', description: 'Every piece is made to your exact specification with meticulous craftsmanship.' },
   { title: 'Sustainably Sourced Hardwood', description: 'Premium timbers selected for beauty, durability, and responsible sourcing.' },
@@ -80,26 +62,7 @@ const heroTrustBadges = [
   { title: 'Designed & Built in Nigeria', description: 'Local craftsmanship with a luxury finish for discerning clients across the region.' },
 ];
 
-interface Product {
-  id: string;
-  name: string;
-  category: string;
-  summary?: string;
-  price?: string;
-  wood?: string;
-  availability?: string;
-  image?: string;
-  cover_image?: string;
-  image_urls?: string[];
-  slug?: string;
-  status?: string;
-  is_active?: boolean;
-  featured?: boolean;
-  is_featured?: boolean;
-  featured_product?: boolean;
-}
-
-const defaultFeaturedProducts: Product[] = products.slice(0, 3);
+const defaultFeaturedProducts = normalizeProducts(products).slice(0, 3);
 
 const defaultProjectOfMonth: Project = {
   id: 'project-of-the-month',
@@ -228,7 +191,7 @@ export function Home() {
             .order('created_at', { ascending: false });
 
           if (error) throw error;
-          return (data ?? []) as Product[];
+          return normalizeProducts(data);
         });
 
         const featuredItems = activeProducts.filter(
@@ -384,7 +347,7 @@ const normalizeCategorySlug = (category: string) =>
                 <div className="relative aspect-[4/3] overflow-hidden">
                   <img
                     src={product.cover_image || product.image || product.image_urls?.[0] || ''}
-                    alt={product.name}
+                    alt={product.name ?? ''}
                     loading="lazy"
                     decoding="async"
                     className="h-full w-full object-cover transition duration-700 ease-brand group-hover:scale-105"
@@ -396,7 +359,7 @@ const normalizeCategorySlug = (category: string) =>
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-sm font-medium text-bark/70">{product.wood}</p>
                     <Button variant="link" size="sm" asChild className="px-0">
-                      <Link to={`/products/${normalizeCategorySlug(product.category)}/${product.slug ?? product.id}`}>View product</Link>
+                      <Link to={`/products/${normalizeCategorySlug(product.category ?? '')}/${product.slug ?? product.id}`}>View product</Link>
                     </Button>
                   </div>
                 </div>

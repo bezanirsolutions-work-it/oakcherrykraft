@@ -17,63 +17,8 @@ import {
   ImageCarousel,
 } from '../components/ui';
 import { getCachedData } from '../lib/cache';
+import { normalizeProduct, productSelectColumns, type Product } from '../lib/products';
 import { supabase } from '../lib/supabase';
-
-interface Product {
-  id: string;
-  name: string;
-  slug?: string;
-  category: string;
-  summary?: string;
-  description?: string;
-  material?: string;
-  finish?: string;
-  colour?: string;
-  dimensions?: string;
-  height?: string;
-  width?: string;
-  depth?: string;
-  dimensionUnit?: string;
-  price?: string;
-  price_label?: string;
-  wood?: string;
-  availability?: string;
-  image?: string;
-  cover_image?: string;
-  image_urls?: string[];
-  features?: string[];
-  specifications?: string[];
-  status?: string;
-  is_active?: boolean;
-}
-
-const productSelectColumns = [
-  'id',
-  'name',
-  'slug',
-  'category',
-  'summary',
-  'description',
-  'material',
-  'finish',
-  'colour',
-  'dimensions',
-  'height',
-  'width',
-  'depth',
-  'dimensionUnit',
-  'price',
-  'price_label',
-  'wood',
-  'availability',
-  'image',
-  'cover_image',
-  'image_urls',
-  'features',
-  'specifications',
-  'status',
-  'is_active',
-].join(',');
 
 const fadeIn = {
   hidden: { opacity: 0, y: 24 },
@@ -87,7 +32,7 @@ const normalizeCategorySlug = (category: string) =>
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9-]/g, '');
 
-const formatPriceValue = (value?: string) => {
+const formatPriceValue = (value?: string | null) => {
   if (!value?.trim()) return '';
   const numeric = value.replace(/[^0-9.-]/g, '');
   if (!numeric || Number.isNaN(Number(numeric))) return value.trim();
@@ -153,7 +98,7 @@ export function ProductDetail() {
             throw fetchError;
           }
 
-          const product = data as Product | null;
+          const product = normalizeProduct(data);
           if (product?.status === 'archived') {
             return null;
           }
@@ -210,25 +155,25 @@ export function ProductDetail() {
     <PageContainer className="space-y-10 pb-20">
       <Helmet>
         <title>{product.name} | Oak Cherry Kraft</title>
-        <meta name="description" content={product.summary || product.description || 'Premium handcrafted furniture'} />
+        <meta name="description" content={product.summary ?? product.description ?? 'Premium handcrafted furniture'} />
       </Helmet>
-      <PageHeader title={product.name} subtitle={product.summary || product.description} showBreadcrumb />
+      <PageHeader title={product.name ?? ''} subtitle={product.summary ?? product.description ?? undefined} showBreadcrumb />
       <Breadcrumb
         items={[
           { label: 'Home', path: '/' },
           { label: 'Products', path: '/products' },
-          { label: product.category, path: `/products/${categorySlug}` },
-          { label: product.name },
+          { label: product.category ?? '', path: `/products/${categorySlug}` },
+          { label: product.name ?? '' },
         ]}
         className="pt-6"
       />
       <motion.section initial="hidden" animate="visible" variants={fadeIn} className="space-y-8">
-        <SectionHeader eyebrow="Product details" title={product.name} description={product.summary || product.description} />
+        <SectionHeader eyebrow="Product details" title={product.name ?? ''} description={product.summary ?? product.description ?? ''} />
 
         {galleryImages.length > 0 ? (
-          <ImageCarousel images={galleryImages} alt={product.name} />
+          <ImageCarousel images={galleryImages} alt={product.name ?? ''} />
         ) : (
-          <AnimatedImage src={coverImage} alt={product.name} aspectRatio="4 / 3" overlay />
+          <AnimatedImage src={coverImage} alt={product.name ?? ''} aspectRatio="4 / 3" overlay />
         )}
 
         {product.description ? (
@@ -240,7 +185,7 @@ export function ProductDetail() {
         <div className="grid gap-6 sm:grid-cols-2">
           <Card>
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oak-700">Category</p>
-            <p className="mt-3 text-lg font-semibold text-bark">{product.category}</p>
+            <p className="mt-3 text-lg font-semibold text-bark">{product.category ?? ''}</p>
           </Card>
           <Card>
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oak-700">Material</p>

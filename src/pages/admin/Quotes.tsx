@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AlertCircle, Inbox, Search } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import type { Json } from '../../lib/database';
 
 interface QuoteRequestRow {
   id: string;
@@ -8,9 +9,9 @@ interface QuoteRequestRow {
   email: string;
   phone: string;
   project_type: string | null;
-  configuration: Record<string, unknown> | null;
+  configuration: Json | null;
   status: string;
-  created_at: string;
+  created_at: string | null;
 }
 
 interface ConfiguratorSelectionRow {
@@ -178,6 +179,8 @@ export function Quotes() {
     }
   };
 
+  const parseCreatedAt = (value: string | null) => (value ? new Date(value).getTime() : 0);
+
   const filteredQuoteRequests = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
@@ -203,7 +206,7 @@ export function Quotes() {
     sorted.sort((a, b) => {
       switch (sortOption) {
         case 'oldest':
-          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          return parseCreatedAt(a.created_at) - parseCreatedAt(b.created_at);
         case 'customer-az':
           return a.full_name.localeCompare(b.full_name);
         case 'customer-za':
@@ -211,7 +214,7 @@ export function Quotes() {
         case 'status':
           return a.status.localeCompare(b.status);
         default:
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          return parseCreatedAt(b.created_at) - parseCreatedAt(a.created_at);
       }
     });
 
@@ -418,7 +421,7 @@ export function Quotes() {
                           ) : null}
                         </div>
                       </td>
-                      <td className="whitespace-nowrap px-4 py-4 text-bark/70">{formatDate(request.created_at)}</td>
+                      <td className="whitespace-nowrap px-4 py-4 text-bark/70">{request.created_at ? formatDate(request.created_at) : '-'}</td>
                       <td className="whitespace-nowrap px-4 py-4 text-right">
                         <button
                           type="button"
@@ -663,12 +666,14 @@ export function Quotes() {
                     </div>
                     <div>
                       <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Created date</p>
-                      <p className="mt-2 text-base font-semibold text-bark">{formatDate(selectedQuote.created_at)}</p>
+                      <p className="mt-2 text-base font-semibold text-bark">
+                        {selectedQuote.created_at ? formatDate(selectedQuote.created_at) : '-'}
+                      </p>
                     </div>
                     <div>
                       <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Last updated</p>
                       <p className="mt-2 text-base font-semibold text-bark">
-                        {selectedQuote.updated_at ? formatDate(selectedQuote.updated_at) : formatDate(selectedQuote.created_at)}
+                        {selectedQuote.updated_at ? formatDate(selectedQuote.updated_at) : selectedQuote.created_at ? formatDate(selectedQuote.created_at) : '-'}
                       </p>
                     </div>
                   </div>
