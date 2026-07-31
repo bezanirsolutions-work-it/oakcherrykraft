@@ -63,7 +63,7 @@ interface ConfiguratorPrefillProduct {
   material?: string;
   finish?: string;
   cover_image?: string;
-  image?: string;
+  image_url?: string;
   image_urls?: string[];
 }
 
@@ -205,7 +205,7 @@ export function Configurator() {
   const selectedProductObj = routeState?.selectedProduct ?? null;
   const productImageUrl: string | undefined =
     selectedProductObj?.cover_image ||
-    selectedProductObj?.image ||
+    selectedProductObj?.image_url ||
     selectedProductObj?.image_urls?.[0] ||
     undefined;
 

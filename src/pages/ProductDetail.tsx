@@ -17,7 +17,7 @@ import {
   ImageCarousel,
 } from '../components/ui';
 import { getCachedData } from '../lib/cache';
-import { normalizeProduct, productSelectColumns, type Product } from '../lib/products';
+import { getProductImage, normalizeProduct, productSelectColumns, type Product } from '../lib/products';
 import { supabase } from '../lib/supabase';
 
 const fadeIn = {
@@ -32,10 +32,12 @@ const normalizeCategorySlug = (category: string) =>
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9-]/g, '');
 
-const formatPriceValue = (value?: string | null) => {
-  if (!value?.trim()) return '';
-  const numeric = value.replace(/[^0-9.-]/g, '');
-  if (!numeric || Number.isNaN(Number(numeric))) return value.trim();
+const formatPriceValue = (value?: string | number | null) => {
+  if (value == null) return '';
+  const stringValue = typeof value === 'number' ? String(value) : value.trim();
+  if (!stringValue) return '';
+  const numeric = stringValue.replace(/[^0-9.-]/g, '');
+  if (!numeric || Number.isNaN(Number(numeric))) return stringValue.trim();
   return new Intl.NumberFormat('en-NG', {
     style: 'currency',
     currency: 'NGN',
@@ -55,13 +57,7 @@ const buildDimensions = (product: Product) => {
     return product.dimensions.trim();
   }
 
-  const measurements = [product.height, product.width, product.depth].filter(Boolean).map((value) => value?.trim());
-  if (measurements.length === 0) {
-    return null;
-  }
-
-  const dimensionString = measurements.join(' × ');
-  return product.dimensionUnit ? `${dimensionString} ${product.dimensionUnit.trim()}` : dimensionString;
+  return null;
 };
 
 export function ProductDetail() {
@@ -87,7 +83,7 @@ export function ProductDetail() {
             .from('products')
             .select(productSelectColumns)
             .eq('slug', slug)
-            .eq('status', 'published')
+            .in('status', ['published', 'available'])
             .eq('is_active', true)
             .single();
 
@@ -120,10 +116,10 @@ export function ProductDetail() {
     fetchProduct();
   }, [slug]);
 
-  const coverImage = product?.cover_image || product?.image || product?.image_urls?.[0] || '';
+  const coverImage = getProductImage(product);
   const galleryImages = useMemo(() => {
     if (!product) return [];
-    const images = product.image_urls?.length ? product.image_urls : product.image ? [product.image] : [];
+    const images = product.image_urls?.length ? product.image_urls : product.image_url ? [product.image_url] : [];
     return images.filter(Boolean);
   }, [product]);
 
@@ -155,9 +151,9 @@ export function ProductDetail() {
     <PageContainer className="space-y-10 pb-20">
       <Helmet>
         <title>{product.name} | Oak Cherry Kraft</title>
-        <meta name="description" content={product.summary ?? product.description ?? 'Premium handcrafted furniture'} />
+        <meta name="description" content={product.description ?? 'Premium handcrafted furniture'} />
       </Helmet>
-      <PageHeader title={product.name ?? ''} subtitle={product.summary ?? product.description ?? undefined} showBreadcrumb />
+      <PageHeader title={product.name ?? ''} subtitle={product.description ?? undefined} showBreadcrumb />
       <Breadcrumb
         items={[
           { label: 'Home', path: '/' },
@@ -168,7 +164,7 @@ export function ProductDetail() {
         className="pt-6"
       />
       <motion.section initial="hidden" animate="visible" variants={fadeIn} className="space-y-8">
-        <SectionHeader eyebrow="Product details" title={product.name ?? ''} description={product.summary ?? product.description ?? ''} />
+        <SectionHeader eyebrow="Product details" title={product.name ?? ''} description={product.description ?? ''} />
 
         {galleryImages.length > 0 ? (
           <ImageCarousel images={galleryImages} alt={product.name ?? ''} />
@@ -189,13 +185,13 @@ export function ProductDetail() {
           </Card>
           <Card>
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oak-700">Material</p>
-            <p className="mt-3 text-lg font-semibold text-bark">{product.material || product.wood || 'Premium wood'}</p>
+            <p className="mt-3 text-lg font-semibold text-bark">{product.material || 'Premium wood'}</p>
           </Card>
         </div>
 
         <div className="rounded-[2rem] border border-bark/10 bg-white p-8 shadow-soft">
           <div className="flex flex-wrap items-center gap-4">
-            <Badge className="bg-oak-100 text-oak-700">{product.availability || 'Made to order'}</Badge>
+            <Badge className="bg-oak-100 text-oak-700">{product.status === 'published' || product.status === 'available' ? 'Available to commission' : 'Made to order'}</Badge>
             <span className="text-lg font-semibold text-bark">{getDisplayPrice(product)}</span>
           </div>
 
