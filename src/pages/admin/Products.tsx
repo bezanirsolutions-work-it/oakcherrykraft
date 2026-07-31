@@ -28,15 +28,46 @@ const overlayVariants = {
 
 type ProductRow = Database['public']['Tables']['products']['Row'];
 
-type Product = ProductRow;
+type Product = ProductRow & {
+  summary?: string | null;
+  wood?: string | null;
+  availability?: string | null;
+  height?: string | null;
+  width?: string | null;
+  depth?: string | null;
+  dimensionUnit?: string | null;
+};
 
-type ProductTextField = {
-  [K in keyof Product]: Product[K] extends string | null | undefined ? K : never;
-}[keyof Product];
+type ProductTextField =
+  | 'id'
+  | 'created_at'
+  | 'updated_at'
+  | 'name'
+  | 'slug'
+  | 'category'
+  | 'description'
+  | 'material'
+  | 'finish'
+  | 'colour'
+  | 'dimensions'
+  | 'price'
+  | 'price_label'
+  | 'image_url'
+  | 'cover_image'
+  | 'image_urls'
+  | 'features'
+  | 'specifications'
+  | 'status'
+  | 'is_active'
+  | 'summary'
+  | 'wood'
+  | 'availability'
+  | 'height'
+  | 'width'
+  | 'depth'
+  | 'dimensionUnit';
 
-type ProductBooleanField = {
-  [K in keyof Product]: Product[K] extends boolean | null | undefined ? K : never;
-}[keyof Product];
+type ProductBooleanField = 'is_active';
 
 type ProductInsertPayload = Database['public']['Tables']['products']['Insert'];
 type ProductUpdatePayload = Database['public']['Tables']['products']['Update'];
@@ -81,7 +112,7 @@ const parseDimensionsString = (dimensions?: string) => {
 };
 
 const buildDimensionsString = (values: Product) => {
-  const parts = [values.height?.trim(), values.width?.trim(), values.depth?.trim()].filter(Boolean);
+  const parts = [values.height?.trim(), values.width?.trim(), values.depth?.trim()].filter((value): value is string => Boolean(value));
   if (parts.length === 0) {
     return '';
   }
@@ -156,6 +187,7 @@ const getDisplayPrice = (product: Product) => {
 const statusBadgeClass = (status?: string) => {
   switch (status?.toLowerCase()) {
     case 'available':
+    case 'published':
     case 'in stock':
     case 'available to commission':
       return 'bg-emerald-100 text-emerald-700';
@@ -249,28 +281,25 @@ export function ProductsAdmin() {
     category: null,
     summary: null,
     description: null,
-    price: null,
-    status: null,
-    availability: null,
-    is_active: null,
-    featured: null,
-    is_featured: null,
-    featured_product: null,
-    cover_image: null,
-    image_urls: [],
-    dimensions: null,
     material: null,
-    wood: null,
     finish: null,
     colour: null,
+    dimensions: null,
+    price: null,
+    price_label: null,
+    image_url: null,
+    cover_image: null,
+    image_urls: [],
+    features: [],
+    specifications: [],
+    status: null,
+    is_active: null,
+    availability: null,
+    wood: null,
     height: null,
     width: null,
     depth: null,
     dimensionUnit: null,
-    price_label: null,
-    image: null,
-    features: [],
-    specifications: [],
   };
 
   const [productList, setProductList] = useState<Product[]>([]);
@@ -573,8 +602,8 @@ export function ProductsAdmin() {
     setFormValues((current) => ({
       ...current,
       image_urls: nextOrder,
-      cover_image: current.cover_image || current.image || nextOrder[0] || '',
-      image: current.cover_image || current.image || nextOrder[0] || '',
+      cover_image: current.cover_image || current.image_url || nextOrder[0] || '',
+      image_url: current.cover_image || current.image_url || nextOrder[0] || '',
     }));
     setProductList((current) =>
       current.map((item) =>
@@ -582,8 +611,8 @@ export function ProductsAdmin() {
           ? {
               ...item,
               image_urls: nextOrder,
-              cover_image: item.cover_image || item.image || nextOrder[0] || '',
-              image: item.cover_image || item.image || nextOrder[0] || '',
+              cover_image: item.cover_image || item.image_url || nextOrder[0] || '',
+              image_url: item.cover_image || item.image_url || nextOrder[0] || '',
               updated_at: new Date().toISOString(),
             }
           : item
@@ -618,7 +647,7 @@ export function ProductsAdmin() {
     }
 
     const images = selectedProduct.image_urls ?? [];
-    const coverImage = selectedProduct.cover_image ?? selectedProduct.image;
+    const coverImage = selectedProduct.cover_image ?? selectedProduct.image_url;
     const ordered = coverImage ? [coverImage, ...images] : images;
     const newOrder = Array.from(new Set(ordered.filter(Boolean)));
     setGalleryOrder(newOrder);
@@ -681,7 +710,7 @@ export function ProductsAdmin() {
     );
   };
 
-  const handleBulkPublish = () => handleBulkStatusUpdate('available', 'Publish');
+  const handleBulkPublish = () => handleBulkStatusUpdate('published', 'Publish');
   const handleBulkDraft = () => handleBulkStatusUpdate('draft', 'Draft');
   const handleBulkArchive = () => handleBulkStatusUpdate('archived', 'Archive');
 
@@ -761,18 +790,15 @@ export function ProductsAdmin() {
       dimensionUnit: dimensionParts.dimensionUnit,
       price: selectedProduct.price ?? null,
       price_label: selectedProduct.price_label ?? null,
-      wood: selectedProduct.wood ?? null,
-      availability: selectedProduct.availability ?? null,
-      image: selectedProduct.image ?? null,
+      image_url: selectedProduct.image_url ?? null,
       cover_image: selectedProduct.cover_image ?? null,
       image_urls: selectedProduct.image_urls ?? [],
       features: selectedProduct.features ?? [],
       specifications: selectedProduct.specifications ?? [],
       status: selectedProduct.status ?? null,
       is_active: selectedProduct.is_active ?? null,
-      featured: selectedProduct.featured ?? null,
-      is_featured: selectedProduct.is_featured ?? null,
-      featured_product: selectedProduct.featured_product ?? null,
+      availability: selectedProduct.availability ?? null,
+      wood: selectedProduct.wood ?? null,
     });
 
     setFormFeaturesText((selectedProduct.features ?? []).join('\n'));
@@ -785,7 +811,7 @@ export function ProductsAdmin() {
     if (!selectedProduct) return [] as string[];
     if (galleryOrder.length > 0) return galleryOrder;
     const images = selectedProduct.image_urls ?? [];
-    const coverImage = selectedProduct.cover_image ?? selectedProduct.image;
+    const coverImage = selectedProduct.cover_image ?? selectedProduct.image_url;
     if (coverImage && !images.includes(coverImage)) {
       return [coverImage, ...images];
     }
@@ -805,8 +831,8 @@ export function ProductsAdmin() {
     setFormValues((current) => ({
       ...current,
       image_urls: selectedProduct.image_urls ?? [],
-      cover_image: selectedProduct.cover_image ?? selectedProduct.image ?? '',
-      image: selectedProduct.image ?? '',
+      cover_image: selectedProduct.cover_image ?? selectedProduct.image_url ?? '',
+      image_url: selectedProduct.image_url ?? '',
     }));
   }, [selectedProduct]);
 
@@ -824,7 +850,10 @@ export function ProductsAdmin() {
     const errorSetter = isCreate ? setCreateFormErrors : setFormErrors;
 
     setter((current) => {
-      const next = { ...current, [field]: value };
+      const next = {
+        ...current,
+        [field]: value,
+      } as Product;
 
       if (field === 'name') {
         const currentAutoSlug = generateSafeSlug(current.name ?? '');
@@ -838,10 +867,11 @@ export function ProductsAdmin() {
     });
 
     if (field === 'slug') {
-      setSlugEdited((current) => ({ ...current, [isCreate ? 'create' : 'edit']: true }));
+      const slugField = isCreate ? 'create' : 'edit';
+      setSlugEdited((current) => ({ ...current, [slugField]: true }));
     }
 
-    errorSetter((current) => ({ ...current, [field]: '' }));
+    errorSetter((current) => ({ ...current, [field]: '' } as Record<string, string>));
   };
 
   const handleInputChange = (field: ProductTextField, value: string) => updateFormField(field, value, false);
@@ -961,7 +991,7 @@ export function ProductsAdmin() {
     try {
       const uploadedUrls = await uploadImagesToStorage(selectedImageFiles);
       const updatedImages = [...(selectedProduct.image_urls ?? []), ...uploadedUrls];
-      const coverUrl = selectedProduct.cover_image || selectedProduct.image || uploadedUrls[0] || '';
+      const coverUrl = selectedProduct.cover_image || selectedProduct.image_url || uploadedUrls[0] || '';
 
       const { error: updateError } = await supabase
         .from('products')
@@ -980,8 +1010,7 @@ export function ProductsAdmin() {
         ...current,
         image_urls: updatedImages,
         cover_image: coverUrl,
-        images: updatedImages,
-        image: coverUrl,
+        image_url: coverUrl,
       }));
 
       setProductList((current) =>
@@ -991,8 +1020,7 @@ export function ProductsAdmin() {
                 ...item,
                 image_urls: updatedImages,
                 cover_image: coverUrl,
-                images: updatedImages,
-                image: coverUrl,
+                image_url: coverUrl,
                 updated_at: new Date().toISOString(),
               }
             : item
@@ -1011,7 +1039,7 @@ export function ProductsAdmin() {
       return;
     }
 
-    if ((selectedProduct.cover_image ?? selectedProduct.image) === imageUrl) return;
+    if ((selectedProduct.cover_image ?? selectedProduct.image_url) === imageUrl) return;
 
     setIsUploadingImages(true);
     setImageError(null);
@@ -1033,7 +1061,7 @@ export function ProductsAdmin() {
     setFormValues((current) => ({
       ...current,
       cover_image: imageUrl,
-      image: imageUrl,
+      image_url: imageUrl,
     }));
 
     setProductList((current) =>
@@ -1042,7 +1070,7 @@ export function ProductsAdmin() {
           ? {
               ...item,
               cover_image: imageUrl,
-              image: imageUrl,
+              image_url: imageUrl,
               updated_at: new Date().toISOString(),
             }
           : item
@@ -1064,7 +1092,7 @@ export function ProductsAdmin() {
     setImageMessage(null);
 
     const remainingImages = (selectedProduct.image_urls ?? []).filter((src) => src !== imageUrl);
-    const currentCover = selectedProduct.cover_image ?? selectedProduct.image ?? '';
+    const currentCover = selectedProduct.cover_image ?? selectedProduct.image_url ?? '';
     const nextCover = currentCover === imageUrl ? remainingImages[0] ?? '' : currentCover;
 
     const { error: updateError } = await supabase
@@ -1084,8 +1112,7 @@ export function ProductsAdmin() {
       ...current,
       image_urls: remainingImages,
       cover_image: nextCover,
-      images: remainingImages,
-      image: nextCover,
+      image_url: nextCover,
     }));
 
     setProductList((current) =>
@@ -1095,8 +1122,7 @@ export function ProductsAdmin() {
               ...item,
               image_urls: remainingImages,
               cover_image: nextCover,
-              images: remainingImages,
-              image: nextCover,
+              image_url: nextCover,
               updated_at: new Date().toISOString(),
             }
           : item
@@ -1134,8 +1160,8 @@ export function ProductsAdmin() {
       const [newUrl] = uploadedUrls;
       const currentImages = selectedProduct.image_urls ?? [];
       const updatedImages = currentImages.map((src) => (src === oldImageUrl ? newUrl : src));
-      const isReplacingCover = (selectedProduct.cover_image ?? selectedProduct.image) === oldImageUrl;
-      const nextCover = isReplacingCover ? newUrl : selectedProduct.cover_image ?? selectedProduct.image ?? updatedImages[0] ?? '';
+      const isReplacingCover = (selectedProduct.cover_image ?? selectedProduct.image_url) === oldImageUrl;
+      const nextCover = isReplacingCover ? newUrl : selectedProduct.cover_image ?? selectedProduct.image_url ?? updatedImages[0] ?? '';
 
       const { error } = await supabase
         .from('products')
@@ -1151,8 +1177,7 @@ export function ProductsAdmin() {
         ...current,
         image_urls: updatedImages,
         cover_image: nextCover,
-        images: updatedImages,
-        image: nextCover,
+        image_url: nextCover,
       }));
 
       setProductList((current) =>
@@ -1162,8 +1187,7 @@ export function ProductsAdmin() {
                 ...item,
                 image_urls: updatedImages,
                 cover_image: nextCover,
-                images: updatedImages,
-                image: nextCover,
+                image_url: nextCover,
                 updated_at: new Date().toISOString(),
               }
             : item
@@ -1209,7 +1233,6 @@ export function ProductsAdmin() {
       price: normalizePriceValue(formValues.price),
       price_label: safeString(formValues.price_label),
       material: safeString(formValues.material),
-      wood: safeString(formValues.wood),
       finish: safeString(formValues.finish),
       colour: safeString(formValues.colour),
       dimensions: updatedDimensions,
@@ -1217,7 +1240,7 @@ export function ProductsAdmin() {
       features: parseMultilineList(formFeaturesText),
       specifications: parseMultilineList(formSpecificationsText),
       image_urls: formValues.image_urls ?? [],
-      cover_image: formValues.cover_image ?? formValues.image ?? '',
+      cover_image: formValues.cover_image ?? formValues.image_url ?? '',
     });
 
     const { error: updateError } = await supabase
@@ -1273,7 +1296,6 @@ export function ProductsAdmin() {
       price: normalizePriceValue(createFormValues.price),
       price_label: safeString(createFormValues.price_label),
       material: safeString(createFormValues.material),
-      wood: safeString(createFormValues.wood),
       finish: safeString(createFormValues.finish),
       colour: safeString(createFormValues.colour),
       dimensions: buildDimensionsString(createFormValues),
@@ -1451,12 +1473,15 @@ export function ProductsAdmin() {
     setConfirmation(null);
   };
 
-  const safeString = (value?: string | null) => (value ?? '').trim();
-  const normalizePriceValue = (value?: string | null) => {
+  const safeString = (value?: string | number | null) => {
+    if (value == null) return '';
+    return String(value).trim();
+  };
+  const normalizePriceValue = (value?: string | number | null) => {
     const trimmed = safeString(value).replace(/,/g, '');
     return trimmed === '' ? undefined : trimmed;
   };
-  const isValidPrice = (value?: string | null) => {
+  const isValidPrice = (value?: string | number | null) => {
     const normalized = normalizePriceValue(value);
     if (!normalized) return false;
     return /^\d+(?:\.\d+)?$/.test(normalized);
@@ -1473,7 +1498,10 @@ export function ProductsAdmin() {
 
   const currentTextValue = (key: keyof Product): string => {
     const value = drawerMode === 'create' ? createFormValues[key] : formValues[key];
-    return typeof value === 'string' ? value : '';
+    if (typeof value === 'string' || typeof value === 'number') {
+      return String(value);
+    }
+    return '';
   };
 
   const currentCheckboxValue = (key: keyof Product): boolean => {
@@ -1729,7 +1757,7 @@ export function ProductsAdmin() {
     const existingImages = selectedProduct ? galleryImages : [];
     const selectedCoverImage = isCreateMode
       ? imagePreviews[selectedUploadCoverIndex] ?? ''
-      : selectedProduct ? selectedProduct.cover_image ?? selectedProduct.image ?? '' : '';
+      : selectedProduct ? selectedProduct.cover_image ?? selectedProduct.image_url ?? '' : '';
 
     return (
       <div className="rounded-[1.5rem] border border-bark/10 bg-sand p-5">
@@ -2108,7 +2136,7 @@ export function ProductsAdmin() {
                 >
                   <div className="relative aspect-[4/3] overflow-hidden bg-surface-strong">
                     <img
-                      src={product.cover_image || product.image || product.image_urls?.[0] || ''}
+                      src={product.cover_image || product.image_url || product.image_urls?.[0] || ''}
                       alt={product.name ?? ''}
                       loading={index === 0 ? 'eager' : 'lazy'}
                       className="h-full w-full object-cover transition duration-700 ease-brand group-hover:scale-105"

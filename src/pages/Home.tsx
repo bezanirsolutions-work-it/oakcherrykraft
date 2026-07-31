@@ -29,7 +29,7 @@ import { Button, Card, SectionHeader } from '../components/ui';
 import { SectionTitle } from '../components/base/SectionTitle';
 import { products } from '../data/products';
 import { getCachedData } from '../lib/cache';
-import { featuredProductSelectColumns, normalizeProducts, type Product } from '../lib/products';
+import { featuredProductSelectColumns, getProductImage, normalizeProducts, type Product } from '../lib/products';
 import { supabase } from '../lib/supabase';
 import { fetchFeaturedProjects, fetchProjectOfMonth, type Project } from '../lib/projects';
 
@@ -44,7 +44,7 @@ const sectionStagger = {
 };
 
 const MotionLink = motion(Link);
-const founderPortrait = new URL('../../FOUNDER.jpeg', import.meta.url).href;
+const founderPortrait = new URL('../../ADE\'s.jpeg', import.meta.url).href;
 
 const categoryCards = [
   { title: 'Dining Furniture', description: 'Sculptural centrepieces made for long conversations and memorable gatherings.', image: '/assets/hero/intro-picture.webp', queryValue: 'Dining' },
@@ -186,7 +186,6 @@ export function Home() {
           const { data, error } = await supabase
             .from('products')
             .select(featuredProductSelectColumns)
-            .eq('status', 'published')
             .eq('is_active', true)
             .order('created_at', { ascending: false });
 
@@ -194,16 +193,9 @@ export function Home() {
           return normalizeProducts(data);
         });
 
-        const featuredItems = activeProducts.filter(
-          (product) =>
-            product.featured === true ||
-            product.is_featured === true ||
-            product.featured_product === true
-        );
+        const featuredItems = activeProducts.slice(0, 4);
 
-        setFeaturedProducts(
-          featuredItems.length > 0 ? featuredItems.slice(0, 4) : activeProducts.slice(0, 4)
-        );
+        setFeaturedProducts(featuredItems);
       } catch (error) {
         console.error('Featured products query error:', error);
         setFeaturedError(error instanceof Error ? error.message : 'Unable to load featured products.');
@@ -346,7 +338,7 @@ const normalizeCategorySlug = (category: string) =>
               >
                 <div className="relative aspect-[4/3] overflow-hidden">
                   <img
-                    src={product.cover_image || product.image || product.image_urls?.[0] || ''}
+                    src={getProductImage(product)}
                     alt={product.name ?? ''}
                     loading="lazy"
                     decoding="async"
@@ -355,9 +347,9 @@ const normalizeCategorySlug = (category: string) =>
                 </div>
                 <div className="p-6">
                   <h3 className="text-2xl font-semibold text-bark">{product.name}</h3>
-                  <p className="mt-3 text-sm leading-7 text-bark/70">{product.summary}</p>
+                  <p className="mt-3 text-sm leading-7 text-bark/70">{product.description || 'Premium handcrafted furniture.'}</p>
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="text-sm font-medium text-bark/70">{product.wood}</p>
+                    <p className="text-sm font-medium text-bark/70">{product.material || 'Fine wood'}</p>
                     <Button variant="link" size="sm" asChild className="px-0">
                       <Link to={`/products/${normalizeCategorySlug(product.category ?? '')}/${product.slug ?? product.id}`}>View product</Link>
                     </Button>

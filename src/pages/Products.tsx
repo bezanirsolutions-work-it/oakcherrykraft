@@ -7,7 +7,7 @@ import { PageHeader } from '../components/layout/PageHeader';
 import { getCachedData } from '../lib/cache';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Button, EmptyState, LoadingState, SectionHeader } from '../components/ui';
-import { normalizeProducts, productSelectColumns, type Product } from '../lib/products';
+import { getProductImage, normalizeProducts, productSelectColumns, type Product } from '../lib/products';
 import { supabase } from '../lib/supabase';
 
 const fadeIn = {
@@ -27,10 +27,12 @@ const normalizeCategorySlug = (category: string) =>
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9-]/g, '');
 
-const formatPriceValue = (value?: string | null) => {
-  if (!value?.trim()) return '';
-  const numeric = value.replace(/[^0-9.-]/g, '');
-  if (!numeric || Number.isNaN(Number(numeric))) return value.trim();
+const formatPriceValue = (value?: string | number | null) => {
+  if (value == null) return '';
+  const stringValue = typeof value === 'number' ? String(value) : value.trim();
+  if (!stringValue) return '';
+  const numeric = stringValue.replace(/[^0-9.-]/g, '');
+  if (!numeric || Number.isNaN(Number(numeric))) return stringValue.trim();
   return new Intl.NumberFormat('en-NG', {
     style: 'currency',
     currency: 'NGN',
@@ -71,7 +73,7 @@ export function Products() {
           const { data, error: fetchError } = await supabase
             .from('products')
             .select(productSelectColumns)
-            .eq('status', 'published')
+            .in('status', ['published', 'available'])
             .eq('is_active', true)
             .order('created_at', { ascending: false });
 
@@ -129,7 +131,7 @@ export function Products() {
         return true;
       }
 
-      const haystack = [product.name, product.category, product.material, product.description, product.summary]
+      const haystack = [product.name, product.category, product.material, product.description]
         .filter(Boolean)
         .join(' ')
         .toLowerCase();
@@ -268,7 +270,7 @@ export function Products() {
             className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
           >
             {filteredProducts.map((product, index) => {
-              const displayImage = product.cover_image || product.image || (product.image_urls?.[0] ?? '');
+              const displayImage = getProductImage(product);
               const productSlug = product.slug || product.id;
               const categorySlug = normalizeCategorySlug(product.category || '');
               return (
@@ -289,17 +291,17 @@ export function Products() {
                     />
                     <span className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 text-xs font-semibold text-bark shadow-soft">
                       <Check size={13} className="text-oak-600" aria-hidden="true" />
-                      {product.availability || 'Made to order'}
+                      {product.status === 'published' || product.status === 'available' ? 'Available to commission' : 'Made to order'}
                     </span>
                   </div>
                   <div className="p-6 sm:p-7">
                     <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oak-700">{product.category}</p>
                     <h2 className="mt-3 font-display text-3xl font-semibold text-bark">{product.name}</h2>
-                    <p className="mt-3 text-sm leading-7 text-bark/70">{product.description || product.summary || 'Premium handcrafted furniture.'}</p>
+                    <p className="mt-3 text-sm leading-7 text-bark/70">{product.description || 'Premium handcrafted furniture.'}</p>
                     <div className="mt-6 flex flex-col gap-3 border-t border-bark/10 pt-5 text-sm sm:flex-row sm:items-center sm:justify-between">
                       <span className="inline-flex items-center gap-2 text-bark/65">
                         <Clock3 size={15} aria-hidden="true" />
-                        {product.material || product.wood || 'Fine wood'}
+                        {product.material || 'Fine wood'}
                       </span>
                       <span className="font-semibold text-bark">{getDisplayPrice(product)}</span>
                     </div>
