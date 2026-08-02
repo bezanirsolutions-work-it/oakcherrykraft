@@ -15,9 +15,10 @@ export function PageHeader({ title, subtitle, height = 'min-h-[320px] sm:min-h-[
 
   return (
     <section
-      className="relative isolate overflow-hidden bg-[#F8F4EE] px-4 py-16 text-[#F8F4EE] sm:px-[60px] sm:py-20 lg:py-24"
+      className="relative isolate overflow-hidden px-4 py-16 text-[#F8F4EE] sm:px-[60px] sm:py-20 lg:py-24"
       style={{
         minHeight: height,
+        backgroundColor: '#F8F4EE',
         backgroundImage: `url('/assets/hero/GENERATED.webp')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',

@@ -36,254 +36,206 @@ const pageTransition = {
   transition: { duration: 0.32, ease: [0.22, 1, 0.36, 1] as const },
 };
 
-const LoadingFallback = () => (
-  <div className="flex h-96 items-center justify-center">
-    <div className="h-8 w-8 animate-spin rounded-full border-4 border-bark/20 border-t-bark" />
-  </div>
-);
-
 export default function App() {
   const location = useLocation();
 
   return (
     <ErrorBoundary>
       <AnimatePresence mode="wait" initial={false}>
-        <Routes location={location}>
-          <Route element={<Layout />}>
-            <Route
-              index
-              element={
-                <motion.div {...pageTransition} className="w-full">
-                  <Home />
-                </motion.div>
-              }
-            />
-            <Route
-              path="products"
-              element={
-                <motion.div {...pageTransition} className="w-full">
-                  <Suspense fallback={<LoadingFallback />}>
+        <Suspense fallback={null}>
+          <Routes location={location}>
+            <Route element={<Layout />}>
+              <Route
+                index
+                element={
+                  <motion.div {...pageTransition} className="w-full">
+                    <Home />
+                  </motion.div>
+                }
+              />
+              <Route
+                path="products"
+                element={
+                  <motion.div {...pageTransition} className="w-full">
                     <Products />
-                  </Suspense>
-                </motion.div>
-              }
-            />
-            <Route
-              path="products/:category"
-              element={
-                <motion.div {...pageTransition} className="w-full">
-                  <Suspense fallback={<LoadingFallback />}>
+                  </motion.div>
+                }
+              />
+              <Route
+                path="products/:category"
+                element={
+                  <motion.div {...pageTransition} className="w-full">
                     <Products />
-                  </Suspense>
-                </motion.div>
-              }
-            />
-            <Route
-              path="products/:category/:slug"
-              element={
-                <motion.div {...pageTransition} className="w-full">
-                  <Suspense fallback={<LoadingFallback />}>
+                  </motion.div>
+                }
+              />
+              <Route
+                path="products/:category/:slug"
+                element={
+                  <motion.div {...pageTransition} className="w-full">
                     <ProductDetail />
-                  </Suspense>
-                </motion.div>
-              }
-            />
-            <Route
-              path="projects"
-              element={
-                <motion.div {...pageTransition} className="w-full">
-                  <Suspense fallback={<LoadingFallback />}>
+                  </motion.div>
+                }
+              />
+              <Route
+                path="projects"
+                element={
+                  <motion.div {...pageTransition} className="w-full">
                     <ProjectPortfolio />
-                  </Suspense>
-                </motion.div>
-              }
-            />
-            <Route
-              path="projects/:slug"
-              element={
-                <motion.div {...pageTransition} className="w-full">
-                  <Suspense fallback={<LoadingFallback />}>
+                  </motion.div>
+                }
+              />
+              <Route
+                path="projects/:slug"
+                element={
+                  <motion.div {...pageTransition} className="w-full">
                     <ProjectDetail />
-                  </Suspense>
-                </motion.div>
-              }
-            />
-            <Route
-              path="request-quote"
-              element={
-                <motion.div {...pageTransition} className="w-full">
-                  <Suspense fallback={<LoadingFallback />}>
+                  </motion.div>
+                }
+              />
+              <Route
+                path="request-quote"
+                element={
+                  <motion.div {...pageTransition} className="w-full">
                     <QuoteRequest />
-                  </Suspense>
-                </motion.div>
-              }
-            />
-            {/* Backwards compatibility: support old /quote link as alias */}
-            <Route
-              path="quote"
-              element={
-                <motion.div {...pageTransition} className="w-full">
-                  <Suspense fallback={<LoadingFallback />}>
+                  </motion.div>
+                }
+              />
+              {/* Backwards compatibility: support old /quote link as alias */}
+              <Route
+                path="quote"
+                element={
+                  <motion.div {...pageTransition} className="w-full">
                     <QuoteRequest />
-                  </Suspense>
-                </motion.div>
-              }
-            />
-            <Route
-              path="configurator"
-              element={
-                <motion.div {...pageTransition} className="w-full">
-                  <Suspense fallback={<LoadingFallback />}>
+                  </motion.div>
+                }
+              />
+              <Route
+                path="configurator"
+                element={
+                  <motion.div {...pageTransition} className="w-full">
                     <Configurator />
-                  </Suspense>
-                </motion.div>
-              }
-            />
-            <Route
-              path="configuration-selector"
-              element={
-                <motion.div {...pageTransition} className="w-full">
-                  <Suspense fallback={<LoadingFallback />}>
+                  </motion.div>
+                }
+              />
+              <Route
+                path="configuration-selector"
+                element={
+                  <motion.div {...pageTransition} className="w-full">
                     <Configurator />
-                  </Suspense>
-                </motion.div>
-              }
-            />
-            <Route
-              path="about"
-              element={
-                <motion.div {...pageTransition} className="w-full">
-                  <Suspense fallback={<LoadingFallback />}>
+                  </motion.div>
+                }
+              />
+              <Route
+                path="about"
+                element={
+                  <motion.div {...pageTransition} className="w-full">
                     <About />
-                  </Suspense>
-                </motion.div>
-              }
-            />
-            <Route
-              path="contact"
-              element={
-                <motion.div {...pageTransition} className="w-full">
-                  <Suspense fallback={<LoadingFallback />}>
+                  </motion.div>
+                }
+              />
+              <Route
+                path="contact"
+                element={
+                  <motion.div {...pageTransition} className="w-full">
                     <Contact />
-                  </Suspense>
-                </motion.div>
-              }
-            />
+                  </motion.div>
+                }
+              />
+              <Route
+                path="*"
+                element={
+                  <motion.div {...pageTransition} className="w-full">
+                    <NotFound />
+                  </motion.div>
+                }
+              />
+            </Route>
+
             <Route
-              path="*"
+              path="/admin/login"
               element={
                 <motion.div {...pageTransition} className="w-full">
-                  <Suspense fallback={<LoadingFallback />}>
-                    <NotFound />
-                  </Suspense>
+                  <Login />
                 </motion.div>
               }
             />
-          </Route>
 
-          <Route
-            path="/admin/login"
-            element={
-              <motion.div {...pageTransition} className="w-full">
-                <Suspense fallback={<LoadingFallback />}>
-                  <Login />
-                </Suspense>
-              </motion.div>
-            }
-          />
-
-          <Route
-            path="/admin"
-            element={
-              <Suspense fallback={<LoadingFallback />}>
+            <Route
+              path="/admin"
+              element={
                 <ProtectedRoute>
                   <AdminLayout />
                 </ProtectedRoute>
-              </Suspense>
-            }
-          >
-            <Route
-              index
-              element={
-                <motion.div {...pageTransition} className="w-full">
-                  <Suspense fallback={<LoadingFallback />}>
+              }
+            >
+              <Route
+                index
+                element={
+                  <motion.div {...pageTransition} className="w-full">
                     <Dashboard />
-                  </Suspense>
-                </motion.div>
-              }
-            />
-            <Route
-              path="quotes"
-              element={
-                <motion.div {...pageTransition} className="w-full">
-                  <Suspense fallback={<LoadingFallback />}>
+                  </motion.div>
+                }
+              />
+              <Route
+                path="quotes"
+                element={
+                  <motion.div {...pageTransition} className="w-full">
                     <Quotes />
-                  </Suspense>
-                </motion.div>
-              }
-            />
-            <Route
-              path="configurator"
-              element={
-                <motion.div {...pageTransition} className="w-full">
-                  <Suspense fallback={<LoadingFallback />}>
+                  </motion.div>
+                }
+              />
+              <Route
+                path="configurator"
+                element={
+                  <motion.div {...pageTransition} className="w-full">
                     <ConfiguratorRequests />
-                  </Suspense>
-                </motion.div>
-              }
-            />
-            <Route
-              path="contacts"
-              element={
-                <motion.div {...pageTransition} className="w-full">
-                  <Suspense fallback={<LoadingFallback />}>
+                  </motion.div>
+                }
+              />
+              <Route
+                path="contacts"
+                element={
+                  <motion.div {...pageTransition} className="w-full">
                     <Contacts />
-                  </Suspense>
-                </motion.div>
-              }
-            />
-            <Route
-              path="products"
-              element={
-                <motion.div {...pageTransition} className="w-full">
-                  <Suspense fallback={<LoadingFallback />}>
+                  </motion.div>
+                }
+              />
+              <Route
+                path="products"
+                element={
+                  <motion.div {...pageTransition} className="w-full">
                     <ProductsAdmin />
-                  </Suspense>
-                </motion.div>
-              }
-            />
-            <Route
-              path="projects"
-              element={
-                <motion.div {...pageTransition} className="w-full">
-                  <Suspense fallback={<LoadingFallback />}>
+                  </motion.div>
+                }
+              />
+              <Route
+                path="projects"
+                element={
+                  <motion.div {...pageTransition} className="w-full">
                     <ProjectsAdmin />
-                  </Suspense>
-                </motion.div>
-              }
-            />
-            <Route
-              path="analytics"
-              element={
-                <motion.div {...pageTransition} className="w-full">
-                  <Suspense fallback={<LoadingFallback />}>
+                  </motion.div>
+                }
+              />
+              <Route
+                path="analytics"
+                element={
+                  <motion.div {...pageTransition} className="w-full">
                     <Analytics />
-                  </Suspense>
-                </motion.div>
-              }
-            />
-            <Route
-              path="settings"
-              element={
-                <motion.div {...pageTransition} className="w-full">
-                  <Suspense fallback={<LoadingFallback />}>
+                  </motion.div>
+                }
+              />
+              <Route
+                path="settings"
+                element={
+                  <motion.div {...pageTransition} className="w-full">
                     <Settings />
-                  </Suspense>
-                </motion.div>
-              }
-            />
-          </Route>
-        </Routes>
+                  </motion.div>
+                }
+              />
+            </Route>
+          </Routes>
+        </Suspense>
       </AnimatePresence>
     </ErrorBoundary>
   );
