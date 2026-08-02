@@ -106,30 +106,7 @@ export function HeroSection({ children }: HeroSectionProps) {
             </motion.div>
           </motion.div>
 
-            <motion.div
-              variants={item}
-              className="mt-16 lg:mt-12 grid gap-4 rounded-[22px] border border-[#d9c3a6]/70 bg-[rgba(255,250,244,0.88)] p-5 shadow-[0_16px_45px_rgba(46,36,28,0.08)] backdrop-blur-sm grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:gap-5"
-            >
-            {[
-              { title: 'Crafted to Order', subtitle: 'Made just for you' },
-              { title: 'Premium Hardwoods', subtitle: 'Sustainably sourced' },
-              { title: 'Residential & Commercial', subtitle: 'Premium projects' },
-              { title: 'Designed & Built', subtitle: 'Proudly in Nigeria' },
-            ].map((itemData) => (
-              <div
-                key={itemData.title}
-                className="flex min-w-[0] items-start gap-3 rounded-[16px] border border-[#e8d7bd] bg-white/80 p-3 shadow-sm lg:items-center lg:h-full"
-              >
-                <span className="mt-0.5 lg:mt-0 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#b98b3b] bg-[#f8efe2] text-[#b98b3b]">
-                  <CheckCircle2 className="h-5 w-5" />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-[0.95rem] font-semibold leading-5 text-[#2E241C]">{itemData.title}</p>
-                  <p className="mt-1 text-sm font-medium leading-6 text-[#6f5a46]">{itemData.subtitle}</p>
-                </div>
-              </div>
-            ))}
-          </motion.div>
+            {/* feature cards removed from the left column and will render as a full-width bar below */}
         </div>
 
         <div className="relative flex items-center justify-end overflow-visible px-4 sm:px-0">
@@ -140,6 +117,29 @@ export function HeroSection({ children }: HeroSectionProps) {
           </div>
         </div>
       </div>
+
+      {/* Full-width feature bar that spans most of the hero on desktop */}
+      <motion.div
+        variants={item}
+        className="relative z-10 -mt-6 lg:-mt-12 w-[92%] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 rounded-[22px] border border-[#d9c3a6]/70 bg-[rgba(255,250,244,0.92)] p-4 shadow-[0_24px_60px_rgba(46,36,28,0.12)] backdrop-blur-sm"
+      >
+        {[
+          { title: 'Crafted to Order', subtitle: 'Made just for you' },
+          { title: 'Premium Hardwoods', subtitle: 'Sustainably sourced' },
+          { title: 'Residential & Commercial', subtitle: 'Premium projects' },
+          { title: 'Designed & Built', subtitle: 'Proudly in Nigeria' },
+        ].map((itemData) => (
+          <div key={itemData.title} className="flex-1 min-w-0 flex flex-col lg:flex-row items-start lg:items-center gap-3 rounded-[16px] border border-[#e8d7bd] bg-white/80 px-6 py-6 shadow-sm">
+            <span className="flex-shrink-0 flex h-10 w-10 items-center justify-center rounded-full border border-[#b98b3b] bg-[#f8efe2] text-[#b98b3b]">
+              <CheckCircle2 className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-[0.95rem] font-semibold leading-5 text-[#2E241C]">{itemData.title}</p>
+              <p className="mt-1 text-sm font-medium leading-6 text-[#6f5a46]">{itemData.subtitle}</p>
+            </div>
+          </div>
+        ))}
+      </motion.div>
 
       <div className="pointer-events-none absolute inset-x-0 bottom-8 flex justify-center">
         <button onClick={handleScrollClick} aria-label="Scroll to explore" className="pointer-events-auto flex flex-col items-center gap-2 rounded-md bg-transparent">
