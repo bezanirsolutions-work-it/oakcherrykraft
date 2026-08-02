@@ -35,7 +35,7 @@ export function HeroSection({ children }: HeroSectionProps) {
   return (
     <section
       ref={heroRef}
-      className="relative overflow-hidden text-[#2E241C] px-4 sm:px-[60px] bg-[url('/assets/hero/GENERATED.webp')] bg-cover bg-center lg:bg-[position:120%_50%] bg-no-repeat"
+      className="relative overflow-hidden text-[#2E241C] px-4 sm:px-[60px] bg-[url('/assets/hero/GENERATED.webp')] bg-cover bg-center lg:bg-[position:calc(100%+240px)_50%] bg-no-repeat"
       style={{ minHeight: '95vh', backgroundColor: '#F8F4EE' }}
     >
       <motion.div
