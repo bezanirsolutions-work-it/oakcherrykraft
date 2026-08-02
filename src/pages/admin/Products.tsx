@@ -5,6 +5,7 @@ import { Archive, ArrowUpRight, Check, Clock3, Eye, Image, Layers, Paintbrush, P
 import { Button, EmptyState, LoadingState, ImageCarousel } from '../../components/ui';
 import { supabase } from '../../lib/supabase';
 import type { Database } from '../../lib/database';
+import { normalizeImageUrl, normalizeProductImageFields } from '../../lib/imageUtils';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -903,6 +904,19 @@ export function ProductsAdmin() {
 
   const getSafeFileName = (file: File) => file.name.replace(/[^a-zA-Z0-9._-]/g, '-');
 
+  const normalizeProductImageState = (product: Product | null | undefined) => {
+    if (!product) return null;
+    const normalized = normalizeProductImageFields(product as Product);
+    if (!normalized) return null;
+
+    return {
+      ...product,
+      cover_image: normalized.cover_image,
+      image_url: normalized.image_url,
+      image_urls: normalized.image_urls,
+    };
+  };
+
   const uploadImagesToStorage = async (files: File[], productId = selectedProduct?.id) => {
     if (!productId) {
       throw new Error('No selected product for image upload.');
@@ -916,18 +930,6 @@ export function ProductsAdmin() {
       const path = `products/${productId}/${Date.now()}-${filename}`;
       setUploadProgress(`Uploading ${index + 1} of ${files.length}...`);
 
-      console.log('Upload start', {
-        productId,
-        bucket,
-        path,
-        file: {
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          isFile: file instanceof File,
-        },
-      });
-
       if (!(file instanceof File)) {
         throw new Error('Upload target is not a File object.');
       }
@@ -940,34 +942,31 @@ export function ProductsAdmin() {
         throw new Error(`Unsupported file type for upload: ${file.type || 'unknown'}`);
       }
 
-      const { data: sessionData } = await supabase.auth.getSession();
-      console.log('Auth session:', sessionData);
-      console.log('Bucket:', bucket);
-      console.log('Uploading:', filename);
+      await supabase.auth.getSession();
 
       const uploadResult = await supabase.storage.from(bucket).upload(path, file, { upsert: false });
-      console.log('Upload result:', uploadResult);
-      console.log('Upload data:', uploadResult.data);
-      console.log('Upload error:', uploadResult.error);
 
       if (uploadResult.error) {
-        console.error('Upload error message:', uploadResult.error.message);
-        console.error('Upload error statusCode:', (uploadResult.error as { statusCode?: number }).statusCode);
-        console.error('Upload error payload:', JSON.stringify(uploadResult.error));
         throw new Error(uploadResult.error.message);
       }
 
-      const listResult = await supabase.storage.from(bucket).list();
-      console.log('Bucket list after upload:', listResult);
-
       const publicUrlResult = supabase.storage.from(bucket).getPublicUrl(path);
       const publicUrlData = publicUrlResult.data;
-      console.log('Public URL:', publicUrlData?.publicUrl ?? null);
       if (!publicUrlData?.publicUrl) {
         throw new Error('Unable to get image public URL.');
       }
 
-      uploadedUrls.push(publicUrlData.publicUrl);
+      const normalizedUrl = normalizeImageUrl(publicUrlData.publicUrl, bucket);
+      if (!normalizedUrl) {
+        throw new Error('Generated image URL is invalid.');
+      }
+
+      const validation = await fetch(normalizedUrl, { method: 'HEAD' });
+      if (!validation.ok) {
+        throw new Error(`Image URL failed validation with status ${validation.status}.`);
+      }
+
+      uploadedUrls.push(normalizedUrl);
     }
 
     return uploadedUrls;
@@ -991,11 +990,11 @@ export function ProductsAdmin() {
     try {
       const uploadedUrls = await uploadImagesToStorage(selectedImageFiles);
       const updatedImages = [...(selectedProduct.image_urls ?? []), ...uploadedUrls];
-      const coverUrl = selectedProduct.cover_image || selectedProduct.image_url || uploadedUrls[0] || '';
+      const coverUrl = normalizeImageUrl(selectedProduct.cover_image ?? selectedProduct.image_url ?? uploadedUrls[0] ?? '', bucket) ?? uploadedUrls[0] ?? '';
 
       const { error: updateError } = await supabase
         .from('products')
-        .update({ image_urls: updatedImages, cover_image: coverUrl })
+        .update({ image_urls: updatedImages, cover_image: coverUrl, image_url: coverUrl })
         .eq('id', selectedProduct.id);
 
       if (updateError) {
@@ -1039,7 +1038,13 @@ export function ProductsAdmin() {
       return;
     }
 
-    if ((selectedProduct.cover_image ?? selectedProduct.image_url) === imageUrl) return;
+    const normalizedUrl = normalizeImageUrl(imageUrl, bucket);
+    if (!normalizedUrl) {
+      setImageError('Selected image URL is invalid.');
+      return;
+    }
+
+    if ((selectedProduct.cover_image ?? selectedProduct.image_url) === normalizedUrl) return;
 
     setIsUploadingImages(true);
     setImageError(null);
@@ -1047,7 +1052,7 @@ export function ProductsAdmin() {
 
     const { error: updateError } = await supabase
       .from('products')
-      .update({ cover_image: imageUrl })
+      .update({ cover_image: normalizedUrl, image_url: normalizedUrl })
       .eq('id', selectedProduct.id);
 
     setIsUploadingImages(false);
@@ -1060,8 +1065,8 @@ export function ProductsAdmin() {
     setImageMessage('Cover image updated successfully.');
     setFormValues((current) => ({
       ...current,
-      cover_image: imageUrl,
-      image_url: imageUrl,
+      cover_image: normalizedUrl,
+      image_url: normalizedUrl,
     }));
 
     setProductList((current) =>
@@ -1069,8 +1074,8 @@ export function ProductsAdmin() {
         item.id === selectedProduct.id
           ? {
               ...item,
-              cover_image: imageUrl,
-              image_url: imageUrl,
+              cover_image: normalizedUrl,
+              image_url: normalizedUrl,
               updated_at: new Date().toISOString(),
             }
           : item
@@ -1091,13 +1096,14 @@ export function ProductsAdmin() {
     setImageError(null);
     setImageMessage(null);
 
-    const remainingImages = (selectedProduct.image_urls ?? []).filter((src) => src !== imageUrl);
+    const normalizedTargetUrl = normalizeImageUrl(imageUrl, bucket);
+    const remainingImages = (selectedProduct.image_urls ?? []).filter((src) => normalizeImageUrl(src, bucket) !== normalizedTargetUrl);
     const currentCover = selectedProduct.cover_image ?? selectedProduct.image_url ?? '';
-    const nextCover = currentCover === imageUrl ? remainingImages[0] ?? '' : currentCover;
+    const nextCover = normalizeImageUrl(currentCover, bucket) === normalizedTargetUrl ? remainingImages[0] ?? '' : normalizeImageUrl(currentCover, bucket) ?? '';
 
     const { error: updateError } = await supabase
       .from('products')
-      .update({ image_urls: remainingImages, cover_image: nextCover })
+      .update({ image_urls: remainingImages, cover_image: nextCover, image_url: nextCover })
       .eq('id', selectedProduct.id);
 
     setIsUploadingImages(false);
@@ -1129,7 +1135,7 @@ export function ProductsAdmin() {
       )
     );
 
-    const storageDeleted = await deleteStorageFile(imageUrl);
+    const storageDeleted = await deleteStorageFile(normalizedTargetUrl ?? imageUrl);
     if (!storageDeleted) {
       setImageError('Image removed from the product, but storage cleanup failed.');
     }
@@ -1159,13 +1165,14 @@ export function ProductsAdmin() {
       const uploadedUrls = await uploadImagesToStorage([singleFile], selectedProduct.id);
       const [newUrl] = uploadedUrls;
       const currentImages = selectedProduct.image_urls ?? [];
-      const updatedImages = currentImages.map((src) => (src === oldImageUrl ? newUrl : src));
-      const isReplacingCover = (selectedProduct.cover_image ?? selectedProduct.image_url) === oldImageUrl;
-      const nextCover = isReplacingCover ? newUrl : selectedProduct.cover_image ?? selectedProduct.image_url ?? updatedImages[0] ?? '';
+      const normalizedOldUrl = normalizeImageUrl(oldImageUrl, bucket);
+      const updatedImages = currentImages.map((src) => (normalizeImageUrl(src, bucket) === normalizedOldUrl ? newUrl : src));
+      const isReplacingCover = normalizeImageUrl(selectedProduct.cover_image ?? selectedProduct.image_url, bucket) === normalizedOldUrl;
+      const nextCover = isReplacingCover ? newUrl : normalizeImageUrl(selectedProduct.cover_image ?? selectedProduct.image_url, bucket) ?? updatedImages[0] ?? '';
 
       const { error } = await supabase
         .from('products')
-        .update({ image_urls: updatedImages, cover_image: nextCover })
+        .update({ image_urls: updatedImages, cover_image: nextCover, image_url: nextCover })
         .eq('id', selectedProduct.id);
 
       if (error) {
@@ -1196,7 +1203,7 @@ export function ProductsAdmin() {
 
       setGalleryOrder(updatedImages);
       galleryOrderRef.current = updatedImages;
-      await deleteStorageFile(oldImageUrl);
+      await deleteStorageFile(normalizedOldUrl ?? oldImageUrl);
     } catch (error) {
       setImageError(error instanceof Error ? error.message : 'Unable to replace image.');
     } finally {
@@ -1240,7 +1247,8 @@ export function ProductsAdmin() {
       features: parseMultilineList(formFeaturesText),
       specifications: parseMultilineList(formSpecificationsText),
       image_urls: formValues.image_urls ?? [],
-      cover_image: formValues.cover_image ?? formValues.image_url ?? '',
+      cover_image: normalizeImageUrl(formValues.cover_image ?? formValues.image_url ?? '', bucket) ?? '',
+      image_url: normalizeImageUrl(formValues.cover_image ?? formValues.image_url ?? '', bucket) ?? '',
     });
 
     const { error: updateError } = await supabase
@@ -1303,7 +1311,8 @@ export function ProductsAdmin() {
       features: parseMultilineList(createFeaturesText),
       specifications: parseMultilineList(createSpecificationsText),
       image_urls: createFormValues.image_urls ?? [],
-      cover_image: createFormValues.cover_image ?? '',
+      cover_image: normalizeImageUrl(createFormValues.cover_image ?? '', bucket) ?? '',
+      image_url: normalizeImageUrl(createFormValues.cover_image ?? '', bucket) ?? '',
     });
 
     const payloadToInsert: Partial<ProductInsertPayload> = { ...insertPayload };
@@ -1333,7 +1342,7 @@ export function ProductsAdmin() {
         const coverImage = newProduct.cover_image || uploadedUrls[selectedUploadCoverIndex] || uploadedUrls[0] || '';
         const { error: imageUpdateError } = await supabase
           .from('products')
-          .update({ image_urls: imageUrls, cover_image: coverImage })
+          .update({ image_urls: imageUrls, cover_image: coverImage, image_url: coverImage })
           .eq('id', newProduct.id);
         if (imageUpdateError) throw new Error(imageUpdateError.message);
         newProduct = { ...newProduct, image_urls: imageUrls, cover_image: coverImage };

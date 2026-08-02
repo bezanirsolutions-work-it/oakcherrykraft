@@ -162,12 +162,14 @@ DROP POLICY IF EXISTS anon_insert_quote_requests ON public.quote_requests;
 CREATE POLICY anon_insert_quote_requests
 ON public.quote_requests
 FOR INSERT
+TO public
 WITH CHECK (true);
 
 DROP POLICY IF EXISTS anon_insert_contact_messages ON public.contact_messages;
 CREATE POLICY anon_insert_contact_messages
 ON public.contact_messages
 FOR INSERT
+TO public
 WITH CHECK (true);
 
 -- Policies for authenticated users.

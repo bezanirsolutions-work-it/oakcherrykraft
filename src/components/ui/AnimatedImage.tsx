@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '../../lib/cn';
 import { imageReveal } from '../../lib/animations';
+import { getSafeImageSrc } from '../../lib/imageUtils';
 
 interface AnimatedImageProps {
   src: string;
@@ -21,6 +23,12 @@ export function AnimatedImage({
   aspectRatio,
   objectFit = 'cover',
 }: AnimatedImageProps) {
+  const [imageSrc, setImageSrc] = useState(() => getSafeImageSrc(src));
+
+  useEffect(() => {
+    setImageSrc(getSafeImageSrc(src));
+  }, [src]);
+
   return (
     <motion.div
       variants={imageReveal}
@@ -35,10 +43,11 @@ export function AnimatedImage({
       style={aspectRatio ? { aspectRatio } : undefined}
     >
       <img
-        src={src}
+        src={imageSrc}
         alt={alt}
         loading={priority ? 'eager' : 'lazy'}
         decoding="async"
+        onError={() => setImageSrc(getSafeImageSrc(null))}
         className={cn(
           'h-full w-full transition duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]',
           objectFit === 'contain' ? 'object-contain' : 'object-cover',

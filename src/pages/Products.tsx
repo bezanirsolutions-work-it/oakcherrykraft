@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, Check, Clock3, Search } from 'lucide-react';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { PageHeader } from '../components/layout/PageHeader';
 import { getCachedData } from '../lib/cache';
 import { PageContainer } from '../components/layout/PageContainer';
@@ -49,19 +49,12 @@ const getDisplayPrice = (product: Product) => {
 
 export function Products() {
   const { category: categoryParam } = useParams<{ category?: string }>();
-  const location = useLocation();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const queryCategory = useMemo(() => {
-    const params = new URLSearchParams(location.search);
-    const value = params.get('category')?.trim();
-    return value || null;
-  }, [location.search]);
-
-  const activeCategoryFilter = queryCategory ?? categoryParam ?? null;
+  const activeCategoryFilter = categoryParam ?? null;
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -78,7 +71,6 @@ export function Products() {
             .order('created_at', { ascending: false });
 
           if (fetchError) {
-            console.error('Supabase query error:', fetchError);
             throw fetchError;
           }
 
@@ -87,7 +79,6 @@ export function Products() {
 
         setProducts(data);
       } catch (fetchError) {
-        console.error('Supabase fetch failed:', fetchError);
         setError('Unable to load products. Please try again later.');
       } finally {
         setLoading(false);
@@ -113,6 +104,8 @@ export function Products() {
   const selectedCategory = activeCategoryFilter
     ? categories.find((item) => item.label === activeCategoryFilter || item.slug === normalizeCategorySlug(activeCategoryFilter))
     : null;
+
+  const selectedCategoryName = selectedCategory?.label ?? null;
 
   const categoryOptions = useMemo(
     () => [{ slug: 'all', label: 'All' }, ...categories],
@@ -185,7 +178,7 @@ export function Products() {
       </Helmet>
 
       <PageHeader
-        title={selectedCategory ? selectedCategory.label : 'Furniture Built to Feel Natural, Lasting, and Beautifully Scaled'}
+        title={selectedCategoryName || 'Furniture Built to Feel Natural, Lasting, and Beautifully Scaled'}
         subtitle="Explore considered pieces for dining, living, bedroom, and custom spaces. Every published design is made to order and can be tailored to your space."
         showBreadcrumb
       />
@@ -200,9 +193,7 @@ export function Products() {
         <SectionHeader
           eyebrow="The collection"
           title={
-            selectedCategory
-              ? selectedCategory.label
-              : 'Furniture built to feel natural, lasting, and beautifully scaled.'
+            selectedCategoryName || 'Furniture built to feel natural, lasting, and beautifully scaled.'
           }
           description="Explore considered pieces for dining, living, bedroom, and custom spaces. Every published design is made to order and can be tailored to your space."
         />
@@ -235,19 +226,22 @@ export function Products() {
               />
             </div>
             <div className="flex flex-wrap gap-2">
-              {categoryOptions.map((option) => (
-                <Link
-                  key={option.slug}
-                  to={option.slug === 'all' ? '/products' : `/products?category=${encodeURIComponent(option.label)}`}
-                  className={`inline-flex items-center justify-center rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                    option.slug === (categoryParam ?? 'all')
-                      ? 'border-bark bg-bark text-sand'
-                      : 'border-bark/10 bg-white text-bark hover:border-bark hover:bg-sand'
-                  }`}
-                >
-                  {option.label}
-                </Link>
-              ))}
+              {categoryOptions.map((option) => {
+                const destination = option.slug === 'all' ? '/products' : `/products/${encodeURIComponent(option.slug)}`;
+                return (
+                  <Link
+                    key={option.slug}
+                    to={destination}
+                    className={`inline-flex items-center justify-center rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                      option.slug === (categoryParam ?? 'all')
+                        ? 'border-bark bg-bark text-sand'
+                        : 'border-bark/10 bg-white text-bark hover:border-bark hover:bg-sand'
+                    }`}
+                  >
+                    {option.label}
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </div>

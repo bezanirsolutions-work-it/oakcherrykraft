@@ -119,8 +119,9 @@ export function ProductDetail() {
   const coverImage = getProductImage(product);
   const galleryImages = useMemo(() => {
     if (!product) return [];
-    const images = product.image_urls?.length ? product.image_urls : product.image_url ? [product.image_url] : [];
-    return images.filter(Boolean);
+    return [product.cover_image, product.image_url, ...(product.image_urls ?? [])]
+      .map((value) => (typeof value === 'string' ? value.trim() : ''))
+      .filter(Boolean);
   }, [product]);
 
   const dimensions = product ? buildDimensions(product) : null;

@@ -47,12 +47,12 @@ const MotionLink = motion(Link);
 const founderPortrait = new URL('../../ADE\'s.jpeg', import.meta.url).href;
 
 const categoryCards = [
-  { title: 'Dining Furniture', description: 'Sculptural centrepieces made for long conversations and memorable gatherings.', image: '/assets/hero/intro-picture.webp', queryValue: 'Dining' },
-  { title: 'Living Room Furniture', description: 'Warm, considered forms that bring depth and ease to everyday living.', image: '/assets/living-room-cover.webp', queryValue: 'Living Room' },
-  { title: 'Bedroom Furniture', description: 'Quietly luxurious pieces designed around rest, ritual, and lasting comfort.', image: '/assets/bedroom-furniture-cover.webp', queryValue: 'Bedroom' },
-  { title: 'Office Furniture', description: 'Confident executive desks and storage that make focused work feel elevated.', image: '/assets/office-furniture-cover.webp', queryValue: 'Office' },
-  { title: 'Kitchen Furniture', description: 'Tailored cabinetry and fitted storage with practical intelligence and a beautiful material presence.', image: '/assets/19.webp', queryValue: 'Kitchen' },
-  { title: 'Outdoor Furniture', description: 'Durable outdoor forms for slow mornings, open-air dinners, and generous hosting.', image: '/assets/outdoor-furniture.webp', queryValue: null },
+  { title: 'Dining Furniture', description: 'Sculptural centrepieces made for long conversations and memorable gatherings.', image: '/assets/hero/intro-picture.webp', pathValue: 'dining' },
+  { title: 'Living Room Furniture', description: 'Warm, considered forms that bring depth and ease to everyday living.', image: '/assets/living-room-cover.webp', pathValue: 'living-room' },
+  { title: 'Bedroom Furniture', description: 'Quietly luxurious pieces designed around rest, ritual, and lasting comfort.', image: '/assets/bedroom-furniture-cover.webp', pathValue: 'bedroom' },
+  { title: 'Office Furniture', description: 'Confident executive desks and storage that make focused work feel elevated.', image: '/assets/office-furniture-cover.webp', pathValue: 'office' },
+  { title: 'Kitchen Furniture', description: 'Tailored cabinetry and fitted storage with practical intelligence and a beautiful material presence.', image: '/assets/19.webp', pathValue: 'kitchen' },
+  { title: 'Outdoor Furniture', description: 'Durable outdoor forms for slow mornings, open-air dinners, and generous hosting.', image: '/assets/outdoor-furniture.webp', pathValue: null },
 ];
 
 const heroTrustBadges = [
@@ -197,7 +197,6 @@ export function Home() {
 
         setFeaturedProducts(featuredItems);
       } catch (error) {
-        console.error('Featured products query error:', error);
         setFeaturedError(error instanceof Error ? error.message : 'Unable to load featured products.');
       } finally {
         setIsFeaturedLoading(false);
@@ -288,7 +287,7 @@ const normalizeCategorySlug = (category: string) =>
           {categoryCards.map((category) => (
             <MotionLink
               key={category.title}
-              to={category.queryValue ? `/products?category=${encodeURIComponent(category.queryValue)}` : '/products'}
+              to={category.pathValue ? `/products/${category.pathValue}` : '/products'}
               variants={reveal}
               whileHover={{ scale: 1.02 }}
               className="group relative overflow-hidden rounded-[1.5rem] bg-bark text-sand shadow-card transition duration-300 hover:-translate-y-1 focus:outline-none focus-visible:ring-4 focus-visible:ring-oak-200"
@@ -527,7 +526,7 @@ const normalizeCategorySlug = (category: string) =>
 
               <Card className="h-auto rounded-[1.75rem] border border-bark/10 bg-sand/80 p-6 shadow-soft">
                 <p className="text-xs font-semibold uppercase tracking-[0.32em] text-oak-700">Founder quote</p>
-                <blockquote className="mt-3 text-2xl font-display leading-tight text-bark">"Great furniture isn't just built to fill a space—it's crafted to become part of the stories created within it."</blockquote>
+                <blockquote className="mt-3 text-2xl font-display leading-tight text-bark">{"Great furniture isn't just built to fill a space—it's crafted to become part of the stories created within it."}</blockquote>
                 <div className="mt-4 text-sm leading-7 text-bark/75">
                   <p className="font-semibold text-bark">Adeyemo Rhodes-Vivour</p>
                   <p>Founder, Oak Cherry Kraft</p>
