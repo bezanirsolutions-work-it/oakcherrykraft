@@ -71,9 +71,9 @@ export function HeroSection({ children }: HeroSectionProps) {
         <div className="absolute inset-x-0 top-[12%] mx-auto h-[480px] w-[480px] rounded-full bg-[radial-gradient(circle,_rgba(215,190,150,0.18),_transparent_70%)] opacity-90 blur-3xl" aria-hidden="true" />
       </div>
 
-      <div className="mx-auto grid max-w-[1400px] min-h-[95vh] items-center gap-6 lg:grid-cols-[0.45fr_0.55fr] py-12 sm:py-24">
+      <div className="mx-auto grid max-w-[1400px] min-h-[95vh] items-center gap-6 py-12 sm:py-24 lg:grid-cols-[minmax(0,0.6fr)_minmax(0,0.4fr)] lg:gap-8 lg:px-[80px] xl:px-[100px]">
         <div className="px-4 sm:px-0">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={containerVariants} className="relative z-10 mx-auto max-w-[100%] sm:max-w-[500px] rounded-[20px] bg-[rgba(248,244,238,0.55)] backdrop-blur-sm p-6 sm:p-10 md:p-12">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={containerVariants} className="relative z-10 mx-auto w-full max-w-[620px] rounded-[20px] bg-[rgba(248,244,238,0.55)] backdrop-blur-sm p-6 sm:p-10 md:p-12 lg:mx-0 lg:max-w-[640px]">
             <motion.div variants={item} className="inline-flex items-center gap-4">
               <span className="inline-block h-px w-16 bg-[#b98b3b] opacity-90" aria-hidden="true" />
               <span className="text-xs uppercase tracking-[0.32em] text-[#8d6a45] font-semibold">HANDCRAFTED IN NIGERIA</span>
@@ -119,10 +119,10 @@ export function HeroSection({ children }: HeroSectionProps) {
         </div>
       </div>
 
-      {/* Full-width feature bar that spans most of the hero on desktop */}
+      {/* Feature cards: one full-width row on desktop, two-by-two on tablet, stacked on mobile */}
       <motion.div
         variants={item}
-        className="relative z-10 -mt-6 lg:-mt-12 w-[92%] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 rounded-[22px] border border-[#d9c3a6]/70 bg-[rgba(255,250,244,0.92)] p-4 shadow-[0_24px_60px_rgba(46,36,28,0.12)] backdrop-blur-sm"
+        className="relative z-10 -mt-6 lg:-mt-10 mx-auto flex w-full max-w-[1400px] flex-col gap-4 px-4 sm:px-[60px] md:grid md:grid-cols-2 md:gap-5 lg:flex lg:flex-row lg:justify-between lg:gap-6 lg:px-[80px] xl:px-[100px]"
       >
         {[
           { title: 'Crafted to Order', subtitle: 'Made just for you' },
@@ -130,8 +130,11 @@ export function HeroSection({ children }: HeroSectionProps) {
           { title: 'Residential & Commercial', subtitle: 'Premium projects' },
           { title: 'Designed & Built', subtitle: 'Proudly in Nigeria' },
         ].map((itemData) => (
-          <div key={itemData.title} className="flex-1 min-w-0 flex flex-col lg:flex-row items-start lg:items-center gap-3 rounded-[16px] border border-[#e8d7bd] bg-white/80 px-6 py-6 shadow-sm">
-            <span className="flex-shrink-0 flex h-10 w-10 items-center justify-center rounded-full border border-[#b98b3b] bg-[#f8efe2] text-[#b98b3b]">
+          <div
+            key={itemData.title}
+            className="flex min-h-[130px] flex-1 flex-row items-center justify-start gap-3 rounded-[18px] border border-[#e8d7bd]/80 bg-[rgba(255,255,255,0.82)] px-6 py-5 shadow-[0_12px_30px_rgba(46,36,28,0.08)] backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_35px_rgba(46,36,28,0.12)] lg:min-h-[150px] lg:items-center"
+          >
+            <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-[#b98b3b] bg-[#f8efe2] text-[#b98b3b]">
               <CheckCircle2 className="h-5 w-5" />
             </span>
             <div className="min-w-0">
