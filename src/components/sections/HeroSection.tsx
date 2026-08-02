@@ -43,7 +43,7 @@ export function HeroSection({ children }: HeroSectionProps) {
         src="/assets/hero/GENERATED.webp"
         alt=""
         aria-hidden="true"
-        className="pointer-events-none hidden lg:block absolute top-0 bottom-0 right-[-240px] w-[140%] object-cover -z-20"
+        className="pointer-events-none hidden lg:block absolute top-0 bottom-0 right-[-320px] w-[145%] object-cover -z-20"
         style={{ transform: 'scaleX(-1)' }}
       />
       <motion.div
@@ -71,25 +71,24 @@ export function HeroSection({ children }: HeroSectionProps) {
         <div className="absolute inset-x-0 top-[12%] mx-auto h-[480px] w-[480px] rounded-full bg-[radial-gradient(circle,_rgba(215,190,150,0.18),_transparent_70%)] opacity-90 blur-3xl" aria-hidden="true" />
       </div>
 
-      <div className="mx-auto grid max-w-[1400px] min-h-[95vh] items-center gap-6 py-12 sm:py-24 lg:grid-cols-[minmax(0,0.6fr)_minmax(0,0.4fr)] lg:gap-8 lg:px-[80px] xl:px-[100px]">
+      <div className="mx-auto grid max-w-[1500px] min-h-[95vh] items-center gap-6 py-12 sm:py-24 lg:grid-cols-[minmax(0,0.54fr)_minmax(0,0.46fr)] lg:gap-8 lg:px-[90px] xl:px-[120px]">
         <div className="px-4 sm:px-0">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={containerVariants} className="relative z-10 mx-auto w-full max-w-[620px] rounded-[20px] bg-[rgba(248,244,238,0.55)] backdrop-blur-sm p-6 sm:p-10 md:p-12 lg:mx-0 lg:max-w-[640px]">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={containerVariants} className="relative z-10 mx-auto w-full max-w-[620px] rounded-[20px] bg-[rgba(248,244,238,0.55)] backdrop-blur-sm p-6 sm:p-10 md:p-12 lg:mx-0 lg:max-w-[740px] lg:pr-16">
             <motion.div variants={item} className="inline-flex items-center gap-4">
               <span className="inline-block h-px w-16 bg-[#b98b3b] opacity-90" aria-hidden="true" />
               <span className="text-xs uppercase tracking-[0.32em] text-[#8d6a45] font-semibold">HANDCRAFTED IN NIGERIA</span>
             </motion.div>
 
-            <motion.h1 variants={item} className="mt-8 max-w-[500px] text-[3.8rem] leading-[1.02] font-serif tracking-[-0.03em] text-[#241B16] sm:text-[4.75rem] md:text-[5.5rem] lg:text-[6rem]">
-              <div>Bespoke Furniture</div>
-              <div>Crafted for</div>
-              <div>Timeless Living</div>
+            <motion.h1 variants={item} className="mt-8 max-w-[620px] text-[3.8rem] leading-[1.02] font-serif tracking-[-0.03em] text-[#241B16] sm:text-[4.75rem] md:text-[5.5rem] lg:max-w-[740px] lg:text-[6rem]">
+              <div>Bespoke Furniture Crafted</div>
+              <div>for Timeless Living</div>
             </motion.h1>
 
-            <motion.p variants={item} className="mt-14 max-w-[500px] text-lg font-medium leading-[1.8] text-[#4B4038]">
+            <motion.p variants={item} className="mt-16 max-w-[560px] text-lg font-medium leading-[1.8] text-[#4B4038] lg:mt-20">
               Every Oak Cherry Kraft piece is thoughtfully designed and handcrafted using premium hardwoods to complement your home or workspace.
             </motion.p>
 
-            <motion.div variants={item} className="mt-16 flex flex-col gap-4 sm:flex-row sm:items-center">
+            <motion.div variants={item} className="mt-20 flex flex-col gap-4 sm:flex-row sm:items-center lg:mt-24">
               <motion.div whileHover={{ y: -2 }} className="w-full sm:w-auto">
                 <Button asChild className="w-full sm:w-auto rounded-full bg-[#2E241C] px-8 py-4 text-sm font-semibold text-[#F8F4EE] shadow-lg shadow-[#00000014] transition duration-300 hover:-translate-y-1 hover:shadow-2xl">
                   <Link to="/request-quote" className="inline-flex items-center gap-3">
@@ -122,7 +121,7 @@ export function HeroSection({ children }: HeroSectionProps) {
       {/* Feature cards: one full-width row on desktop, two-by-two on tablet, stacked on mobile */}
       <motion.div
         variants={item}
-        className="relative z-10 -mt-6 lg:-mt-10 mx-auto flex w-full max-w-[1400px] flex-col gap-4 px-4 sm:px-[60px] md:grid md:grid-cols-2 md:gap-5 lg:flex lg:flex-row lg:justify-between lg:gap-6 lg:px-[80px] xl:px-[100px]"
+        className="relative z-10 -mt-8 lg:-mt-20 xl:-mt-24 mx-auto flex w-full max-w-[1800px] flex-col gap-4 px-4 sm:px-[60px] md:grid md:grid-cols-2 md:gap-5 lg:flex lg:flex-row lg:justify-between lg:gap-6 lg:px-12 xl:px-16 2xl:px-20"
       >
         {[
           { title: 'Crafted to Order', subtitle: 'Made just for you' },
@@ -132,7 +131,7 @@ export function HeroSection({ children }: HeroSectionProps) {
         ].map((itemData) => (
           <div
             key={itemData.title}
-            className="flex min-h-[130px] flex-1 flex-row items-center justify-start gap-3 rounded-[18px] border border-[#e8d7bd]/80 bg-[rgba(255,255,255,0.82)] px-6 py-5 shadow-[0_12px_30px_rgba(46,36,28,0.08)] backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_35px_rgba(46,36,28,0.12)] lg:min-h-[150px] lg:items-center"
+            className="flex min-h-[92px] flex-1 flex-row items-center justify-start gap-3 rounded-[18px] border border-[#e8d7bd]/80 bg-[rgba(255,255,255,0.82)] px-6 py-4 shadow-[0_12px_30px_rgba(46,36,28,0.08)] backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(46,36,28,0.14)] lg:min-h-[100px] lg:items-center lg:py-3"
           >
             <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-[#b98b3b] bg-[#f8efe2] text-[#b98b3b]">
               <CheckCircle2 className="h-5 w-5" />
@@ -145,7 +144,7 @@ export function HeroSection({ children }: HeroSectionProps) {
         ))}
       </motion.div>
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-8 flex justify-center">
+      <div className="pointer-events-none absolute inset-x-0 bottom-8 flex justify-center lg:hidden">
         <button onClick={handleScrollClick} aria-label="Scroll to explore" className="pointer-events-auto flex flex-col items-center gap-2 rounded-md bg-transparent">
           <motion.div animate={{ y: [0, 8, 0] }} transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }} className="text-[#2E241C] text-2xl">
             ↓
