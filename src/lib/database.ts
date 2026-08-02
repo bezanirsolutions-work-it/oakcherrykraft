@@ -6,7 +6,6 @@ export interface Database {
       profiles: {
         Row: {
           id: string;
-          user_id: string | null;
           full_name: string | null;
           avatar_url: string | null;
           role: string | null;
@@ -15,7 +14,6 @@ export interface Database {
         };
         Insert: {
           id?: string;
-          user_id?: string | null;
           full_name?: string | null;
           avatar_url?: string | null;
           role?: string | null;
@@ -24,7 +22,6 @@ export interface Database {
         };
         Update: {
           id?: string;
-          user_id?: string | null;
           full_name?: string | null;
           avatar_url?: string | null;
           role?: string | null;
