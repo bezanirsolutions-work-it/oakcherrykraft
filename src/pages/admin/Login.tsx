@@ -22,13 +22,6 @@ export function Login() {
       email,
       password,
     });
-
-    console.log('signInWithPassword result:', result);
-    console.log('signInWithPassword data:', result.data);
-    console.log('signInWithPassword error:', result.error);
-    console.log('signInWithPassword session:', result.data?.session);
-    console.log('signInWithPassword user:', result.data?.user);
-
     setLoading(false);
 
     if (result.error) {
@@ -37,19 +30,21 @@ export function Login() {
     }
 
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    console.log('Session after login:', sessionData);
-
     const { data: userData, error: userError } = await supabase.auth.getUser();
-    console.log('User after login:', userData);
-    console.log('User error after login:', userError);
+
+    
 
     const session = result.data?.session ?? sessionData.session;
     const user = result.data?.user ?? userData.user ?? session?.user;
+
+    
 
     if (sessionError || !session?.access_token || !user?.id) {
       setError('Supabase did not create a valid admin session. Please try again.');
       return;
     }
+
+    
 
     try {
       const role = await getAdminRole(user.id);
@@ -60,7 +55,6 @@ export function Login() {
         return;
       }
     } catch (adminError) {
-      console.error(adminError);
       setError('We could not verify your admin access right now. Please try again.');
       return;
     }
@@ -80,8 +74,9 @@ export function Login() {
 
           <form className="mt-10 space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-sm font-medium text-bark">Email address</label>
+              <label htmlFor="admin-email" className="block text-sm font-medium text-bark">Email address</label>
               <input
+                id="admin-email"
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
@@ -90,8 +85,9 @@ export function Login() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-bark">Password</label>
+              <label htmlFor="admin-password" className="block text-sm font-medium text-bark">Password</label>
               <input
+                id="admin-password"
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
