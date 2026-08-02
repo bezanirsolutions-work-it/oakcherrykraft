@@ -35,10 +35,14 @@ export function HeroSection({ children }: HeroSectionProps) {
   return (
     <section
       ref={heroRef}
-      className="relative overflow-hidden bg-[#F8F4EE] text-[#2E241C] px-4 sm:px-[60px]"
+      className="relative overflow-hidden text-[#2E241C] px-4 sm:px-[60px]"
       style={{
         minHeight: '95vh',
-        backgroundImage: "linear-gradient(90deg, rgba(248,244,238,1) 0%, rgba(248,244,238,0.98) 35%, rgba(248,244,238,0.9) 50%, rgba(248,244,238,0.35) 68%, transparent 100%)",
+        backgroundColor: '#F8F4EE',
+        backgroundImage: "url('/assets/hero/GENERATED.webp')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
       }}
     >
       <motion.div
@@ -52,7 +56,7 @@ export function HeroSection({ children }: HeroSectionProps) {
           top: '0%',
           bottom: '0%',
           width: '100%',
-          backgroundImage: "linear-gradient(90deg, rgba(0,0,0,0.20) 0%, rgba(0,0,0,0.12) 45%, rgba(0,0,0,0.28) 100%), radial-gradient(circle at 85% 20%, rgba(255,255,255,0.16), transparent 30%), url('/assets/hero/GENERATED.webp')",
+          backgroundImage: "linear-gradient(90deg, rgba(0,0,0,0.20) 0%, rgba(0,0,0,0.12) 45%, rgba(0,0,0,0.28) 100%), radial-gradient(circle at 85% 20%, rgba(255,255,255,0.16), transparent 30%)",
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
