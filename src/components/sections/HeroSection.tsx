@@ -44,6 +44,7 @@ export function HeroSection({ children }: HeroSectionProps) {
         alt=""
         aria-hidden="true"
         className="pointer-events-none hidden lg:block absolute top-0 bottom-0 right-[-240px] w-[140%] object-cover -z-20"
+        style={{ transform: 'scaleX(-1)' }}
       />
       <motion.div
         className="pointer-events-none absolute inset-y-0 z-0 h-full hero-bg"
