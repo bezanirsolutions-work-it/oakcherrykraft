@@ -106,15 +106,21 @@ export function HeroSection({ children }: HeroSectionProps) {
             </motion.div>
           </motion.div>
 
-          <motion.div variants={item} className="mt-16 grid gap-4 rounded-[22px] border border-[#d9c3a6]/70 bg-[rgba(255,250,244,0.88)] p-5 shadow-[0_16px_45px_rgba(46,36,28,0.08)] backdrop-blur-sm sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4 xl:gap-5">
+            <motion.div
+              variants={item}
+              className="mt-16 lg:mt-12 grid gap-4 rounded-[22px] border border-[#d9c3a6]/70 bg-[rgba(255,250,244,0.88)] p-5 shadow-[0_16px_45px_rgba(46,36,28,0.08)] backdrop-blur-sm grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:gap-5"
+            >
             {[
               { title: 'Crafted to Order', subtitle: 'Made just for you' },
               { title: 'Premium Hardwoods', subtitle: 'Sustainably sourced' },
               { title: 'Residential & Commercial', subtitle: 'Premium projects' },
               { title: 'Designed & Built', subtitle: 'Proudly in Nigeria' },
             ].map((itemData) => (
-              <div key={itemData.title} className="flex min-w-[0] items-start gap-3 rounded-[16px] border border-[#e8d7bd] bg-white/80 p-3 shadow-sm">
-                <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#b98b3b] bg-[#f8efe2] text-[#b98b3b]">
+              <div
+                key={itemData.title}
+                className="flex min-w-[0] items-start gap-3 rounded-[16px] border border-[#e8d7bd] bg-white/80 p-3 shadow-sm lg:items-center lg:h-full"
+              >
+                <span className="mt-0.5 lg:mt-0 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#b98b3b] bg-[#f8efe2] text-[#b98b3b]">
                   <CheckCircle2 className="h-5 w-5" />
                 </span>
                 <div className="min-w-0">
