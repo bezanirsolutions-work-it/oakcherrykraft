@@ -173,13 +173,9 @@ export function QuoteForm({ className = '', defaultValues, onSuccess }: QuoteFor
       },
     };
 
-    console.log('Quote Request Payload:', payload);
-    console.log('Estimated Price Range:', estimatedPrice, 'type:', typeof estimatedPrice);
-
     const { error } = await supabase.from('quote_requests').insert(payload);
 
     if (error) {
-      console.error('Quote Error:', error);
       setStatus('error');
       setFeedbackMessage(
         error.message || 'There was a problem submitting your request. Please try again or contact the studio directly.',
@@ -197,12 +193,9 @@ export function QuoteForm({ className = '', defaultValues, onSuccess }: QuoteFor
       estimated_price: String(estimatedPrice),
     };
 
-    console.log('Configurator Payload:', configuratorPayload);
-
     const { error: selectionError } = await supabase.from('configurator_selections').insert(configuratorPayload);
 
     if (selectionError) {
-      console.error('Configurator Error:', selectionError);
       setStatus('error');
       setFeedbackMessage(selectionError.message || 'There was a problem saving your configurator selections.');
       return;

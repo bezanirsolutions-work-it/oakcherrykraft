@@ -2,14 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import {
-  ArrowUpRight,
-  ChevronRight,
-  Hammer,
-  MapPin,
-  Sparkles,
-  Truck,
-} from 'lucide-react';
+import { ArrowUpRight, ChevronRight, Hammer, Sparkles, Truck } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Breadcrumb, Button, Card, SectionHeader } from '../components/ui';
@@ -29,9 +22,6 @@ const stepDefinitions = [
   { label: 'Details', description: 'Provide your contact details, completion window, and notes.' },
   { label: 'Review', description: 'Confirm the configurator selections before continuing to the quote request.' },
 ];
-
-const colours = ['Natural', 'Warm brown', 'Smoky grey', 'Charcoal', 'Black', 'Cream'];
-const legStyles = ['Tapered legs', 'Sleigh base', 'Metal frame', 'Turned legs', 'Pedestal', 'Minimal profile'];
 
 const baseConfiguration: Partial<QuoteFormValues> = {
   product: '',
@@ -97,21 +87,34 @@ export function Configurator() {
     '';
   const hasSelectedProduct = Boolean(incomingProductName || incomingCategory);
 
-  const [step, setStep] = useState(hasSelectedProduct ? 1 : 0);
-  const [configuration, setConfiguration] = useState<Partial<QuoteFormValues>>(() => ({
+  const initialConfiguration = useMemo<Partial<QuoteFormValues>>(() => ({
     ...baseConfiguration,
     ...(incomingProductName ? { product: incomingProductName } : {}),
     ...(incomingCategory ? { category: incomingCategory } : {}),
     ...(incomingWood ? { woodSpecies: incomingWood } : {}),
     ...(incomingFinish ? { finish: incomingFinish } : {}),
-  }));
+  }), [incomingProductName, incomingCategory, incomingWood, incomingFinish]);
+
+  const [step, setStep] = useState(0);
+  const [configuration, setConfiguration] = useState<Partial<QuoteFormValues>>(initialConfiguration);
   const [selectedProductName, setSelectedProductName] = useState(incomingProductName);
 
   useEffect(() => {
-    if (incomingProductName) {
-      setSelectedProductName(incomingProductName);
-    }
-  }, [incomingProductName]);
+    const nextStep = hasSelectedProduct ? 1 : 0;
+    const sanitizedConfiguration = {
+      ...baseConfiguration,
+      ...(incomingProductName ? { product: incomingProductName } : {}),
+      ...(incomingCategory ? { category: incomingCategory } : {}),
+      ...(incomingWood ? { woodSpecies: incomingWood } : {}),
+      ...(incomingFinish ? { finish: incomingFinish } : {}),
+    };
+
+    setSelectedProductName(incomingProductName || '');
+    setConfiguration(sanitizedConfiguration);
+    setStep(nextStep);
+    setSubmissionStatus('idle');
+    setSubmissionMessage('');
+  }, [location.key, incomingProductName, incomingCategory, incomingWood, incomingFinish, hasSelectedProduct]);
   const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [submissionMessage, setSubmissionMessage] = useState('');
 
@@ -167,35 +170,12 @@ export function Configurator() {
   };
 
   const handlePrev = () => setStep((current) => Math.max(0, current - 1));
-  const handleNext = () => setStep((current) => Math.min(stepDefinitions.length - 1, current + 1));
-
-  const buildQuoteRequestPayload = (config: Partial<QuoteFormValues>) => ({
-    full_name: config.name?.trim() ?? '',
-    email: config.email?.trim() ?? '',
-    phone: config.phone?.trim() ?? '',
-    project_type: config.productType ?? null,
-    room_type: config.category ?? null,
-    dimensions:
-      config.width && config.depth && config.height
-        ? `${config.width} x ${config.depth} x ${config.height}`
-        : null,
-    budget: config.budgetRange ?? null,
-    configuration: {
-      category: config.category ?? '',
-      productType: config.productType ?? '',
-      width: config.width ?? 0,
-      depth: config.depth ?? 0,
-      height: config.height ?? 0,
-      woodSpecies: config.woodSpecies ?? '',
-      finish: config.finish ?? '',
-      quantity: config.quantity ?? 0,
-      deliveryLocation: config.deliveryLocation ?? '',
-      preferredDate: config.preferredDate ?? '',
-      budgetRange: config.budgetRange ?? '',
-      additionalNotes: config.additionalNotes ?? '',
-    },
-    notes: config.additionalNotes ?? '',
-  });
+  const handleNext = () => {
+    if (!stepComplete) {
+      return;
+    }
+    setStep((current) => Math.min(stepDefinitions.length - 1, current + 1));
+  };
 
   const submitDesign = async () => {
     // route to the canonical request-quote page and hand over the completed configuration
@@ -204,17 +184,9 @@ export function Configurator() {
 
   const selectedProductObj = routeState?.selectedProduct ?? null;
   const productImageUrl: string | undefined =
-    selectedProductObj?.cover_image ||
-    selectedProductObj?.image_url ||
-    selectedProductObj?.image_urls?.[0] ||
-    undefined;
-
-  const stepIndicator = stepDefinitions.map((item, index) => (
-    <li key={item.label} className="flex items-center gap-3 text-sm text-bark/70">
-      <span className={index <= step ? 'inline-flex h-9 w-9 items-center justify-center rounded-full border border-oak-500 bg-oak-100 text-oak-900' : 'inline-flex h-9 w-9 items-center justify-center rounded-full border border-bark/10 bg-white text-bark'}>{index + 1}</span>
-      <span className={index === step ? 'font-semibold text-bark' : 'text-bark/70'}>{item.label}</span>
-    </li>
-  ));
+    [selectedProductObj?.cover_image, selectedProductObj?.image_url, ...(selectedProductObj?.image_urls ?? [])]
+      .map((value) => (typeof value === 'string' ? value.trim() : ''))
+      .find(Boolean) || undefined;
 
   const stepContent = () => {
     switch (step) {
@@ -485,8 +457,9 @@ export function Configurator() {
             </div>
           </div>
         );
-      default:
+      default: {
         return null;
+      }
     }
   };
 

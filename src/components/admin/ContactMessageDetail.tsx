@@ -101,10 +101,10 @@ export function ContactMessageDetail({
 
               {/* Email */}
               <div>
-                <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-bark/60">
-                  <Mail className="h-3 w-3" />
-                  Email
-                </label>
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-bark/60">
+                  <Mail className="h-3 w-3" aria-hidden="true" />
+                  <span>Email</span>
+                </div>
                 <div className="mt-2 flex items-center gap-2">
                   <a href={`mailto:${message.email}`} className="text-sm text-oak-600 hover:underline">
                     {message.email}
@@ -123,10 +123,10 @@ export function ContactMessageDetail({
               {/* Phone */}
               {message.phone && (
                 <div>
-                  <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-bark/60">
-                    <Phone className="h-3 w-3" />
-                    Phone
-                  </label>
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-bark/60">
+                    <Phone className="h-3 w-3" aria-hidden="true" />
+                    <span>Phone</span>
+                  </div>
                   <div className="mt-2 flex items-center gap-2">
                     <a href={`tel:${message.phone}`} className="text-sm text-oak-600 hover:underline">
                       {message.phone}

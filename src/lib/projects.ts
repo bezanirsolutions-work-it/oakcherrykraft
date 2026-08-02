@@ -205,10 +205,10 @@ export const uploadProjectAsset = async (projectId: string, file: File, folder =
   }
 
   const { data: publicUrlData } = supabase.storage.from(projectBucket).getPublicUrl(path);
-  const publicUrl = (publicUrlData as any)?.publicUrl ?? null;
-  if (!publicUrl) {
+  if (!publicUrlData || typeof publicUrlData.publicUrl !== 'string') {
     throw new Error('Unable to get image public URL.');
   }
+  const publicUrl = publicUrlData.publicUrl;
 
   return publicUrl;
 };
@@ -239,15 +239,11 @@ export const unsetOtherProjectOfMonth = async (projectId: string): Promise<void>
 };
 
 export const deleteProjectImage = async (imageUrl: string): Promise<void> => {
-  try {
-    const url = new URL(imageUrl);
-    const segments = url.pathname.split('/').filter(Boolean);
-    const publicIndex = segments.indexOf('public');
-    const path = publicIndex >= 0 ? segments.slice(publicIndex + 2).join('/') : segments.slice(1).join('/');
+  const url = new URL(imageUrl);
+  const segments = url.pathname.split('/').filter(Boolean);
+  const publicIndex = segments.indexOf('public');
+  const path = publicIndex >= 0 ? segments.slice(publicIndex + 2).join('/') : segments.slice(1).join('/');
 
-    const { error } = await supabase.storage.from(projectBucket).remove([path]);
-    if (error) throw error;
-  } catch (error) {
-    throw error;
-  }
+  const { error } = await supabase.storage.from(projectBucket).remove([path]);
+  if (error) throw error;
 };

@@ -1,7 +1,27 @@
 import { ArrowUpRight, Facebook, Instagram, Linkedin, Mail, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 
 export function Footer() {
+  const [newsletterStatus, setNewsletterStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [newsletterMessage, setNewsletterMessage] = useState('');
+
+  const handleNewsletterSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const email = new FormData(form).get('newsletter-email')?.toString().trim() ?? '';
+
+    if (!email || !email.includes('@') || !email.includes('.')) {
+      setNewsletterStatus('error');
+      setNewsletterMessage('Please enter a valid email address to subscribe.');
+      return;
+    }
+
+    setNewsletterStatus('success');
+    setNewsletterMessage('Thanks for subscribing. We will keep you updated with our latest projects and notes.');
+    form.reset();
+  };
+
   return (
     <footer className="border-t border-bark/10 bg-sand px-4 py-14 text-sm text-bark/70 sm:px-8 sm:py-16 lg:px-10">
       <div className="mx-auto max-w-7xl">
@@ -38,10 +58,17 @@ export function Footer() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oak-700">Studio notes</p>
             <p className="mt-5 leading-7 text-bark/75">Join our occasional studio newsletter for new work, material stories, and project notes.</p>
-            <form className="mt-5 flex gap-2" onSubmit={(event) => event.preventDefault()}>
-              <label className="sr-only" htmlFor="footer-email">Email address</label>
-              <input id="footer-email" type="email" required placeholder="Your email" className="min-w-0 flex-1 rounded-full border border-bark/10 bg-white px-4 py-3 text-sm text-bark outline-none placeholder:text-bark/40 focus:border-oak-600 focus:ring-4 focus:ring-oak-200" />
-              <button type="submit" aria-label="Subscribe to studio notes" className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-bark text-sand transition hover:-translate-y-0.5 hover:bg-oak-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-oak-200"><Mail size={17} /></button>
+            <form className="mt-5 flex flex-col gap-3" onSubmit={handleNewsletterSubmit}>
+              <div className="flex gap-2">
+                <label className="sr-only" htmlFor="footer-email">Email address</label>
+                <input id="footer-email" name="newsletter-email" type="email" required placeholder="Your email" className="min-w-0 flex-1 rounded-full border border-bark/10 bg-white px-4 py-3 text-sm text-bark outline-none placeholder:text-bark/40 focus:border-oak-600 focus:ring-4 focus:ring-oak-200" />
+                <button type="submit" aria-label="Subscribe to studio notes" className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-bark text-sand transition hover:-translate-y-0.5 hover:bg-oak-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-oak-200"><Mail size={17} /></button>
+              </div>
+              {newsletterMessage ? (
+                <p className={`text-sm ${newsletterStatus === 'success' ? 'text-emerald-700' : 'text-rose-600'}`}>
+                  {newsletterMessage}
+                </p>
+              ) : null}
             </form>
           </div>
         </div>

@@ -16,7 +16,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // TODO: send error telemetry to a logging service
     console.error('ErrorBoundary caught error', error, errorInfo);
   }
 

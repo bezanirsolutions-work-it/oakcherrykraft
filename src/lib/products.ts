@@ -1,3 +1,5 @@
+import { getProductImage as getCanonicalProductImage } from './imageUtils';
+
 export interface ProductRow {
   id: string;
   created_at: string | null;
@@ -26,10 +28,7 @@ export type Product = ProductRow;
 export const getProductImage = (
   product: Partial<ProductRow> | null | undefined,
   placeholder = '/assets/hero/intro-picture.webp'
-): string => {
-  if (!product) return placeholder;
-  return product.cover_image || product.image_url || product.image_urls?.[0] || placeholder;
-};
+): string => getCanonicalProductImage(product as Partial<{ cover_image?: string | null; image_url?: string | null; image_urls?: Array<string | null | undefined> }> | null | undefined, placeholder);
 
 export const normalizeProduct = (row: Partial<ProductRow> | null | undefined): Product | null => {
   if (!row?.id) return null;

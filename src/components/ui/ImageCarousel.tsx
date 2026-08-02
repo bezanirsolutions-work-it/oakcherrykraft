@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '../../lib/cn';
+import { getSafeImageSrc } from '../../lib/imageUtils';
 
 interface ImageCarouselProps {
   images: string[];
@@ -12,11 +13,18 @@ interface ImageCarouselProps {
 export function ImageCarousel({ images, alt, className = '' }: ImageCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const startXRef = useRef(0);
   const startYRef = useRef(0);
 
   const displayImages = useMemo(() => images.filter(Boolean), [images]);
+
+  useEffect(() => {
+    setCurrentIndex(0);
+    setDirection(0);
+    setImageSrc(getSafeImageSrc(displayImages[0] ?? null));
+  }, [displayImages]);
 
   if (displayImages.length === 0) {
     return null;
@@ -26,10 +34,11 @@ export function ImageCarousel({ images, alt, className = '' }: ImageCarouselProp
     return (
       <div className={cn('overflow-hidden rounded-[1.5rem] bg-surface-strong', className)}>
         <img
-          src={displayImages[0]}
+          src={imageSrc ?? getSafeImageSrc(displayImages[0] ?? null)}
           alt={alt}
           loading="lazy"
           decoding="async"
+          onError={() => setImageSrc(getSafeImageSrc(null))}
           className="h-full w-full object-cover"
         />
       </div>
@@ -40,6 +49,10 @@ export function ImageCarousel({ images, alt, className = '' }: ImageCarouselProp
     setDirection(newDirection);
     setCurrentIndex((prev) => (prev + newDirection + displayImages.length) % displayImages.length);
   };
+
+  useEffect(() => {
+    setImageSrc(getSafeImageSrc(displayImages[currentIndex] ?? null));
+  }, [currentIndex, displayImages]);
 
   const handlePrev = () => paginate(-1);
   const handleNext = () => paginate(1);
@@ -110,6 +123,15 @@ export function ImageCarousel({ images, alt, className = '' }: ImageCarouselProp
     }),
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'ArrowLeft') {
+      handlePrev();
+    }
+    if (e.key === 'ArrowRight') {
+      handleNext();
+    }
+  };
+
   return (
     <div className={cn('relative aspect-[4/3] overflow-hidden rounded-[1.5rem] bg-surface-strong', className)}>
       <div
@@ -119,13 +141,15 @@ export function ImageCarousel({ images, alt, className = '' }: ImageCarouselProp
         onTouchEnd={handleTouchEnd}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
+        onKeyDown={handleKeyDown}
         role="group"
+        tabIndex={0}
         aria-label={`Image carousel, showing ${currentIndex + 1} of ${displayImages.length}`}
       >
         <AnimatePresence initial={false} custom={direction} mode="wait">
           <motion.img
             key={currentIndex}
-            src={displayImages[currentIndex]}
+            src={imageSrc ?? getSafeImageSrc(displayImages[currentIndex] ?? null)}
             alt={`${alt} ${currentIndex + 1}`}
             custom={direction}
             variants={variants}
@@ -135,6 +159,7 @@ export function ImageCarousel({ images, alt, className = '' }: ImageCarouselProp
             transition={{ x: { type: 'spring', stiffness: 300, damping: 30 }, opacity: { duration: 0.2 } }}
             loading="lazy"
             decoding="async"
+            onError={() => setImageSrc(getSafeImageSrc(null))}
             className="absolute inset-0 h-full w-full object-cover"
           />
         </AnimatePresence>

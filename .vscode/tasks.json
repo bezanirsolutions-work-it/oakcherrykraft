@@ -9,6 +9,14 @@
 			"problemMatcher": [
 				"$tsc"
 			]
+		},
+		{
+			"label": "Verify Supabase backend",
+			"type": "shell",
+			"command": "node verify_supabase_uat.js",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "test"
 		}
 	]
 }

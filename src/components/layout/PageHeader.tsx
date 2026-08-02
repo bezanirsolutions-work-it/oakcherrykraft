@@ -16,20 +16,14 @@ export function PageHeader({ title, subtitle, height = 'min-h-[320px] sm:min-h-[
   return (
     <section
       className="relative isolate overflow-hidden bg-[#F8F4EE] px-4 py-16 text-[#F8F4EE] sm:px-[60px] sm:py-20 lg:py-24"
-      style={{ minHeight: height }}
+      style={{
+        minHeight: height,
+        backgroundImage: `url('/assets/hero/GENERATED.webp')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
     >
-      <div className="absolute inset-0 z-0 bg-[#120f0b]" aria-hidden="true" />
-      <div
-        className="absolute inset-0 z-0"
-        style={{
-          backgroundImage: `linear-gradient(90deg, rgba(12,10,8,0.76) 0%, rgba(12,10,8,0.70) 42%, rgba(12,10,8,0.60) 68%, rgba(12,10,8,0.35) 100%), url('/assets/hero/GENERATED.webp')`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-        }}
-        aria-hidden="true"
-      />
-      <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_top_left,_rgba(185,139,59,0.22),_transparent_46%)]" aria-hidden="true" />
       <div className="relative z-10 mx-auto flex h-full max-w-[1400px] items-center">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
