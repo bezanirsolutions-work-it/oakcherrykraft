@@ -52,6 +52,13 @@
 			"command": "git add -A && git commit -m \"Fix: remove inline display from hero heading span to prevent duplicate rendering\" && git log -1 --pretty=format:\"%h %s\"",
 			"isBackground": false,
 			"problemMatcher": []
+		},
+		{
+			"label": "Commit hero rebuild",
+			"type": "shell",
+			"command": "git add -A && git commit -m \"Rebuild: hero desktop layout - clean two-column grid; single frosted panel; centered equal feature cards\" && git log -1 --pretty=format:\"%h %s\"",
+			"isBackground": false,
+			"problemMatcher": []
 		}
 	]
 }
