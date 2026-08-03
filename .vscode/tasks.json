@@ -17,6 +17,27 @@
 			"isBackground": false,
 			"problemMatcher": [],
 			"group": "test"
+		},
+		{
+			"label": "Commit changes",
+			"type": "shell",
+			"command": "git add -A ; git commit -m \"Finalize hero desktop layout: widen left column, expand glass panel, full-width heading, adjust image position\" ; git log -1 --pretty=format:\"%h %s\"",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Commit changes",
+			"type": "shell",
+			"command": "git add -A && git commit -m \"Finalize hero desktop layout: widen left column, expand glass panel, full-width heading, adjust image position\" && git log -1 --pretty=format:\"%h %s\"",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Commit changes simple",
+			"type": "shell",
+			"command": "git commit -am \"Finalize hero desktop layout: widen left column, expand glass panel, full-width heading, adjust image position\"",
+			"isBackground": false,
+			"problemMatcher": []
 		}
 	]
 }
