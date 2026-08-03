@@ -61,14 +61,14 @@ export function HeroSection({ children }: HeroSectionProps) {
       </div>
 
       <div className="mx-auto grid max-w-[1500px] min-h-[95vh] items-center gap-6 py-12 sm:py-24 lg:grid-cols-[minmax(0,0.58fr)_minmax(0,0.42fr)] lg:items-center lg:gap-10 lg:px-[90px] xl:px-[120px]">
-        <div className="px-4 sm:px-0">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={containerVariants} className="relative z-10 mx-auto w-full max-w-[620px] rounded-[20px] bg-[rgba(248,244,238,0.55)] p-6 backdrop-blur-sm sm:p-10 md:p-12 lg:mx-0 lg:max-w-[760px] lg:rounded-none lg:bg-transparent lg:p-0 lg:pr-0 lg:backdrop-blur-none">
+        <div className="px-4 sm:px-0 lg:max-w-[55vw]">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={containerVariants} className="relative z-10 mx-auto w-full max-w-[620px] rounded-[20px] bg-[rgba(248,244,238,0.55)] p-6 backdrop-blur-sm sm:p-10 md:p-12 lg:mx-0 lg:w-full lg:max-w-none lg:rounded-[28px] lg:border lg:border-white/40 lg:bg-[rgba(248,244,238,0.55)] lg:backdrop-blur-[12px] lg:shadow-[0_24px_80px_rgba(0,0,0,0.12)] lg:p-12">
             <motion.div variants={item} className="inline-flex items-center gap-4">
               <span className="inline-block h-px w-16 bg-[#b98b3b] opacity-90" aria-hidden="true" />
               <span className="text-xs uppercase tracking-[0.32em] text-[#8d6a45] font-semibold">HANDCRAFTED IN NIGERIA</span>
             </motion.div>
 
-            <motion.h1 variants={item} className="mt-8 max-w-[620px] text-[3.8rem] leading-[1.02] font-serif tracking-[-0.03em] text-[#241B16] sm:text-[4.75rem] md:text-[5.5rem] lg:max-w-none lg:whitespace-nowrap lg:text-[5.8rem] lg:leading-[0.95] xl:text-[6.2rem]">
+            <motion.h1 variants={item} className="mt-8 text-[3.8rem] leading-[1.02] font-serif tracking-[-0.03em] text-[#241B16] sm:text-[4.75rem] md:text-[5.5rem] lg:max-w-[720px] lg:text-[5.8rem] lg:leading-[0.95] xl:text-[6.2rem]">
               <div>Bespoke Furniture Crafted</div>
               <div>for Timeless Living</div>
             </motion.h1>
