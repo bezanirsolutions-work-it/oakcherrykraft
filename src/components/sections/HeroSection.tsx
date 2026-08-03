@@ -57,9 +57,9 @@ export function HeroSection({ children }: HeroSectionProps) {
         <div className="absolute inset-x-0 top-[12%] mx-auto h-[480px] w-[480px] rounded-full bg-[radial-gradient(circle,_rgba(215,190,150,0.18),_transparent_70%)] opacity-90 blur-3xl" aria-hidden="true" />
       </div>
 
-      <div className="mx-auto grid max-w-[1500px] min-h-[95vh] items-center gap-6 py-12 sm:py-24 lg:grid-cols-[minmax(0,0.58fr)_minmax(0,0.42fr)] lg:items-center lg:gap-10 lg:px-[90px] xl:px-[120px]">
-        <div className="px-4 sm:px-0 lg:w-full">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={containerVariants} className="relative z-10 mx-auto w-full max-w-[620px] rounded-[20px] bg-[rgba(248,244,238,0.55)] p-6 backdrop-blur-sm sm:p-10 md:p-12 lg:mx-0 lg:w-full lg:max-w-[860px] lg:rounded-[28px] lg:border lg:border-white/40 lg:bg-[rgba(248,244,238,0.55)] lg:backdrop-blur-[12px] lg:shadow-[0_24px_80px_rgba(0,0,0,0.12)] lg:p-12">
+      <div className="mx-auto grid max-w-[1500px] min-h-[95vh] items-center gap-6 py-12 sm:py-24 lg:grid-cols-[minmax(0,0.55fr)_minmax(0,0.45fr)] lg:items-center lg:gap-10 lg:px-[90px] xl:px-[120px]">
+        <div className="px-4 sm:px-0">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={containerVariants} className="relative z-10 w-full max-w-[680px] rounded-[20px] bg-[rgba(248,244,238,0.55)] p-6 backdrop-blur-sm sm:p-10 md:p-12 lg:mx-0 lg:w-full lg:rounded-[28px] lg:border lg:border-white/40 lg:bg-[rgba(248,244,238,0.55)] lg:backdrop-blur-[12px] lg:shadow-[0_24px_80px_rgba(0,0,0,0.12)] lg:p-12">
             <motion.div variants={item} className="inline-flex items-center gap-4">
               <span className="inline-block h-px w-16 bg-[#b98b3b] opacity-90" aria-hidden="true" />
               <span className="text-xs uppercase tracking-[0.32em] text-[#8d6a45] font-semibold">HANDCRAFTED IN NIGERIA</span>
@@ -67,18 +67,18 @@ export function HeroSection({ children }: HeroSectionProps) {
 
             <motion.h1
               variants={item}
-              className={"mt-8 font-serif tracking-[-0.03em] text-[#241B16] text-[3.8rem] leading-[1.02] sm:text-[4.75rem] md:text-[5.5rem] lg:text-[5.9rem] lg:leading-[0.92] lg:whitespace-nowrap xl:text-[6.3rem]"}
+              className={"mt-8 font-serif tracking-[-0.03em] text-[#241B16] text-[3.8rem] leading-[1.02] sm:text-[4.75rem] md:text-[5.5rem] lg:text-[5.9rem] lg:leading-[0.92] xl:text-[6.3rem]"}
             >
-              <span className="hidden lg:block">
+              <span className="hidden lg:block" style={{ display: 'block', maxWidth: 680 }}>
                 Bespoke Furniture
                 <br />
                 Crafted For Timeless Living
               </span>
 
               <span className="lg:hidden">
-                Bespoke Furniture Crafted
+                Bespoke Furniture
                 <br />
-                for Timeless Living
+                Crafted For Timeless Living
               </span>
             </motion.h1>
 
@@ -119,7 +119,7 @@ export function HeroSection({ children }: HeroSectionProps) {
       {/* Feature cards: one full-width row on desktop, two-by-two on tablet, stacked on mobile */}
       <motion.div
         variants={item}
-        className="relative z-10 -mt-8 mx-auto flex w-full max-w-[1800px] flex-col gap-4 px-4 sm:px-[60px] md:grid md:grid-cols-2 md:gap-5 lg:absolute lg:bottom-[-26px] lg:left-1/2 lg:w-[min(92%,1280px)] lg:-translate-x-1/2 lg:flex-row lg:justify-between lg:gap-5 lg:px-0 xl:bottom-[-28px] xl:w-[min(92%,1320px)]"
+        className="relative z-10 -mt-8 mx-auto flex w-full max-w-[1800px] flex-col gap-4 px-4 sm:px-[60px] md:grid md:grid-cols-2 md:gap-5 lg:absolute lg:bottom-[-26px] lg:left-1/2 lg:w-[min(92%,1280px)] lg:-translate-x-1/2 lg:flex-row lg:flex-nowrap lg:justify-between lg:gap-5 lg:px-0 xl:bottom-[-28px] xl:w-[min(92%,1320px)]"
       >
         {[
           { title: 'Crafted to Order', subtitle: 'Made just for you' },
