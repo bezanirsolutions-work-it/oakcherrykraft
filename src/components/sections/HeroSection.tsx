@@ -69,7 +69,7 @@ export function HeroSection({ children }: HeroSectionProps) {
               variants={item}
               className={"mt-8 font-serif tracking-[-0.03em] text-[#241B16] text-[3.8rem] leading-[1.02] sm:text-[4.75rem] md:text-[5.5rem] lg:text-[5.9rem] lg:leading-[0.92] xl:text-[6.3rem]"}
             >
-              <span className="hidden lg:block" style={{ display: 'block', maxWidth: 680 }}>
+              <span className="hidden lg:block max-w-[680px]">
                 Bespoke Furniture
                 <br />
                 Crafted For Timeless Living
