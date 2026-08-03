@@ -38,6 +38,13 @@
 			"command": "git commit -am \"Finalize hero desktop layout: widen left column, expand glass panel, full-width heading, adjust image position\"",
 			"isBackground": false,
 			"problemMatcher": []
+		},
+		{
+			"label": "Commit hero layout",
+			"type": "shell",
+			"command": "git add -A && git commit -m \"Rebuild desktop hero layout: two-column grid, constrain content width, enforce two-line heading, non-wrapping feature cards\" && git log -1 --pretty=format:\"%h %s\"",
+			"isBackground": false,
+			"problemMatcher": []
 		}
 	]
 }
