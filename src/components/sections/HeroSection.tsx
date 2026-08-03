@@ -24,8 +24,8 @@ export function HeroSection({ children }: HeroSectionProps) {
   return (
     <section
       ref={heroRef}
-      className="relative overflow-hidden text-[#2E241C] px-4 sm:px-[60px] bg-[url('/assets/hero/GENERATED.webp')] bg-cover bg-center lg:bg-[position:calc(100%+240px)_50%] bg-no-repeat"
-      style={{ minHeight: '95vh', backgroundColor: '#F8F4EE' }}
+      className="relative overflow-hidden text-[#2E241C] px-4 sm:px-[60px] min-h-[95vh] lg:min-h-[100vh] bg-[url('/assets/hero/GENERATED.webp')] bg-cover bg-center lg:bg-[position:calc(100%+240px)_50%] bg-no-repeat"
+      style={{ backgroundColor: '#F8F4EE' }}
     >
       {/* Absolute image for precise large-screen placement (keeps bg as fallback on smaller screens) */}
       <img
@@ -69,8 +69,8 @@ export function HeroSection({ children }: HeroSectionProps) {
             </motion.div>
 
             <motion.h1 variants={item} className="mt-8 text-[3.8rem] leading-[1.02] font-serif tracking-[-0.03em] text-[#241B16] sm:text-[4.75rem] md:text-[5.5rem] lg:max-w-[720px] lg:text-[5.8rem] lg:leading-[0.95] xl:text-[6.2rem]">
-              <div>Bespoke Furniture Crafted</div>
-              <div>for Timeless Living</div>
+              <div>Bespoke Furniture</div>
+              <div>Crafted For Timeless Living</div>
             </motion.h1>
 
             <motion.p variants={item} className="mt-16 max-w-[560px] text-lg font-medium leading-[1.8] text-[#4B4038] lg:mt-10 lg:max-w-[540px] lg:text-[1.05rem] lg:leading-[1.75]">
@@ -110,7 +110,7 @@ export function HeroSection({ children }: HeroSectionProps) {
       {/* Feature cards: one full-width row on desktop, two-by-two on tablet, stacked on mobile */}
       <motion.div
         variants={item}
-        className="relative z-10 -mt-8 mx-auto flex w-full max-w-[1800px] flex-col gap-4 px-4 sm:px-[60px] md:grid md:grid-cols-2 md:gap-5 lg:absolute lg:bottom-[-48px] lg:left-1/2 lg:w-[min(92%,1280px)] lg:-translate-x-1/2 lg:flex-row lg:justify-between lg:gap-4 lg:px-0 xl:bottom-[-54px] xl:w-[min(92%,1320px)]"
+        className="relative z-10 -mt-8 mx-auto flex w-full max-w-[1800px] flex-col gap-4 px-4 sm:px-[60px] md:grid md:grid-cols-2 md:gap-5 lg:absolute lg:bottom-[-26px] lg:left-1/2 lg:w-[min(92%,1280px)] lg:-translate-x-1/2 lg:flex-row lg:justify-between lg:gap-5 lg:px-0 xl:bottom-[-28px] xl:w-[min(92%,1320px)]"
       >
         {[
           { title: 'Crafted to Order', subtitle: 'Made just for you' },
@@ -120,7 +120,7 @@ export function HeroSection({ children }: HeroSectionProps) {
         ].map((itemData) => (
           <div
             key={itemData.title}
-            className="flex min-h-[92px] flex-1 flex-row items-center justify-start gap-3 rounded-[18px] border border-[#e8d7bd]/80 bg-[rgba(255,255,255,0.82)] px-6 py-4 shadow-[0_12px_30px_rgba(46,36,28,0.08)] backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(46,36,28,0.14)] lg:min-h-[110px] lg:flex-1 lg:items-center lg:justify-center lg:gap-4 lg:px-4 lg:py-4 lg:text-center"
+            className="flex min-h-[92px] flex-1 flex-row items-center justify-start gap-3 rounded-[18px] border border-[#e8d7bd]/80 bg-[rgba(255,255,255,0.82)] px-6 py-4 shadow-[0_12px_30px_rgba(46,36,28,0.08)] backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(46,36,28,0.14)] lg:min-h-[100px] lg:flex-1 lg:items-center lg:justify-center lg:gap-4 lg:px-4 lg:py-4 lg:text-center"
           >
             <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-[#b98b3b] bg-[#f8efe2] text-[#b98b3b]">
               <CheckCircle2 className="h-5 w-5" />
