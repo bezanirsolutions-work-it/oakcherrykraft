@@ -29,7 +29,7 @@ export function HeroSection({ children }: HeroSectionProps) {
         src="/assets/hero/GENERATED.webp"
         alt=""
         aria-hidden="true"
-        className="pointer-events-none hidden lg:block absolute top-0 bottom-0 right-[-420px] w-[160%] object-cover -z-20"
+        className="pointer-events-none hidden lg:block absolute top-0 bottom-0 right-[-420px] w-[170%] object-cover -z-20"
         style={{ transform: 'scaleX(-1)' }}
       />
       <motion.div
@@ -57,12 +57,16 @@ export function HeroSection({ children }: HeroSectionProps) {
         <div className="absolute inset-x-0 top-[12%] mx-auto h-[480px] w-[480px] rounded-full bg-[radial-gradient(circle,_rgba(215,190,150,0.18),_transparent_70%)] opacity-90 blur-3xl" aria-hidden="true" />
       </div>
 
-      <div className="mx-auto max-w-[1500px] min-h-[95vh] py-12 sm:py-24 lg:py-24 lg:px-[90px] xl:px-[120px]">
-        {/* Desktop: clean two-column layout (52% / 48%) - mobile/tablet unchanged */}
-        <div className="mx-auto grid w-full items-center gap-6 lg:grid-cols-[52%_48%]">
-          {/* Left column: content panel */}
-          <div className="px-4 sm:px-0">
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={containerVariants} className="relative z-10 w-full max-w-[680px] rounded-[20px] bg-[rgba(248,244,238,0.55)] p-6 backdrop-blur-sm sm:p-10 md:p-12 lg:mx-0 lg:w-full lg:rounded-[28px] lg:border lg:border-white/40 lg:bg-[rgba(248,244,238,0.55)] lg:backdrop-blur-[12px] lg:shadow-[0_24px_80px_rgba(0,0,0,0.12)] lg:p-12">
+      <div className="mx-auto max-w-[1600px] min-h-[95vh] py-12 sm:py-24 lg:py-24 lg:px-0 xl:px-[120px]">
+        {/* Desktop: centered hero card with equal left/right margins */}
+        <div className="mx-auto w-full px-4 sm:px-0 lg:max-w-[960px]">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+            variants={containerVariants}
+            className="relative z-10 mx-auto w-full max-w-[760px] rounded-[20px] bg-[rgba(248,244,238,0.55)] p-6 backdrop-blur-sm sm:p-10 md:p-12 lg:max-w-[860px] lg:rounded-[28px] lg:border lg:border-white/40 lg:bg-[rgba(248,244,238,0.55)] lg:backdrop-blur-[12px] lg:shadow-[0_24px_80px_rgba(0,0,0,0.12)] lg:p-12"
+          >
             <motion.div variants={item} className="inline-flex items-center gap-4">
               <span className="inline-block h-px w-16 bg-[#b98b3b] opacity-90" aria-hidden="true" />
               <span className="text-xs uppercase tracking-[0.32em] text-[#8d6a45] font-semibold">HANDCRAFTED IN NIGERIA</span>
@@ -70,27 +74,19 @@ export function HeroSection({ children }: HeroSectionProps) {
 
             <motion.h1
               variants={item}
-              className={"mt-8 font-serif tracking-[-0.03em] text-[#241B16] text-[3.8rem] leading-[1.02] sm:text-[4.75rem] md:text-[5.5rem] lg:text-[5.9rem] lg:leading-[0.92] xl:text-[6.3rem]"}
+              className="mt-8 max-w-[760px] font-serif tracking-[-0.03em] text-[#241B16] text-[3rem] leading-[1.02] sm:text-[3.6rem] md:text-[4rem] lg:mt-10 lg:max-w-[780px] lg:text-[4.15rem] lg:leading-[0.98] xl:text-[4.55rem]"
             >
-              <span className="hidden lg:block max-w-[680px]">
-                Bespoke Furniture
-                <br />
-                Crafted For Timeless Living
-              </span>
-
-              <span className="lg:hidden">
-                Bespoke Furniture
-                <br />
-                Crafted For Timeless Living
-              </span>
+              <span className="block">Bespoke Furniture Crafted</span>
+              <span className="block">For Timeless Living</span>
             </motion.h1>
 
-            <motion.p variants={item} className="mt-16 max-w-[560px] text-lg font-medium leading-[1.8] text-[#4B4038] lg:mt-10 lg:max-w-[540px] lg:text-[1.05rem] lg:leading-[1.75]">
-              Every Oak Cherry Kraft piece is thoughtfully designed and handcrafted using premium hardwoods to complement your home or workspace.
+            <motion.p variants={item} className="mt-16 max-w-[560px] text-lg font-medium leading-[1.8] text-[#4B4038] lg:mt-10 lg:max-w-[590px] lg:text-[1.05rem] lg:leading-[1.55]">
+              <span className="block lg:whitespace-nowrap">Every Oak Cherry Kraft piece is thoughtfully designed and handcrafted using premium</span>
+              <span className="block lg:whitespace-nowrap">hardwoods to complement your home or workspace.</span>
             </motion.p>
 
-            <motion.div variants={item} className="mt-20 flex flex-col gap-4 sm:flex-row sm:items-center lg:mt-14 lg:gap-5">
-              <motion.div whileHover={{ y: -2 }} className="w-full sm:w-auto">
+            <motion.div variants={item} className="mt-20 flex flex-col gap-4 sm:flex-row sm:items-center lg:mt-14 lg:justify-between lg:gap-5">
+              <motion.div whileHover={{ y: -2 }} className="w-full sm:w-auto lg:mr-auto">
                 <Button asChild className="w-full sm:w-auto rounded-full bg-[#2E241C] px-8 py-4 text-sm font-semibold text-[#F8F4EE] shadow-lg shadow-[#00000014] transition duration-300 hover:-translate-y-1 hover:shadow-2xl">
                   <Link to="/request-quote" className="inline-flex items-center gap-3">
                     Design Your Furniture
@@ -99,7 +95,7 @@ export function HeroSection({ children }: HeroSectionProps) {
                 </Button>
               </motion.div>
 
-              <motion.div whileHover={{ y: -2 }} className="w-full sm:w-auto">
+              <motion.div whileHover={{ y: -2 }} className="w-full sm:w-auto lg:ml-auto">
                 <Button variant="ghost" asChild className="w-full sm:w-auto rounded-full border border-[#2E241C] bg-white px-8 py-4 text-sm font-semibold text-[#2E241C] transition duration-300 hover:-translate-y-1 hover:bg-[#f7f1ec]">
                   <Link to="/products">Explore Collection →</Link>
                 </Button>
@@ -107,11 +103,8 @@ export function HeroSection({ children }: HeroSectionProps) {
             </motion.div>
           </motion.div>
 
-            {/* feature cards removed from the left column and will render as a full-width bar below */}
-        </div>
-
           {/* Right column: reserved for artwork (leave empty) */}
-          <div className="hidden lg:block relative px-4 sm:px-0">
+          <div className="hidden lg:block relative px-4 sm:px-0 mt-6">
             <div className="pointer-events-none inset-0 flex items-center justify-center">
               <div className="absolute inset-0 mx-auto h-[340px] w-[340px] rounded-full bg-[#f7efe7] opacity-40 blur-2xl" aria-hidden="true" />
               <div className="absolute inset-x-0 top-1/3 mx-auto h-[225px] w-[225px] rounded-full bg-[#f2e4d5] opacity-35 blur-3xl" aria-hidden="true" />
@@ -149,3 +142,4 @@ export function HeroSection({ children }: HeroSectionProps) {
     </section>
   );
 }
+ 
