@@ -21,7 +21,7 @@ export function ContactMessageDetail({
   onArchive,
   onDelete,
 }: ContactMessageDetailProps) {
-  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [_copiedField, setCopiedField] = useState<string | null>(null);
 
   const copyToClipboard = async (text: string, field: string) => {
     try {
@@ -56,7 +56,8 @@ export function ContactMessageDetail({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-bark/10 transition hover:bg-bark/5"
+            aria-label="Close message details"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-bark/10 transition hover:bg-bark/5 focus:outline-none focus-visible:ring-4 focus-visible:ring-oak-200"
           >
             <X className="h-5 w-5 text-bark" />
           </button>
@@ -85,13 +86,13 @@ export function ContactMessageDetail({
             <div className="grid gap-4 sm:grid-cols-2">
               {/* Name */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-[0.1em] text-bark/60">Name</label>
+                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-bark/60">Name</p>
                 <div className="mt-2 flex items-center gap-2">
                   <p className="text-sm text-bark">{message.name}</p>
                   <button
                     type="button"
                     onClick={() => copyToClipboard(message.name, 'name')}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-bark/10 transition hover:bg-sand"
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-bark/10 transition hover:bg-sand focus:outline-none focus-visible:ring-4 focus-visible:ring-oak-200"
                     title="Copy name"
                   >
                     <Copy className="h-4 w-4 text-bark/60" />
@@ -146,7 +147,7 @@ export function ContactMessageDetail({
               {/* Subject */}
               {message.subject && (
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-[0.1em] text-bark/60">Subject</label>
+                  <p className="text-xs font-semibold uppercase tracking-[0.1em] text-bark/60">Subject</p>
                   <p className="mt-2 text-sm text-bark">{message.subject}</p>
                 </div>
               )}

@@ -84,7 +84,11 @@ export function Footer() {
         </div>
 
         <div className="mt-12 flex flex-col gap-5 border-t border-bark/10 pt-6 text-xs text-bark/60 sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} Oak Cherry Kraft Artistry Limited. All rights reserved.</p>
+          <div className="flex flex-wrap items-center gap-3">
+            <p>© {new Date().getFullYear()} Oak Cherry Kraft Artistry Limited. All rights reserved.</p>
+            <Link to="/privacy-policy" className="transition hover:text-bark">Privacy Policy</Link>
+            <Link to="/terms" className="transition hover:text-bark">Terms</Link>
+          </div>
           <a href="mailto:oakcherrykraft@gmail.com" className="inline-flex items-center gap-2 transition hover:text-bark"><Mail size={14} />oakcherrykraft@gmail.com<ArrowUpRight size={13} /></a>
         </div>
       </div>

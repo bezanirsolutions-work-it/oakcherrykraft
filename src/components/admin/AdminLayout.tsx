@@ -12,6 +12,7 @@ interface AdminLayoutProps {
 
 const navItems = [
   { label: 'Dashboard', path: '/admin' },
+  { label: 'Testimonials', path: '/admin/testimonials' },
   { label: 'Quotes', path: '/admin/quotes' },
   { label: 'Configurator Requests', path: '/admin/configurator' },
   { label: 'Contact Messages', path: '/admin/contacts' },
@@ -22,7 +23,7 @@ const navItems = [
 
 export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayoutProps) {
   const [isNavOpen, setIsNavOpen] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(() => {
+  const [isCollapsed, _setIsCollapsed] = useState(() => {
     if (typeof window === 'undefined') return false;
     try {
       return localStorage.getItem('admin-sidebar-collapsed') === 'true';

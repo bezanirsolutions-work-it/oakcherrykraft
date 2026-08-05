@@ -27,21 +27,21 @@ interface ProjectFormProps {
 export function ProjectForm({
   values,
   errors,
-  isSubmitting,
+  isSubmitting: _isSubmitting,
   coverFile,
   beforeFile,
   afterFile,
-  galleryFiles,
+  galleryFiles: _galleryFiles,
   onChange,
   onCoverUpload,
-  onBeforeUpload,
-  onAfterUpload,
+  onBeforeUpload: _onBeforeUpload,
+  onAfterUpload: _onAfterUpload,
   onGalleryUpload,
   onRemoveGalleryImage,
-  onRemoveGalleryFile,
+  onRemoveGalleryFile: _onRemoveGalleryFile,
   onRemoveCoverImage,
-  onRemoveBeforeImage,
-  onRemoveAfterImage,
+  onRemoveBeforeImage: _onRemoveBeforeImage,
+  onRemoveAfterImage: _onRemoveAfterImage,
 }: ProjectFormProps) {
   const [autoSlug, setAutoSlug] = useState(true);
 
@@ -49,7 +49,7 @@ export function ProjectForm({
     if (autoSlug) {
       onChange('slug', normalizeProjectSlug(values.title || values.slug || ''));
     }
-  }, [autoSlug, values.title]);
+  }, [autoSlug, values.title, onChange, values.slug]);
 
   const coverPreview = useMemo(() => (coverFile ? URL.createObjectURL(coverFile) : null), [coverFile]);
   const beforePreview = useMemo(() => (beforeFile ? URL.createObjectURL(beforeFile) : null), [beforeFile]);

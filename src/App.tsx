@@ -18,6 +18,8 @@ const Products = lazy(() => import('./pages/Products').then(m => ({ default: m.P
 const ProjectPortfolio = lazy(() => import('./pages/ProjectPortfolio').then(m => ({ default: m.ProjectPortfolio })));
 const ProjectDetail = lazy(() => import('./pages/ProjectDetail').then(m => ({ default: m.ProjectDetail })));
 const QuoteRequest = lazy(() => import('./pages/QuoteRequest').then(m => ({ default: m.QuoteRequest })));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy').then(m => ({ default: m.PrivacyPolicy })));
+const Terms = lazy(() => import('./pages/Terms').then(m => ({ default: m.Terms })));
 
 // Lazy-load admin pages
 const Dashboard = lazy(() => import('./pages/admin/Dashboard').then(m => ({ default: m.Dashboard })));
@@ -26,6 +28,7 @@ const ConfiguratorRequests = lazy(() => import('./pages/admin/ConfiguratorReques
 const ProductsAdmin = lazy(() => import('./pages/admin/Products').then(m => ({ default: m.ProductsAdmin })));
 const ProjectsAdmin = lazy(() => import('./pages/admin/Projects').then(m => ({ default: m.Projects })));
 const Analytics = lazy(() => import('./pages/admin/AdminPagePlaceholder').then(m => ({ default: m.Analytics })));
+const TestimonialsAdmin = lazy(() => import('./pages/admin/Testimonials').then(m => ({ default: m.Testimonials })));
 const Contacts = lazy(() => import('./pages/admin/Contacts').then(m => ({ default: m.Contacts })));
 const Settings = lazy(() => import('./pages/admin/Settings').then(m => ({ default: m.Settings })));
 
@@ -79,6 +82,14 @@ export default function App() {
               />
               <Route
                 path="projects"
+                element={
+                  <motion.div {...pageTransition} className="w-full">
+                    <ProjectPortfolio />
+                  </motion.div>
+                }
+              />
+              <Route
+                path="gallery"
                 element={
                   <motion.div {...pageTransition} className="w-full">
                     <ProjectPortfolio />
@@ -143,6 +154,22 @@ export default function App() {
                 }
               />
               <Route
+                path="privacy-policy"
+                element={
+                  <motion.div {...pageTransition} className="w-full">
+                    <PrivacyPolicy />
+                  </motion.div>
+                }
+              />
+              <Route
+                path="terms"
+                element={
+                  <motion.div {...pageTransition} className="w-full">
+                    <Terms />
+                  </motion.div>
+                }
+              />
+              <Route
                 path="*"
                 element={
                   <motion.div {...pageTransition} className="w-full">
@@ -190,6 +217,14 @@ export default function App() {
                 element={
                   <motion.div {...pageTransition} className="w-full">
                     <ConfiguratorRequests />
+                  </motion.div>
+                }
+              />
+              <Route
+                path="testimonials"
+                element={
+                  <motion.div {...pageTransition} className="w-full">
+                    <TestimonialsAdmin />
                   </motion.div>
                 }
               />

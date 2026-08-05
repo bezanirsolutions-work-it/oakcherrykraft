@@ -8,6 +8,7 @@ import { Card } from './Card';
 import { cn } from '../../lib/cn';
 import { supabase } from '../../lib/supabase';
 import { getEstimatedPriceRange } from '../../utils/priceEstimator';
+import { emailService } from '../../services/email';
 
 export const categories = [
   'Dining & entertaining',
@@ -226,6 +227,16 @@ export function QuoteForm({ className = '', defaultValues, onSuccess }: QuoteFor
       inspirationImage: undefined,
     });
     setPreviewUrl(null);
+
+    try {
+      await emailService.sendEmail({
+        to: import.meta.env.VITE_EMAIL_TO || '',
+        subject: `New quote request from ${values.name}`,
+        body: `Name: ${values.name}\nEmail: ${values.email}\nPhone: ${values.phone}\nCategory: ${values.category}\nType: ${values.productType}\nBudget: ${values.budgetRange}\nNotes: ${values.additionalNotes || 'None'}`,
+      });
+    } catch (err) {
+      console.error('Quote notification email failed:', err);
+    }
 
     if (onSuccess) onSuccess();
   }
@@ -490,7 +501,7 @@ export function QuoteForm({ className = '', defaultValues, onSuccess }: QuoteFor
               </label>
               {previewUrl ? (
                 <div className="mt-5 overflow-hidden rounded-[1.5rem] border border-bark/10 bg-white">
-                  <img src={previewUrl} alt="Inspiration preview" className="h-56 w-full object-cover" />
+                  <img src={previewUrl} alt="Inspiration preview" loading="lazy" decoding="async" width="700" height="280" className="h-56 w-full object-cover" />
                 </div>
               ) : null}
               <label className="block text-sm font-medium text-bark">

@@ -1,13 +1,12 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { motion, useInView } from 'framer-motion';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { SEO } from '../components/layout/SEO';
+import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
   ArrowUpRight,
   ChevronRight,
   Leaf,
   MapPin,
-  MessageSquare,
   Ruler,
   ShieldCheck,
   Sparkles,
@@ -32,6 +31,7 @@ import { getCachedData } from '../lib/cache';
 import { featuredProductSelectColumns, getProductImage, normalizeProducts, type Product } from '../lib/products';
 import { supabase } from '../lib/supabase';
 import { fetchFeaturedProjects, fetchProjectOfMonth, type Project } from '../lib/projects';
+import { Testimonial, useTestimonials } from '../hooks/useTestimonials';
 
 const reveal = {
   hidden: { opacity: 0, y: 24 },
@@ -125,7 +125,7 @@ const projectTimeline = [
   },
 ];
 
-const statistics = [
+const initialStatistics = [
   { label: 'Projects Completed', value: 100 },
   { label: 'Happy Clients', value: 100 },
   { label: 'Years Experience', value: 3 },
@@ -142,28 +142,73 @@ function formatStat(value: number) {
   return `${value}+`;
 }
 
-const testimonials = [
+const testimonials: Testimonial[] = [
   {
-    quote: 'The craftsmanship exceeded my expectations. The dining table feels incredibly solid, the finish is beautiful, and every detail was handled with care. The team was professional throughout the entire process.',
+    id: 'testimonial-1',
+    name: 'Chinwe',
+    role: 'Interior Designer',
+    company: 'Studio Nuru',
+    photo_url: null,
+    rating: 5,
+    testimonial: 'The craftsmanship exceeded my expectations. The dining table feels incredibly solid, the finish is beautiful, and every detail was handled with care. The team was professional throughout the entire process.',
+    featured: true,
+    display_order: 1,
+    created_at: null,
   },
   {
-    quote: 'I wanted a custom TV console that matched my living room perfectly, and Oak Cherry Kraft delivered exactly what I had imagined. The quality of the woodwork is outstanding.',
+    id: 'testimonial-2',
+    name: 'Musa',
+    role: 'Homeowner',
+    company: null,
+    photo_url: null,
+    rating: 5,
+    testimonial: 'I wanted a custom TV console that matched my living room perfectly, and Oak Cherry Kraft delivered exactly what I had imagined. The quality of the woodwork is outstanding.',
+    featured: true,
+    display_order: 2,
+    created_at: null,
   },
   {
-    quote: 'From the first consultation to delivery, communication was excellent. The wardrobe was completed on schedule and looks even better than the design we discussed.',
+    id: 'testimonial-3',
+    name: 'Ada',
+    role: null,
+    company: null,
+    photo_url: null,
+    rating: 5,
+    testimonial: 'From the first consultation to delivery, communication was excellent. The wardrobe was completed on schedule and looks even better than the design we discussed.',
+    featured: false,
+    display_order: 3,
+    created_at: null,
   },
   {
-    quote: 'I appreciate the attention to detail and the premium finish on my office desk. It\'s sturdy, elegant, and has completely transformed my workspace. I would definitely recommend Oak Cherry Kraft.',
+    id: 'testimonial-4',
+    name: 'Ibrahim',
+    role: 'Entrepreneur',
+    company: null,
+    photo_url: null,
+    rating: 4,
+    testimonial: 'I appreciate the attention to detail and the premium finish on my office desk. It\'s sturdy, elegant, and has completely transformed my workspace. I would definitely recommend Oak Cherry Kraft.',
+    featured: false,
+    display_order: 4,
+    created_at: null,
   },
   {
-    quote: 'The Design Your Furniture process made it easy to customise exactly what I wanted. The final piece was beautifully crafted and worth every penny.',
+    id: 'testimonial-5',
+    name: 'Sade',
+    role: null,
+    company: null,
+    photo_url: null,
+    rating: 5,
+    testimonial: 'The Design Your Furniture process made it easy to customise exactly what I wanted. The final piece was beautifully crafted and worth every penny.',
+    featured: false,
+    display_order: 5,
+    created_at: null,
   },
 ];
 
 export function Home() {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>(defaultFeaturedProducts);
-  const [isFeaturedLoading, setIsFeaturedLoading] = useState(true);
-  const [featuredError, setFeaturedError] = useState<string | null>(null);
+  const [_isFeaturedLoading, setIsFeaturedLoading] = useState(true);
+  const [_featuredError, setFeaturedError] = useState<string | null>(null);
   const [featuredProjects, setFeaturedProjects] = useState<Project[]>([]);
   const [projectOfMonth, setProjectOfMonth] = useState<Project | null>(null);
   const [isProjectsLoading, setIsProjectsLoading] = useState(true);
@@ -226,7 +271,35 @@ export function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    const loadTrustMetrics = async () => {
+      try {
+        const [projectCount, clientCount] = await Promise.all([
+          supabase.from('projects').select('id', { count: 'exact', head: true }),
+          supabase.from('contact_messages').select('id', { count: 'exact', head: true }),
+        ]);
+
+        if (projectCount.error || clientCount.error) {
+          return;
+        }
+
+        setTrustMetrics([
+          { label: 'Projects Completed', value: projectCount.count ?? initialStatistics[0].value },
+          { label: 'Happy Clients', value: clientCount.count ?? initialStatistics[1].value },
+          { label: 'Years Experience', value: initialStatistics[2].value },
+          { label: 'States Served', value: initialStatistics[3].value },
+        ]);
+      } catch {
+        // keep fallback values
+      }
+    };
+
+    void loadTrustMetrics();
+  }, []);
+
   const [selectedSwatch, setSelectedSwatch] = useState(materialSwatches[0]);
+  const [trustMetrics, setTrustMetrics] = useState(initialStatistics);
+  const { testimonials: loadedTestimonials, loading: isTestimonialsLoading } = useTestimonials();
   const previewImage = useMemo(() => selectedSwatch.previewImage ?? projectOfMonth?.cover_image ?? defaultProjectOfMonth.cover_image ?? '', [selectedSwatch, projectOfMonth?.cover_image]);
 
 const normalizeCategorySlug = (category: string) =>
@@ -240,13 +313,11 @@ const normalizeCategorySlug = (category: string) =>
 
   return (
     <PageContainer className="space-y-0 pb-16 sm:pb-20 pt-6">
-      <Helmet>
-        <title>Oak Cherry Kraft | Handcrafted furniture & bespoke commissions</title>
-        <meta
-          name="description"
-          content="Oak Cherry Kraft Artistry Limited creates premium handcrafted furniture for homes, offices, and commercial spaces in Nigeria."
-        />
-      </Helmet>
+      <SEO
+        title="Oak Cherry Kraft | Handcrafted furniture & bespoke commissions"
+        description="Oak Cherry Kraft Artistry Limited creates premium handcrafted furniture for homes, offices, and commercial spaces in Nigeria."
+        url="https://oakcherrykraft.com/"
+      />
 
       <HeroSection />
 
@@ -597,20 +668,24 @@ const normalizeCategorySlug = (category: string) =>
       <Suspense fallback={null}>
         <TestimonialsSection>
           <SectionHeader
-          eyebrow="Client stories"
-          title="The details people remember."
-          description="Our work is measured not only in finish and form, but in how beautifully it becomes part of everyday life."
-          className="mb-8"
-        />
-        <div className="grid gap-5 lg:grid-cols-3">
-          {testimonials.map((testimonial, index) => (
-            <Card key={index} className="rounded-[1.75rem] border border-bark/10 bg-white p-8 shadow-soft">
-              <p className="text-sm tracking-[0.22em] text-clay" aria-label="Five stars">★★★★★</p>
-              <blockquote className="mt-5 font-display text-2xl leading-snug text-bark">&ldquo;{testimonial.quote}&rdquo;</blockquote>
-            </Card>
-          ))}
-        </div>
-      </TestimonialsSection>
+            eyebrow="Client stories"
+            title="The details people remember."
+            description="Our work is measured not only in finish and form, but in how beautifully it becomes part of everyday life."
+            className="mb-8"
+          />
+          <div className="grid gap-5 lg:grid-cols-3">
+            {(isTestimonialsLoading ? testimonials : loadedTestimonials.length > 0 ? loadedTestimonials : testimonials).slice(0, 3).map((testimonial, index) => (
+              <Card key={testimonial.id ?? `testimonial-${index}`} className="rounded-[1.75rem] border border-bark/10 bg-white p-8 shadow-soft">
+                <p className="text-sm tracking-[0.22em] text-clay" aria-label="Five stars">{Array.from({ length: testimonial.rating ?? 5 }).map(() => '★').join('')}</p>
+                <blockquote className="mt-5 font-display text-2xl leading-snug text-bark">“{testimonial.testimonial}”</blockquote>
+                <div className="mt-6 text-sm leading-7 text-bark/70">
+                  <p className="font-semibold text-bark">{testimonial.name ?? 'Client'}</p>
+                  {testimonial.company ? <p>{testimonial.company}</p> : null}
+                </div>
+              </Card>
+            ))}
+          </div>
+        </TestimonialsSection>
 
       <section className="section-gap bg-sand/10">
         <div className="container-wide">
@@ -621,7 +696,7 @@ const normalizeCategorySlug = (category: string) =>
             className="mb-8 max-w-3xl"
           />
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-            {statistics.map((stat, index) => (
+            {trustMetrics.map((stat, index) => (
               <motion.article
                 key={stat.label}
                 initial={{ opacity: 0, y: 22 }}

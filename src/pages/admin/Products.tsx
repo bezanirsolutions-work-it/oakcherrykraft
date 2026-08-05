@@ -1,7 +1,7 @@
-import { ChangeEvent, DragEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { ChangeEvent, DragEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Archive, ArrowUpRight, Check, Clock3, Eye, Image, Layers, Paintbrush, Pencil, Search, Tag, Text, Trash2, X, CalendarDays } from 'lucide-react';
+import { Archive, Check, Clock3, Eye, Pencil, Search, Trash2, X } from 'lucide-react';
 import { Button, EmptyState, LoadingState, ImageCarousel } from '../../components/ui';
 import { supabase } from '../../lib/supabase';
 import type { Database } from '../../lib/database';
@@ -10,11 +10,6 @@ import { normalizeImageUrl, normalizeProductImageFields } from '../../lib/imageU
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] as const } },
-};
-
-const sectionStagger = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.1, delayChildren: 0.08 } },
 };
 
 const drawerVariants = {
@@ -67,8 +62,6 @@ type ProductTextField =
   | 'width'
   | 'depth'
   | 'dimensionUnit';
-
-type ProductBooleanField = 'is_active';
 
 type ProductInsertPayload = Database['public']['Tables']['products']['Insert'];
 type ProductUpdatePayload = Database['public']['Tables']['products']['Update'];
@@ -258,19 +251,7 @@ const productWoodSpeciesOptions: string[] = [
 const optionsWithCurrentValue = (options: string[], currentValue: string) =>
   currentValue && !options.includes(currentValue) ? [currentValue, ...options] : options;
 
-const generateSeoTitle = (name: string, category: string) => `${name} | ${category} | Oak Cherry Kraft`;
-const generateMetaDescription = (name: string, category: string, material: string, finish: string) => {
-  const finishText = finish ? ` with a ${finish.toLowerCase()} finish` : '';
-  const materialText = material && material !== 'Custom Timber' ? ` crafted from ${material.toLowerCase()}` : '';
-  return `${name} is a premium ${category.toLowerCase()}${materialText}${finishText}, designed for elegant, handcrafted living spaces. Contact Oak Cherry Kraft for a bespoke quote.`;
-};
-
-const generateAltText = (name: string, material: string, finish: string, colour: string) => {
-  const materialText = material && material !== 'Custom Timber' ? ` in ${material.toLowerCase()}` : '';
-  const finishText = finish ? ` with a ${finish.toLowerCase()} finish` : '';
-  const colourText = colour ? ` in ${colour.toLowerCase()}` : '';
-  return `${name}${materialText}${finishText}${colourText}`.trim();
-};
+// Removed unused helpers/constants to reduce eslint warnings
 
 export function ProductsAdmin() {
   const blankProductValues: Product = {
@@ -446,7 +427,7 @@ export function ProductsAdmin() {
     });
   };
 
-  const fetchAllProducts = async () => {
+  const fetchAllProducts = useCallback(async () => {
     setIsLoadingProducts(true);
     setLoadProductsError(null);
     try {
@@ -467,11 +448,11 @@ export function ProductsAdmin() {
     } finally {
       setIsLoadingProducts(false);
     }
-  };
+  }, [selectedProductId]);
 
   useEffect(() => {
-    fetchAllProducts();
-  }, []);
+    void fetchAllProducts();
+  }, [fetchAllProducts]);
 
   const selectedCount = selectedProductIds.length;
   const isAllSelected = productList.length > 0 && selectedCount === productList.length;
@@ -668,7 +649,7 @@ export function ProductsAdmin() {
   };
 
   const handleSelectAll = () => {
-    setSelectedProductIds((current) =>
+    setSelectedProductIds((_current) =>
       isAllSelected ? [] : productList.map((product) => product.id)
     );
   };
@@ -884,7 +865,7 @@ export function ProductsAdmin() {
       .map((item) => item.trim())
       .filter(Boolean);
 
-  const addListItem = (field: 'features' | 'specifications', value: string, isCreate: boolean) => {
+  const _addListItem = (field: 'features' | 'specifications', value: string, isCreate: boolean) => {
     const item = value.trim();
     if (!item) return;
     const setter = isCreate ? setCreateFormValues : setFormValues;
@@ -897,14 +878,14 @@ export function ProductsAdmin() {
     else setFormSpecificationsText('');
   };
 
-  const removeListItem = (field: 'features' | 'specifications', index: number, isCreate: boolean) => {
+  const _removeListItem = (field: 'features' | 'specifications', index: number, isCreate: boolean) => {
     const setter = isCreate ? setCreateFormValues : setFormValues;
     setter((current) => ({ ...current, [field]: (current[field] ?? []).filter((_, itemIndex) => itemIndex !== index) }));
   };
 
   const getSafeFileName = (file: File) => file.name.replace(/[^a-zA-Z0-9._-]/g, '-');
 
-  const normalizeProductImageState = (product: Product | null | undefined) => {
+  const _normalizeProductImageState = (product: Product | null | undefined) => {
     if (!product) return null;
     const normalized = normalizeProductImageFields(product as Product);
     if (!normalized) return null;
@@ -1316,7 +1297,7 @@ export function ProductsAdmin() {
     });
 
     const payloadToInsert: Partial<ProductInsertPayload> = { ...insertPayload };
-    delete (payloadToInsert as any).id;
+    delete (payloadToInsert as Partial<Record<string, unknown>>).id;
 
     const { data, error: insertError } = await supabase
       .from('products')
@@ -1499,7 +1480,7 @@ export function ProductsAdmin() {
     Object.fromEntries(Object.entries(obj).filter(([, value]) => value !== undefined)) as Partial<T>;
 
   const isCreate = drawerMode === 'create';
-  const currentFormValues = isCreate ? createFormValues : formValues;
+  const _currentFormValues = isCreate ? createFormValues : formValues;
   const currentFormErrors = isCreate ? createFormErrors : formErrors;
   const currentFeaturesText = isCreate ? createFeaturesText : formFeaturesText;
   const currentSpecificationsText = isCreate ? createSpecificationsText : formSpecificationsText;
@@ -1518,7 +1499,7 @@ export function ProductsAdmin() {
     return value === true;
   };
 
-  const isSlugEdited = slugEdited[drawerMode === 'create' ? 'create' : 'edit'];
+  const _isSlugEdited = slugEdited[drawerMode === 'create' ? 'create' : 'edit'];
   const handleCurrentInputChange = (field: ProductTextField, value: string) => {
     if (drawerMode === 'create') {
       handleCreateInputChange(field, value);
@@ -1771,7 +1752,7 @@ export function ProductsAdmin() {
     return (
       <div className="rounded-[1.5rem] border border-bark/10 bg-sand p-5">
         <div className="rounded-[1.5rem] border border-bark/10 bg-white p-4">
-          <label className="block text-sm font-semibold text-bark">Product images</label>
+          <p className="block text-sm font-semibold text-bark">Product images</p>
           <div
             onDragEnter={handleDropzoneDragEnter}
             onDragLeave={handleDropzoneDragLeave}
@@ -1801,7 +1782,7 @@ export function ProductsAdmin() {
                   onDragOver={(event) => handlePreviewDragOver(event, index)}
                   onDragEnd={handlePreviewDragEnd}
                 >
-                  <img src={preview} alt={`Selected preview ${index + 1}`} className="h-24 w-full object-cover" />
+                  <img src={preview} alt={`Preview ${index + 1}`} className="h-24 w-full object-cover" />
                   <div className="absolute inset-x-1 bottom-1 flex items-center justify-between gap-2 rounded-full bg-bark/75 px-2 py-1 text-[0.65rem] text-white">
                     <button
                       type="button"
@@ -1875,7 +1856,7 @@ export function ProductsAdmin() {
                       onDragEnd={handleGalleryDragEnd}
                       className="group relative overflow-hidden rounded-[1.5rem] border border-bark/10 bg-sand"
                     >
-                      <img src={src} alt={`${selectedProduct?.name} image ${index + 1}`} className="h-40 w-full object-cover" />
+                      <img src={src} alt={`${selectedProduct?.name} ${index + 1}`} loading="lazy" decoding="async" width="320" height="160" className="h-40 w-full object-cover" />
                       <div className="absolute inset-x-0 bottom-0 flex flex-col gap-2 bg-gradient-to-t from-black/60 to-transparent p-3 text-white">
                         <div className="flex items-center justify-between text-xs uppercase tracking-[0.35em]">
                           <span>{isCover ? 'Cover' : 'Image'}</span>
@@ -2456,7 +2437,16 @@ export function ProductsAdmin() {
             exit={{ opacity: 0, y: 20 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
-            <div className="absolute inset-0 bg-bark/50 backdrop-blur-sm" onClick={closeConfirmation} />
+            <div
+              className="absolute inset-0 bg-bark/50 backdrop-blur-sm"
+              role="button"
+              tabIndex={0}
+              aria-label="Close confirmation dialog"
+              onClick={closeConfirmation}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') closeConfirmation();
+              }}
+            />
             <div className="relative z-10 w-full max-w-lg rounded-[2rem] border border-bark/10 bg-white p-6 shadow-2xl">
               <div className="flex items-start justify-between gap-4">
                 <div>

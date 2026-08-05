@@ -18,7 +18,7 @@ const item = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: easing } },
 };
 
-export function HeroSection({ children }: HeroSectionProps) {
+export function HeroSection({ children: _children }: HeroSectionProps) {
   return (
     <section
       className="relative overflow-hidden text-[#2E241C] px-4 sm:px-[60px] min-h-[95vh] lg:min-h-[100vh] bg-[url('/assets/hero/GENERATED.webp')] bg-cover bg-center lg:bg-[position:calc(100%+240px)_50%] bg-no-repeat"
@@ -29,8 +29,8 @@ export function HeroSection({ children }: HeroSectionProps) {
         src="/assets/hero/GENERATED.webp"
         alt=""
         aria-hidden="true"
-        className="pointer-events-none hidden lg:block absolute top-0 bottom-0 right-[-420px] w-[170%] object-cover -z-20"
-        style={{ transform: 'scaleX(-1)' }}
+        className="pointer-events-none hidden lg:block absolute top-0 bottom-0 right-[-300px] w-[150%] object-cover -z-20"
+        style={{ transform: 'scale(0.92) scaleX(-1)' }}
       />
       <motion.div
         className="pointer-events-none absolute inset-y-0 z-0 h-full hero-bg"

@@ -11,4 +11,12 @@ declare global {
   }
 }
 
+declare module '*.mp4';
+declare module '*.vtt';
+declare module '*.webp';
+declare module '*.jpeg';
+declare module '*.jpg';
+declare module '*.png';
+declare module '*.svg';
+
 export {};

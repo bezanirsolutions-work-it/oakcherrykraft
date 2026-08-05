@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react';
-import { Helmet } from 'react-helmet-async';
+import { SEO } from '../components/layout/SEO';
 import { motion } from 'framer-motion';
 import { Mail, MapPin, MessageCircle, Phone, Send, Clock3, Instagram } from 'lucide-react';
+import { emailService } from '../services/email';
 import { PageHeader } from '../components/layout/PageHeader';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Button, Card, SectionHeader } from '../components/ui';
@@ -59,14 +60,25 @@ export function Contact() {
     setStatus('success');
     setFeedbackMessage('Your message has been sent. We will get back to you shortly.');
     form.reset();
+
+    try {
+      await emailService.sendEmail({
+        to: import.meta.env.VITE_EMAIL_TO || '',
+        subject: `New contact enquiry: ${subject || 'No subject'}`,
+        body: `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\nSubject: ${subject}\nMessage: ${message}`,
+      });
+    } catch (err) {
+      console.error('Contact notification email failed:', err);
+    }
   }
 
   return (
     <PageContainer className="space-y-14 pb-16 sm:space-y-20 sm:pb-20">
-      <Helmet>
-        <title>Contact | Oak Cherry Kraft</title>
-        <meta name="description" content="Contact Oak Cherry Kraft for bespoke furniture, quotes, and project guidance across Nigeria." />
-      </Helmet>
+      <SEO
+        title="Contact | Oak Cherry Kraft"
+        description="Contact Oak Cherry Kraft for bespoke furniture, quotes, and project guidance across Nigeria."
+        url="https://oakcherrykraft.com/contact"
+      />
       <PageHeader title="Let’s Build Something Beautiful Together" subtitle="Reach out to discuss custom orders, project timelines, or design support for your space. We serve discerning clients across Nigeria." />
 
       <motion.section initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={fadeIn} className="max-w-3xl">
