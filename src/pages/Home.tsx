@@ -312,7 +312,7 @@ const normalizeCategorySlug = (category: string) =>
   const displayFeaturedProducts = featuredProducts.length > 0 ? featuredProducts : defaultFeaturedProducts;
 
   return (
-    <PageContainer className="space-y-0 pb-16 sm:pb-20 pt-6">
+    <>
       <SEO
         title="Oak Cherry Kraft | Handcrafted furniture & bespoke commissions"
         description="Oak Cherry Kraft Artistry Limited creates premium handcrafted furniture for homes, offices, and commercial spaces in Nigeria."
@@ -321,15 +321,16 @@ const normalizeCategorySlug = (category: string) =>
 
       <HeroSection />
 
-      <FeaturedCollectionsSection>
-        <section id="explore-collection">
-          <SectionHeader
-            eyebrow="Explore the collection"
-            title="Furniture for the way you want to live."
-            description="From a statement dining table to a complete bespoke installation, each piece is made to feel unmistakably yours."
-            className="mb-6"
-          />
-        </section>
+      <PageContainer className="space-y-0 pb-16 sm:pb-20 pt-6">
+        <FeaturedCollectionsSection>
+          <section id="explore-collection">
+            <SectionHeader
+              eyebrow="Explore the collection"
+              title="Furniture for the way you want to live."
+              description="From a statement dining table to a complete bespoke installation, each piece is made to feel unmistakably yours."
+              className="mb-6"
+            />
+          </section>
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.12 }} variants={sectionStagger} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {categoryCards.map((category) => (
             <MotionLink
