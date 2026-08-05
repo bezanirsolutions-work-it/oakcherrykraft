@@ -21,7 +21,7 @@ const item = {
 export function HeroSection({ children: _children }: HeroSectionProps) {
   return (
     <section
-      className="relative overflow-hidden text-[#2E241C] px-4 sm:px-[60px] min-h-[95vh] lg:min-h-[100vh] bg-[url('/assets/hero/GENERATED.webp')] bg-cover bg-center lg:bg-[position:calc(100%+240px)_50%] bg-no-repeat"
+      className="relative overflow-hidden text-[#2E241C] px-4 sm:px-[60px] min-h-[95vh] lg:min-h-[100vh] bg-[url('/assets/hero/GENERATED.webp')] bg-[length:120%] lg:bg-[length:140%] bg-no-repeat bg-center lg:bg-[position:100%_50%]"
       style={{ backgroundColor: '#F8F4EE' }}
     >
       {/* Absolute image for precise large-screen placement (keeps bg as fallback on smaller screens) */}
@@ -57,7 +57,7 @@ export function HeroSection({ children: _children }: HeroSectionProps) {
         <div className="absolute inset-x-0 top-[12%] mx-auto h-[480px] w-[480px] rounded-full bg-[radial-gradient(circle,_rgba(215,190,150,0.18),_transparent_70%)] opacity-90 blur-3xl" aria-hidden="true" />
       </div>
 
-      <div className="mx-auto max-w-[1600px] min-h-[95vh] py-12 sm:py-24 lg:py-24 lg:px-0 xl:px-[120px]">
+      <div className="mx-auto max-w-[1600px] min-h-[95vh] pt-8 pb-14 sm:pt-10 sm:pb-16 lg:pt-10 lg:pb-16 lg:px-0 xl:px-[120px]">
         {/* Desktop: centered hero card with equal left/right margins */}
         <div className="mx-auto w-full px-4 sm:px-0 lg:max-w-[960px]">
           <motion.div
@@ -65,7 +65,7 @@ export function HeroSection({ children: _children }: HeroSectionProps) {
             whileInView="visible"
             viewport={{ once: true, amount: 0.3 }}
             variants={containerVariants}
-            className="relative z-10 mx-auto w-full max-w-[760px] rounded-[20px] bg-[rgba(248,244,238,0.55)] p-6 backdrop-blur-sm sm:p-10 md:p-12 lg:max-w-[860px] lg:rounded-[28px] lg:border lg:border-white/40 lg:bg-[rgba(248,244,238,0.55)] lg:backdrop-blur-[12px] lg:shadow-[0_24px_80px_rgba(0,0,0,0.12)] lg:p-12"
+            className="relative z-10 mx-auto w-full max-w-[760px] rounded-[20px] bg-[rgba(248,244,238,0.55)] p-6 backdrop-blur-sm sm:p-10 md:p-12 lg:-mt-14 lg:max-w-[860px] lg:rounded-[28px] lg:border lg:border-white/40 lg:bg-[rgba(248,244,238,0.55)] lg:backdrop-blur-[12px] lg:shadow-[0_24px_80px_rgba(0,0,0,0.12)] lg:p-12"
           >
             <motion.div variants={item} className="inline-flex items-center gap-4">
               <span className="inline-block h-px w-16 bg-[#b98b3b] opacity-90" aria-hidden="true" />
