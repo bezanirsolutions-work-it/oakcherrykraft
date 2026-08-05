@@ -312,7 +312,7 @@ const normalizeCategorySlug = (category: string) =>
   const displayFeaturedProducts = featuredProducts.length > 0 ? featuredProducts : defaultFeaturedProducts;
 
   return (
-    <>
+    <div className="min-h-screen">
       <SEO
         title="Oak Cherry Kraft | Handcrafted furniture & bespoke commissions"
         description="Oak Cherry Kraft Artistry Limited creates premium handcrafted furniture for homes, offices, and commercial spaces in Nigeria."
@@ -735,5 +735,6 @@ const normalizeCategorySlug = (category: string) =>
         </CallToActionSection>
       </Suspense>
     </PageContainer>
+    </div>
   );
 }
