@@ -1,11 +1,11 @@
-import { Helmet } from 'react-helmet-async';
+import { SEO } from '../components/layout/SEO';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, CheckCircle2, Eye, Heart, Leaf } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { PageHeader } from '../components/layout/PageHeader';
 import { PageContainer } from '../components/layout/PageContainer';
 import { AnimatedImage, Button, Card, SectionHeader } from '../components/ui';
 import founderVideo from '../../assets/videos/founder.mp4';
+import founderCaptions from '../../assets/videos/founder-captions.vtt';
 import replaceChairImage from '../../REPLACE CHAIR.jpeg';
 
 const trustPoints = [
@@ -24,18 +24,16 @@ const sectionStagger = {
   visible: { transition: { staggerChildren: 0.12, delayChildren: 0.08 } },
 };
 
-const cardLift = {
-  whileHover: { y: -4, transition: { duration: 0.2, ease: 'easeOut' } },
-};
+// cardLift removed — not currently used
 
 export function About() {
   return (
     <PageContainer className="space-y-16 pb-16 sm:space-y-24 sm:pb-20">
-      <Helmet>
-        <title>About | Oak Cherry Kraft</title>
-        <meta name="description" content="Learn about Oak Cherry Kraft Artistry Limited, our craftsmanship, process, and furniture philosophy." />
-      </Helmet>
-      <PageHeader title="Crafted with Passion. Built to Last." subtitle="At Oak Cherry Kraft Artistry Limited, we believe furniture should do more than fill a room—it should define it." />
+      <SEO
+        title="About | Oak Cherry Kraft"
+        description="Learn about Oak Cherry Kraft Artistry Limited, our craftsmanship, process, and furniture philosophy."
+        url="https://oakcherrykraft.com/about"
+      />
 
       <section className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-14">
         <motion.div initial={{ opacity: 0, x: -24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7, ease: 'easeOut' }} className="space-y-7">
@@ -79,8 +77,10 @@ export function About() {
               controls
               preload="metadata"
               poster="/assets/about-page.webp"
+              aria-label="Behind-the-scenes workshop video"
             >
               <source src={founderVideo} type="video/mp4" />
+              <track kind="captions" src={founderCaptions} srcLang="en" label="English captions" default />
               Your browser does not support the video tag.
             </video>
           </div>

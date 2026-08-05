@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import { SEO } from '../components/layout/SEO';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, ChevronRight, Hammer, Sparkles, Truck } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
@@ -8,7 +8,6 @@ import { PageContainer } from '../components/layout/PageContainer';
 import { Breadcrumb, Button, Card, SectionHeader } from '../components/ui';
 import { QuoteFormValues, categories, productTypes, woodSpecies, finishes, budgetRanges } from '../components/ui/QuoteForm';
 import { getEstimatedPriceRange } from '../utils/priceEstimator';
-import { supabase } from '../lib/supabase';
 
 const stepDefinitions = [
   { label: 'Category', description: 'Choose the furniture family that fits your project.' },
@@ -22,6 +21,8 @@ const stepDefinitions = [
   { label: 'Details', description: 'Provide your contact details, completion window, and notes.' },
   { label: 'Review', description: 'Confirm the configurator selections before continuing to the quote request.' },
 ];
+
+const CONFIGURATOR_STORAGE_KEY = 'oakcherrykraft:configurator-state';
 
 const baseConfiguration: Partial<QuoteFormValues> = {
   product: '',
@@ -66,6 +67,8 @@ export function Configurator() {
   const locationState = location.state as ConfiguratorLocationState | null;
   const navigate = useNavigate();
 
+  const [savedConfiguration, setSavedConfiguration] = useState<Partial<QuoteFormValues> | null>(null);
+
   const routeState = locationState;
   const searchParams = new URLSearchParams(location.search);
   const incomingProductName =
@@ -89,11 +92,12 @@ export function Configurator() {
 
   const initialConfiguration = useMemo<Partial<QuoteFormValues>>(() => ({
     ...baseConfiguration,
+    ...(savedConfiguration ?? {}),
     ...(incomingProductName ? { product: incomingProductName } : {}),
     ...(incomingCategory ? { category: incomingCategory } : {}),
     ...(incomingWood ? { woodSpecies: incomingWood } : {}),
     ...(incomingFinish ? { finish: incomingFinish } : {}),
-  }), [incomingProductName, incomingCategory, incomingWood, incomingFinish]);
+  }), [incomingProductName, incomingCategory, incomingWood, incomingFinish, savedConfiguration]);
 
   const [step, setStep] = useState(0);
   const [configuration, setConfiguration] = useState<Partial<QuoteFormValues>>(initialConfiguration);
@@ -103,6 +107,7 @@ export function Configurator() {
     const nextStep = hasSelectedProduct ? 1 : 0;
     const sanitizedConfiguration = {
       ...baseConfiguration,
+      ...(savedConfiguration ?? {}),
       ...(incomingProductName ? { product: incomingProductName } : {}),
       ...(incomingCategory ? { category: incomingCategory } : {}),
       ...(incomingWood ? { woodSpecies: incomingWood } : {}),
@@ -114,9 +119,41 @@ export function Configurator() {
     setStep(nextStep);
     setSubmissionStatus('idle');
     setSubmissionMessage('');
-  }, [location.key, incomingProductName, incomingCategory, incomingWood, incomingFinish, hasSelectedProduct]);
+  }, [location.key, incomingProductName, incomingCategory, incomingWood, incomingFinish, hasSelectedProduct, savedConfiguration]);
   const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [submissionMessage, setSubmissionMessage] = useState('');
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      window.localStorage.setItem(
+        CONFIGURATOR_STORAGE_KEY,
+        JSON.stringify({ configuration, step, savedAt: new Date().toISOString() })
+      );
+    } catch {
+      // ignore storage failures
+    }
+  }, [configuration, step]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const raw = window.localStorage.getItem(CONFIGURATOR_STORAGE_KEY);
+      if (!raw) return;
+
+      const parsed = JSON.parse(raw) as { configuration?: Partial<QuoteFormValues>; step?: number } | null;
+      if (!parsed?.configuration) return;
+
+      setSavedConfiguration(parsed.configuration);
+      if (typeof parsed.step === 'number') {
+        setStep(parsed.step);
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }, []);
 
   const progress = useMemo(() => ((step + 1) / stepDefinitions.length) * 100, [step]);
 
@@ -391,7 +428,7 @@ export function Configurator() {
             </div>
           </div>
         );
-      case 9:
+      case 9: {
         const reviewGroups = [
           {
             title: 'Product details',
@@ -428,7 +465,7 @@ export function Configurator() {
             <p className="text-base leading-7 text-bark/75">Review your choices before continuing to the quote request page.</p>
             {productImageUrl ? (
               <div className="overflow-hidden rounded-[1.75rem] border border-bark/10 bg-white shadow-sm">
-                <img src={productImageUrl} alt={selectedProductName ?? 'Selected product preview'} className="h-56 w-full object-cover" />
+                <img src={productImageUrl} alt={selectedProductName ?? 'Selected product preview'} loading="lazy" decoding="async" width="896" height="224" className="h-56 w-full object-cover" />
                 <div className="space-y-2 p-5">
                   <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oak-700">Product preview</p>
                   <p className="text-lg font-semibold text-bark">{selectedProductName || 'Custom design'}</p>
@@ -457,6 +494,7 @@ export function Configurator() {
             </div>
           </div>
         );
+      }
       default: {
         return null;
       }
@@ -465,10 +503,11 @@ export function Configurator() {
 
   return (
     <PageContainer className="space-y-10 pb-20">
-      <Helmet>
-        <title>Design your furniture | Oak Cherry Kraft</title>
-        <meta name="description" content="Build your premium custom furniture specification and send a quote request with tailored selections." />
-      </Helmet>
+      <SEO
+        title="Design your furniture | Oak Cherry Kraft"
+        description="Build your premium custom furniture specification and send a quote request with tailored selections."
+        url="https://oakcherrykraft.com/configurator"
+      />
 
       <PageHeader title="Design Your Furniture" subtitle="Create a tailored furniture brief with premium materials, dimensions, and finish details." showBreadcrumb />
       <Breadcrumb items={[{ label: 'Home', path: '/' }, { label: 'Design Your Furniture' }]} className="pt-6" />

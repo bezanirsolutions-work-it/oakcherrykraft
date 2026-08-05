@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
+import { SEO } from '../components/layout/SEO';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, Check, Clock3, Search } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
@@ -167,15 +167,17 @@ export function Products() {
     );
   }
 
+  const pageUrl = activeCategoryFilter
+    ? `https://oakcherrykraft.com/products/${encodeURIComponent(activeCategoryFilter)}`
+    : 'https://oakcherrykraft.com/products';
+
   return (
     <PageContainer className="space-y-14 pb-16 sm:space-y-20 sm:pb-20">
-      <Helmet>
-        <title>Products | Oak Cherry Kraft</title>
-        <meta
-          name="description"
-          content="Discover our published furniture collection with live catalogue filtering by category, search, and product details."
-        />
-      </Helmet>
+      <SEO
+        title="Products | Oak Cherry Kraft"
+        description="Discover our published furniture collection with live catalogue filtering by category, search, and product details."
+        url={pageUrl}
+      />
 
       <PageHeader
         title={selectedCategoryName || 'Furniture Built to Feel Natural, Lasting, and Beautifully Scaled'}

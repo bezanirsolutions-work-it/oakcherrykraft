@@ -1,7 +1,7 @@
-import { Link } from 'react-router-dom';
+import { /* Link */ } from 'react-router-dom';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '../../ui/Button';
-import { Badge } from '../../ui/Badge';
+// Badge removed — unused
 import type { Project } from '../../../lib/projects';
 
 interface ProjectTableProps {
@@ -54,7 +54,7 @@ export function ProjectTable({ projects, onEdit, onDelete, onView, isLoading }: 
                   <td className="px-5 py-4 align-top">
                     <div className="h-20 w-28 overflow-hidden rounded-3xl bg-sand">
                       {project.cover_image ? (
-                        <img src={project.cover_image} alt={project.title} className="h-full w-full object-cover" />
+                        <img src={project.cover_image} alt={project.title} loading="lazy" decoding="async" width="112" height="80" className="h-full w-full object-cover" />
                       ) : (
                         <div className="flex h-full items-center justify-center text-xs text-bark/50">No cover</div>
                       )}

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { StatCard } from '../../components/ui/StatCard';
-import { AlertCircle, Inbox, MessageCircle, MessageSquare, ShoppingCart, LayoutGrid, ClipboardList } from 'lucide-react';
+import { AlertCircle, Inbox, MessageCircle, MessageSquare, ShoppingCart, LayoutGrid, ClipboardList, Star } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { getProfileName } from '../../lib/profile';
 
@@ -10,6 +10,7 @@ interface Counts {
   configurator_selections: number;
   contact_messages: number;
   products: number;
+  testimonials: number;
 }
 
 interface QuoteRequestRow {
@@ -31,6 +32,7 @@ const initialCounts: Counts = {
   configurator_selections: 0,
   contact_messages: 0,
   products: 0,
+  testimonials: 0,
 };
 
 export function Dashboard() {
@@ -40,7 +42,7 @@ export function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string>('');
-  const [displayName, setDisplayName] = useState<string>('Ade');
+  const [_displayName, setDisplayName] = useState<string>('Ade');
   const mountedRef = useRef(true);
 
   const fetchUserName = async () => {
@@ -75,11 +77,12 @@ export function Dashboard() {
     setError(null);
 
     try {
-      const [quoteCount, configuratorCount, messageCount, productCount, recentQuotes, recentMessages] = await Promise.all([
+      const [quoteCount, configuratorCount, messageCount, productCount, testimonialCount, recentQuotes, recentMessages] = await Promise.all([
         supabase.from('quote_requests').select('id', { count: 'exact', head: true }),
         supabase.from('configurator_selections').select('id', { count: 'exact', head: true }),
         supabase.from('contact_messages').select('id', { count: 'exact', head: true }),
         supabase.from('products').select('id', { count: 'exact', head: true }),
+        supabase.from('testimonials').select('id', { count: 'exact', head: true }),
         supabase
           .from('quote_requests')
           .select('id, full_name, project_type, created_at')
@@ -94,7 +97,7 @@ export function Dashboard() {
 
       if (!mountedRef.current) return;
 
-      const requestError = [quoteCount, configuratorCount, messageCount, productCount, recentQuotes, recentMessages].find(
+      const requestError = [quoteCount, configuratorCount, messageCount, productCount, testimonialCount, recentQuotes, recentMessages].find(
         (response) => response.error
       );
 
@@ -107,6 +110,7 @@ export function Dashboard() {
         configurator_selections: configuratorCount.count ?? 0,
         contact_messages: messageCount.count ?? 0,
         products: productCount.count ?? 0,
+        testimonials: testimonialCount.count ?? 0,
       });
 
       setQuoteRequests(recentQuotes.data ?? []);
@@ -202,6 +206,12 @@ export function Dashboard() {
           value={counts.contact_messages.toString()}
           label="Contact messages"
           description="Messages received from the contact form."
+        />
+        <StatCard
+          icon={<Star className="h-5 w-5" />}
+          value={counts.testimonials.toString()}
+          label="Testimonials"
+          description="Published client stories and homepage feedback."
         />
         <StatCard
           icon={<ShoppingCart className="h-5 w-5" />}

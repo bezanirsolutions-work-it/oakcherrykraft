@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
+import { SEO } from '../components/layout/SEO';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowUpRight, Clock3, MapPin } from 'lucide-react';
+import { ArrowUpRight, Clock3, MapPin, Share2 } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { PageContainer } from '../components/layout/PageContainer';
 import {
@@ -17,7 +17,15 @@ import {
   ImageCarousel,
 } from '../components/ui';
 import { getCachedData } from '../lib/cache';
-import { getProductImage, normalizeProduct, productSelectColumns, type Product } from '../lib/products';
+import {
+  fetchRelatedProducts,
+  fetchRecentlyViewedProducts,
+  getProductImage,
+  normalizeProduct,
+  productSelectColumns,
+  saveRecentlyViewedProductSlug,
+  type Product,
+} from '../lib/products';
 import { supabase } from '../lib/supabase';
 
 const fadeIn = {
@@ -65,6 +73,9 @@ export function ProductDetail() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [_relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [_recentProducts, setRecentProducts] = useState<Product[]>([]);
+  const [shareMessage, setShareMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -116,6 +127,28 @@ export function ProductDetail() {
     fetchProduct();
   }, [slug]);
 
+  useEffect(() => {
+    const loadRelatedAndRecent = async (category: string | null, currentSlug: string) => {
+      try {
+        const [related, recent] = await Promise.all([
+          fetchRelatedProducts(category, currentSlug),
+          fetchRecentlyViewedProducts(6),
+        ]);
+
+        setRelatedProducts(related.filter((item) => item.slug !== currentSlug));
+        setRecentProducts(recent.filter((item) => item.slug !== currentSlug));
+      } catch {
+        setRelatedProducts([]);
+        setRecentProducts([]);
+      }
+    };
+
+    if (product?.slug) {
+      saveRecentlyViewedProductSlug(product.slug);
+      void loadRelatedAndRecent(product.category, product.slug);
+    }
+  }, [product]);
+
   const coverImage = getProductImage(product);
   const galleryImages = useMemo(() => {
     if (!product) return [];
@@ -125,6 +158,26 @@ export function ProductDetail() {
   }, [product]);
 
   const dimensions = product ? buildDimensions(product) : null;
+  const handleShare = async () => {
+    const shareData = {
+      title: product?.name ?? 'Oak Cherry Kraft',
+      text: product?.description ?? 'Discover this custom furniture piece from Oak Cherry Kraft.',
+      url: pageUrl,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        setShareMessage('Product shared successfully.');
+        return;
+      }
+
+      await navigator.clipboard.writeText(pageUrl);
+      setShareMessage('Link copied to clipboard.');
+    } catch {
+      setShareMessage('Unable to share this product on your device.');
+    }
+  };
 
   if (loading) {
     return (
@@ -147,13 +200,15 @@ export function ProductDetail() {
   }
 
   const categorySlug = normalizeCategorySlug(product.category || '');
-
+  const pageUrl = `https://oakcherrykraft.com/products/${categorySlug}/${slug}`;
   return (
     <PageContainer className="space-y-10 pb-20">
-      <Helmet>
-        <title>{product.name} | Oak Cherry Kraft</title>
-        <meta name="description" content={product.description ?? 'Premium handcrafted furniture'} />
-      </Helmet>
+      <SEO
+        title={`${product.name} | Oak Cherry Kraft`}
+        description={product.description ?? 'Premium handcrafted furniture'}
+        url={pageUrl}
+        image={coverImage}
+      />
       <PageHeader title={product.name ?? ''} subtitle={product.description ?? undefined} showBreadcrumb />
       <Breadcrumb
         items={[
@@ -223,14 +278,17 @@ export function ProductDetail() {
             <Button variant="secondary" asChild icon={<ArrowUpRight size={17} aria-hidden="true" />}>
               <Link to="/projects">View portfolio</Link>
             </Button>
+            <Button variant="outline" onClick={handleShare} icon={<Share2 size={17} aria-hidden="true" />}>
+              Share
+            </Button>
           </div>
+          {shareMessage ? <p className="mt-3 text-sm text-bark/70">{shareMessage}</p> : null}
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-          <Card className="bg-sand p-6">
-            <h3 className="text-lg font-semibold text-bark">Features</h3>
+          <Card className="bg-white p-6">
             {product.features?.length ? (
-              <ul className="mt-4 space-y-3 text-sm leading-7 text-bark/75">
+              <ul className="space-y-3 text-sm leading-7 text-bark/75">
                 {product.features.map((feature, index) => (
                   <li key={index} className="flex gap-3">
                     <span className="mt-1 h-1.5 w-1.5 rounded-full bg-bark" />
@@ -261,7 +319,7 @@ export function ProductDetail() {
         </div>
 
         <Card className="bg-sand">
-          <div className="space-y-4">
+          <div className="space-y-4 p-6">
             <div className="flex items-center gap-3 text-bark/80">
               <MapPin size={18} aria-hidden="true" />
               <p>Studio and delivery across Nigeria</p>

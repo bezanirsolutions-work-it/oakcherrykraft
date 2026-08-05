@@ -30,7 +30,7 @@ export function Login() {
     }
 
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    const { data: userData, error: userError } = await supabase.auth.getUser();
+    const { data: userData, error: _userError } = await supabase.auth.getUser();
 
     
 

@@ -1,4 +1,4 @@
-import { Helmet } from 'react-helmet-async';
+import { SEO } from '../components/layout/SEO';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
@@ -7,7 +7,7 @@ import { PageHeader } from '../components/layout/PageHeader';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Breadcrumb, Button, QuoteForm, SectionHeader } from '../components/ui';
 import type { QuoteFormValues } from '../components/ui/QuoteForm';
-import { getEstimatedPriceRange } from '../utils/priceEstimator';
+// getEstimatedPriceRange import removed — not used
 
 const fadeIn = {
   hidden: { opacity: 0, y: 24 },
@@ -22,10 +22,11 @@ export function QuoteRequest() {
 
   return (
     <PageContainer className="space-y-10 pb-20">
-      <Helmet>
-        <title>Request a quote | Oak Cherry Kraft</title>
-        <meta name="description" content="Submit a quote request for bespoke furniture, custom installations, and tailored design support." />
-      </Helmet>
+      <SEO
+        title="Request a quote | Oak Cherry Kraft"
+        description="Submit a quote request for bespoke furniture, custom installations, and tailored design support."
+        url="https://oakcherrykraft.com/request-quote"
+      />
       <PageHeader title="Request a Quote" subtitle="Share your space, materials, and timeframe. Our studio will respond with a tailored proposal and next steps." showBreadcrumb />
       <Breadcrumb items={[{ label: 'Home', path: '/' }, { label: 'Request quote' }]} className="pt-6" />
 

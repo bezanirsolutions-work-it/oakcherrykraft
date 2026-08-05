@@ -1,10 +1,5 @@
 import { supabase } from './supabase';
 
-const getSessionMetadata = () => {
-  const session = supabase.auth.getSession();
-  return session;
-};
-
 export const getProfileRole = async (userId: string): Promise<string | null> => {
   const { data: sessionData } = await supabase.auth.getSession();
   const session = sessionData.session;

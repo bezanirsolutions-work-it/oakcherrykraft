@@ -1,4 +1,4 @@
-import { Helmet } from 'react-helmet-async';
+import { SEO } from '../components/layout/SEO';
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -79,10 +79,11 @@ export function ProjectPortfolio() {
 
   return (
     <PageContainer className="space-y-10 pb-20">
-      <Helmet>
-        <title>Portfolio | Oak Cherry Kraft</title>
-        <meta name="description" content="Browse our portfolio of crafted furniture and bespoke project installations." />
-      </Helmet>
+      <SEO
+        title="Portfolio | Oak Cherry Kraft"
+        description="Browse our portfolio of crafted furniture and bespoke project installations."
+        url="https://oakcherrykraft.com/projects"
+      />
       <PageHeader title="Project Portfolio" subtitle="Browse completed commissions and get inspired by projects that balance craft, comfort, and architectural presence." showBreadcrumb />
       <Breadcrumb items={[{ label: 'Home', path: '/' }, { label: 'Portfolio' }]} className="pt-6" />
       <motion.section initial="hidden" animate="visible" variants={fadeIn} className="space-y-8">

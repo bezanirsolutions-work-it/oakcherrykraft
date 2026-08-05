@@ -294,6 +294,45 @@ export interface Database {
         };
         Relationships: [];
       };
+      testimonials: {
+        Row: {
+          id: string;
+          name: string;
+          role: string | null;
+          company: string | null;
+          photo_url: string | null;
+          rating: number | null;
+          testimonial: string;
+          featured: boolean | null;
+          display_order: number | null;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          role?: string | null;
+          company?: string | null;
+          photo_url?: string | null;
+          rating?: number | null;
+          testimonial: string;
+          featured?: boolean | null;
+          display_order?: number | null;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          role?: string | null;
+          company?: string | null;
+          photo_url?: string | null;
+          rating?: number | null;
+          testimonial?: string;
+          featured?: boolean | null;
+          display_order?: number | null;
+          created_at?: string | null;
+        };
+        Relationships: [];
+      };
       settings: {
         Row: {
           key: string;
