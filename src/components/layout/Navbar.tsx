@@ -45,13 +45,13 @@ export function Navbar() {
   );
 
   return (
-    <header className={`sticky top-0 z-50 border-b border-bark/10 bg-sand/90 shadow-soft backdrop-blur-xl transition duration-300 ease-brand ${isScrolled ? 'py-0' : ''}`}>
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-4 sm:px-8 sm:py-4 lg:px-10">
+    <header className="sticky top-0 z-50 border-b border-bark/10 bg-sand/90 shadow-soft backdrop-blur-xl transition duration-300 ease-brand">
+      <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between gap-6 px-4 sm:px-8 lg:px-10">
         <Link to="/" className="flex items-center gap-3 text-sm font-semibold tracking-tight text-bark">
           <img
             src={logoPath}
             alt="Oak Cherry Kraft logo"
-            className={`h-12 w-12 rounded-full object-contain shadow-sm transition-all duration-300 ease-brand ${isScrolled ? 'h-10 w-10' : 'sm:h-14 sm:w-14'}`}
+            className="h-12 w-12 rounded-full object-contain shadow-sm transition-all duration-300 ease-brand sm:h-12 sm:w-12"
           />
           <div className="flex flex-col leading-tight">
             <span className="text-[0.71rem] font-semibold uppercase tracking-[0.25em] text-bark/90 sm:text-[0.78rem]">
