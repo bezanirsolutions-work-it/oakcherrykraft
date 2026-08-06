@@ -21,7 +21,7 @@ const item = {
 export function HeroSection({ children: _children }: HeroSectionProps) {
   return (
     <section
-      className="relative overflow-hidden text-[#2E241C] px-4 sm:px-[60px] min-h-[auto] sm:min-h-[95vh] lg:min-h-[100vh] bg-[url('/assets/hero/GENERATED.webp')] bg-[length:120%] lg:bg-[length:140%] bg-no-repeat bg-center lg:bg-[position:100%_50%]"
+      className="relative overflow-hidden text-[#2E241C] w-full px-0 md:px-[60px] min-h-[90vh] md:min-h-[95vh] lg:min-h-[100vh] bg-[url('/assets/hero/GENERATED.webp')] bg-cover bg-center bg-no-repeat bg-[length:120%] lg:bg-[length:140%] lg:bg-[position:100%_50%]"
       style={{ backgroundColor: '#F8F4EE' }}
     >
       {/* Absolute image for precise large-screen placement (keeps bg as fallback on smaller screens) */}
@@ -57,9 +57,10 @@ export function HeroSection({ children: _children }: HeroSectionProps) {
         <div className="absolute inset-x-0 top-[12%] mx-auto h-[480px] w-[480px] rounded-full bg-[radial-gradient(circle,_rgba(215,190,150,0.18),_transparent_70%)] opacity-90 blur-3xl" aria-hidden="true" />
       </div>
 
-      <div className="mx-auto max-w-[1600px] min-h-[auto] pt-6 pb-12 sm:min-h-[95vh] sm:pt-10 sm:pb-16 lg:pt-10 lg:pb-16 lg:px-0 xl:px-[120px]">
+      <div className="w-full max-w-[1600px] mx-auto min-h-[auto] pt-6 pb-12 md:min-h-[95vh] md:pt-10 md:pb-16 lg:pt-10 lg:pb-16 xl:px-[120px]">
+        <div className="w-full mx-auto px-0 lg:max-w-[960px]">
         {/* Desktop: centered hero card with equal left/right margins */}
-        <div className="mx-auto w-full px-4 sm:px-0 lg:max-w-[960px]">
+        <div className="mx-auto w-full px-0 sm:px-0 lg:max-w-[960px]">
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -112,6 +113,7 @@ export function HeroSection({ children: _children }: HeroSectionProps) {
           </div>
         </div>
       </div>
+    </div>
 
       {/* Feature cards: one full-width row on desktop, two-by-two on tablet, stacked on mobile */}
       <motion.div
