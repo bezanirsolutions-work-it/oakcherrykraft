@@ -46,12 +46,12 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-bark/10 bg-sand/90 shadow-soft backdrop-blur-xl transition duration-300 ease-brand">
-      <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between gap-6 px-4 sm:px-8 lg:px-10">
+      <div className="mx-auto flex h-[64px] max-w-7xl items-center justify-between gap-6 px-4 sm:h-[76px] sm:px-8 lg:px-10">
         <Link to="/" className="flex items-center gap-3 text-sm font-semibold tracking-tight text-bark">
           <img
             src={logoPath}
             alt="Oak Cherry Kraft logo"
-            className="h-12 w-12 rounded-full object-contain shadow-sm transition-all duration-300 ease-brand sm:h-12 sm:w-12"
+            className="h-11 w-11 rounded-full object-contain shadow-sm transition-all duration-300 ease-brand sm:h-12 sm:w-12"
           />
           <div className="flex flex-col leading-tight">
             <span className="text-[0.71rem] font-semibold uppercase tracking-[0.25em] text-bark/90 sm:text-[0.78rem]">

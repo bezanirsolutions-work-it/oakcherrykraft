@@ -21,7 +21,7 @@ const item = {
 export function HeroSection({ children: _children }: HeroSectionProps) {
   return (
     <section
-      className="relative overflow-hidden text-[#2E241C] px-4 sm:px-[60px] min-h-[95vh] lg:min-h-[100vh] bg-[url('/assets/hero/GENERATED.webp')] bg-[length:120%] lg:bg-[length:140%] bg-no-repeat bg-center lg:bg-[position:100%_50%]"
+      className="relative overflow-hidden text-[#2E241C] px-4 sm:px-[60px] min-h-[auto] sm:min-h-[95vh] lg:min-h-[100vh] bg-[url('/assets/hero/GENERATED.webp')] bg-[length:120%] lg:bg-[length:140%] bg-no-repeat bg-center lg:bg-[position:100%_50%]"
       style={{ backgroundColor: '#F8F4EE' }}
     >
       {/* Absolute image for precise large-screen placement (keeps bg as fallback on smaller screens) */}
@@ -57,7 +57,7 @@ export function HeroSection({ children: _children }: HeroSectionProps) {
         <div className="absolute inset-x-0 top-[12%] mx-auto h-[480px] w-[480px] rounded-full bg-[radial-gradient(circle,_rgba(215,190,150,0.18),_transparent_70%)] opacity-90 blur-3xl" aria-hidden="true" />
       </div>
 
-      <div className="mx-auto max-w-[1600px] min-h-[95vh] pt-8 pb-14 sm:pt-10 sm:pb-16 lg:pt-10 lg:pb-16 lg:px-0 xl:px-[120px]">
+      <div className="mx-auto max-w-[1600px] min-h-[auto] pt-6 pb-12 sm:min-h-[95vh] sm:pt-10 sm:pb-16 lg:pt-10 lg:pb-16 lg:px-0 xl:px-[120px]">
         {/* Desktop: centered hero card with equal left/right margins */}
         <div className="mx-auto w-full px-4 sm:px-0 lg:max-w-[960px]">
           <motion.div
@@ -65,7 +65,7 @@ export function HeroSection({ children: _children }: HeroSectionProps) {
             whileInView="visible"
             viewport={{ once: true, amount: 0.3 }}
             variants={containerVariants}
-            className="relative z-10 mx-auto w-full max-w-[760px] rounded-[20px] bg-[rgba(248,244,238,0.55)] p-6 backdrop-blur-sm sm:p-10 md:p-12 lg:-mt-14 lg:max-w-[860px] lg:rounded-[28px] lg:border lg:border-white/40 lg:bg-[rgba(248,244,238,0.55)] lg:backdrop-blur-[12px] lg:shadow-[0_24px_80px_rgba(0,0,0,0.12)] lg:p-12"
+            className="relative z-10 mx-auto w-full max-w-[min(92%,420px)] rounded-[20px] bg-[rgba(248,244,238,0.65)] p-6 backdrop-blur-sm sm:max-w-[740px] sm:p-10 md:p-12 lg:-mt-14 lg:max-w-[820px] lg:rounded-[28px] lg:border lg:border-white/40 lg:bg-[rgba(248,244,238,0.65)] lg:backdrop-blur-[16px] lg:shadow-[0_24px_80px_rgba(0,0,0,0.12)] lg:p-12"
           >
             <motion.div variants={item} className="inline-flex items-center gap-4">
               <span className="inline-block h-px w-16 bg-[#b98b3b] opacity-90" aria-hidden="true" />
@@ -74,19 +74,19 @@ export function HeroSection({ children: _children }: HeroSectionProps) {
 
             <motion.h1
               variants={item}
-              className="mt-8 max-w-[760px] font-serif tracking-[-0.03em] text-[#241B16] text-[3rem] leading-[1.02] sm:text-[3.6rem] md:text-[4rem] lg:mt-10 lg:max-w-[780px] lg:text-[4.15rem] lg:leading-[0.98] xl:text-[4.55rem]"
+              className="mt-8 max-w-[760px] font-serif tracking-[-0.03em] text-[#241B16] text-[2.8rem] leading-[0.95] sm:text-[3.6rem] md:text-[4rem] lg:mt-10 lg:max-w-[780px] lg:text-[4.15rem] lg:leading-[0.98] xl:text-[4.55rem]"
             >
               <span className="block">Bespoke Furniture Crafted</span>
               <span className="block">For Timeless Living</span>
             </motion.h1>
 
-            <motion.p variants={item} className="mt-16 max-w-[560px] text-lg font-medium leading-[1.8] text-[#4B4038] lg:mt-10 lg:max-w-[590px] lg:text-[1.05rem] lg:leading-[1.55]">
+            <motion.p variants={item} className="mt-12 max-w-[320px] text-lg font-medium leading-[1.8] text-[#4B4038] sm:max-w-[560px] lg:mt-10 lg:max-w-[590px] lg:text-[1.05rem] lg:leading-[1.55]">
               <span className="block lg:whitespace-nowrap">Every Oak Cherry Kraft piece is thoughtfully designed and handcrafted using premium</span>
               <span className="block lg:whitespace-nowrap">hardwoods to complement your home or workspace.</span>
             </motion.p>
 
-            <motion.div variants={item} className="mt-20 flex flex-col gap-4 sm:flex-row sm:items-center lg:mt-14 lg:justify-between lg:gap-5">
-              <motion.div whileHover={{ y: -2 }} className="w-full sm:w-auto lg:mr-auto">
+            <motion.div variants={item} className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center lg:mt-14 lg:justify-start lg:gap-6">
+              <motion.div whileHover={{ y: -2 }} className="w-full sm:w-auto">
                 <Button asChild className="w-full sm:w-auto rounded-full bg-[#2E241C] px-8 py-4 text-sm font-semibold text-[#F8F4EE] shadow-lg shadow-[#00000014] transition duration-300 hover:-translate-y-1 hover:shadow-2xl">
                   <Link to="/request-quote" className="inline-flex items-center gap-3">
                     Design Your Furniture
@@ -95,7 +95,7 @@ export function HeroSection({ children: _children }: HeroSectionProps) {
                 </Button>
               </motion.div>
 
-              <motion.div whileHover={{ y: -2 }} className="w-full sm:w-auto lg:ml-auto">
+              <motion.div whileHover={{ y: -2 }} className="w-full sm:w-auto">
                 <Button variant="ghost" asChild className="w-full sm:w-auto rounded-full border border-[#2E241C] bg-white px-8 py-4 text-sm font-semibold text-[#2E241C] transition duration-300 hover:-translate-y-1 hover:bg-[#f7f1ec]">
                   <Link to="/products">Explore Collection →</Link>
                 </Button>
