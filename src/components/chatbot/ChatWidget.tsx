@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { MessageCircle } from 'lucide-react';
 import { ChatWindow, type ChatMessageItem } from './ChatWindow';
 import { getChatResponse } from './chatKnowledge';
-import iconLogoPath from '../../../icon logo.png';
+import chatbotIcon from '../../assets/chatbot-icon.png';
 
 const MAX_CONVERSATION_MESSAGES = 12;
 const MAX_MESSAGE_LENGTH = 1200;
@@ -121,7 +121,7 @@ export function ChatWidget() {
             className="relative inline-flex h-[120px] w-[120px] items-center justify-center rounded-full bg-transparent text-sand transition duration-200 ease-brand hover:scale-[1.05] hover:shadow-[0_0_0_12px_rgba(150,97,38,0.12)] active:scale-[0.96] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#d6a65d]/40 sm:h-[128px] sm:w-[128px] md:h-[136px] md:w-[136px] lg:h-[136px] lg:w-[136px] xl:h-[144px] xl:w-[144px]"
           >
             <img
-              src={iconLogoPath}
+              src={chatbotIcon}
               alt="Oak Cherry Kraft chat assistant"
               className="relative h-[100px] w-[100px] object-contain sm:h-[108px] sm:w-[108px] md:h-[116px] md:w-[116px] lg:h-[120px] lg:w-[120px] xl:h-[124px] xl:w-[124px]"
               loading="eager"
