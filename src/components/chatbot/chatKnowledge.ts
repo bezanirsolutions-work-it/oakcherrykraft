@@ -92,15 +92,34 @@ export function getChatResponse(
   ];
 
   const handoverPatterns = [
+    'i want to speak to an agent',
+    'i want to talk to an agent',
+    'can i speak to an agent',
+    'can i talk to someone',
+    'i want to speak to someone',
+    'i need to speak to someone',
+    'let me speak to an agent',
+    'connect me to an agent',
+    'can you connect me with someone',
+    'i want a human',
+    'i want to talk to a human',
+    'can i speak with a person',
+    'i need a real person',
+    'i want customer service',
+    'can i talk to customer service',
+    'i need customer support',
+    'please connect me with your team',
+    'i want to speak with the oak cherry kraft team',
+    'can someone from oak cherry kraft contact me',
+    'agent please',
+    'human please',
+    'talk to someone please',
+    'i need an agent',
     'i want to speak to someone',
     'i want to talk to a human',
-    'can i talk to a person',
     'can someone help me',
     'connect me to team',
     'can someone call me',
-    'i need help',
-    'i need an agent',
-    'speak to someone',
     'customer service',
     'contact someone',
     'human',
@@ -528,6 +547,13 @@ export function getChatResponse(
     };
   }
 
+  if (hasAny(normalized, handoverPatterns)) {
+    return {
+      message: `Absolutely. I can connect you with the Oak Cherry Kraft team. You can reach the team directly through WhatsApp or phone.`,
+      actions: createHandoverActions(),
+    };
+  }
+
   if (hasAny(normalized, [...warrantyPatterns, ...returnPatterns])) {
     return {
       message: `I don't want to give you incorrect information. That detail needs to be confirmed by the Oak Cherry Kraft team.`,
@@ -692,20 +718,6 @@ export function getChatResponse(
     };
   }
 
-  if (hasAny(normalized, handoverPatterns)) {
-    return {
-      message: `Of course. You can speak directly with the Oak Cherry Kraft team.
-
-WhatsApp: ${PHONE_2}
-Call: ${PHONE_1} or ${PHONE_2}
-
-Phone and WhatsApp are monitored from 7 AM to 7 PM, with a target response time within 1 hour.
-
-Would you like to continue on WhatsApp or call the team?`,
-      actions: createHandoverActions(),
-    };
-  }
-
   if (hasAny(normalized, generalHelpPatterns)) {
     return {
       message: `I can help with Oak Cherry Kraft products, custom furniture, configuration, quotes, materials, delivery, installation, studio information, and connecting you with our team. Which would you like help with?`,
@@ -796,16 +808,6 @@ How can I help you today?`,
       message: `Oak Cherry Kraft can assess projects involving interior designers, architects, and other project professionals. Please share your project requirements and design references so the team can review the details.`,
       actions: [
         { label: 'Contact Studio', href: ROUTES.contact },
-        { label: 'Request a Quote', href: ROUTES.requestQuote },
-      ],
-    };
-  }
-
-  if (hasAny(normalized, customPatterns)) {
-    return {
-      message: `Oak Cherry Kraft can build custom furniture to your specifications. Use the Configuration Selector to share type, dimensions, materials, finishes, and reference details, and the team will review your request.`,
-      actions: [
-        { label: 'Open Configuration Selector', href: ROUTES.configurationSelector },
         { label: 'Request a Quote', href: ROUTES.requestQuote },
       ],
     };

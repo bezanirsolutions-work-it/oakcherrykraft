@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { MessageCircle } from 'lucide-react';
 import { ChatWindow, type ChatMessageItem } from './ChatWindow';
 import { getChatResponse } from './chatKnowledge';
+import iconLogoPath from '../../../icon logo.png';
 
 const MAX_CONVERSATION_MESSAGES = 12;
 const MAX_MESSAGE_LENGTH = 1200;
@@ -110,16 +111,36 @@ export function ChatWidget() {
           </div>
         ) : null}
 
-        <button
-          type="button"
-          aria-label={isOpen ? 'Close Oak Cherry Assistant' : 'Open Oak Cherry Assistant'}
-          aria-expanded={isOpen}
-          aria-haspopup="dialog"
-          onClick={() => setIsOpen((current) => !current)}
-          className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-bark text-sand shadow-soft transition hover:-translate-y-0.5 hover:bg-bark/95 focus:outline-none focus-visible:ring-4 focus-visible:ring-oak-200"
-        >
-          <MessageCircle size={24} aria-hidden="true" />
-        </button>
+        <div className="group relative">
+          <button
+            type="button"
+            aria-label={isOpen ? 'Close Oak Cherry Kraft chat' : 'Chat with Oak Cherry Kraft'}
+            aria-expanded={isOpen}
+            aria-haspopup="dialog"
+            onClick={() => setIsOpen((current) => !current)}
+            className="relative inline-flex h-[120px] w-[120px] items-center justify-center rounded-full bg-transparent text-sand transition duration-200 ease-brand hover:scale-[1.05] hover:shadow-[0_0_0_12px_rgba(150,97,38,0.12)] active:scale-[0.96] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#d6a65d]/40 sm:h-[128px] sm:w-[128px] md:h-[136px] md:w-[136px] lg:h-[136px] lg:w-[136px] xl:h-[144px] xl:w-[144px]"
+          >
+            <img
+              src={iconLogoPath}
+              alt="Oak Cherry Kraft chat assistant"
+              className="relative h-[100px] w-[100px] object-contain sm:h-[108px] sm:w-[108px] md:h-[116px] md:w-[116px] lg:h-[120px] lg:w-[120px] xl:h-[124px] xl:w-[124px]"
+              loading="eager"
+            />
+            <span className="pointer-events-none absolute -right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#d7b38d] text-[#2e1d11] shadow-[0_0_0_2px_rgba(255,255,255,0.18)]">
+              <MessageCircle className="h-3 w-3" strokeWidth={2} />
+            </span>
+
+            <span
+              className={`pointer-events-none absolute bottom-2 right-2 h-2.5 w-2.5 rounded-full border border-white/80 bg-emerald-400 transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
+            />
+          </button>
+
+          <div className="pointer-events-none absolute right-full top-1/2 mr-3 -translate-y-1/2 opacity-0 transition duration-200 ease-brand group-hover:opacity-100 group-focus-within:opacity-100">
+            <span className="inline-flex whitespace-nowrap rounded-full bg-[#1f150e] px-3 py-1 text-xs font-medium text-white shadow-soft">
+              Chat with Oak Cherry Kraft
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );
