@@ -19,7 +19,7 @@ interface ChatWindowProps {
   isTyping: boolean;
   onClose: () => void;
   onSend: (message: string) => void;
-  onQuickAction: (text: string) => void;
+  onQuickAction: (action: string | ChatAction) => void;
 }
 
 const quickActions = [
@@ -95,6 +95,16 @@ export function ChatWindow({ messages, isTyping, onClose, onSend, onQuickAction 
                           >
                             {action.label}
                           </a>
+                        </Button>
+                      ) : action.type === 'live' ? (
+                        <Button
+                          type="button"
+                          variant={action.variant ?? 'secondary'}
+                          size="sm"
+                          className="w-full"
+                          onClick={() => onQuickAction(action)}
+                        >
+                          {action.label}
                         </Button>
                       ) : (
                         <Button asChild variant={action.variant ?? 'secondary'} size="sm" className="w-full">

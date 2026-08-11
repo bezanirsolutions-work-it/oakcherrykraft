@@ -2,13 +2,22 @@ import { useEffect, useRef, useState } from 'react';
 import { MessageCircle } from 'lucide-react';
 import { ChatWindow, type ChatMessageItem } from './ChatWindow';
 import { getChatResponse } from './chatKnowledge';
+import {
+  createSessionProxy,
+  createMessageProxy,
+  fetchSessionByTokenProxy,
+  fetchMessagesProxy,
+} from '../../lib/liveChatProxyClient';
 import chatbotIcon from '../../assets/chatbot-icon.png';
+import type { LiveChatMessage } from '../../lib/liveChat';
 
 const MAX_CONVERSATION_MESSAGES = 12;
 const MAX_MESSAGE_LENGTH = 1200;
 const TYPING_DELAY_MS = 250;
 const GENERIC_ERROR_MESSAGE =
   "I'm sorry, I'm having trouble right now. Please try again in a moment, or contact Oak Cherry Kraft directly.";
+
+const generateVisitorToken = () => `visitor_${Math.random().toString(36).slice(2)}_${Date.now()}`;
 
 export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,20 +26,50 @@ export function ChatWidget() {
       id: 'welcome',
       author: 'assistant',
       content:
-        'Hi 👋 Welcome to Oak Cherry Kraft. I\'m here to help you find furniture, explore custom designs, or start a quote.',
+        "Hi 👋 Welcome to Oak Cherry Kraft. I'm here to help you find furniture, explore custom designs, or start a quote.",
     },
   ]);
   const [isTyping, setIsTyping] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
+  const [liveChatSessionId, setLiveChatSessionId] = useState<string | null>(null);
+  const [isLiveChatActive, setIsLiveChatActive] = useState(false);
+  const sessionTokenRef = useRef<string>(generateVisitorToken());
+  const liveChatSubscriptionRef = useRef<any | null>(null);
+  const liveChatSessionSubscriptionRef = useRef<any | null>(null);
 
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {
         window.clearTimeout(timeoutRef.current);
       }
+      supabaseChannelCleanup();
     };
   }, []);
+
+  const supabaseChannelCleanup = () => {
+    try {
+      if (
+        liveChatSubscriptionRef.current &&
+        typeof liveChatSubscriptionRef.current.unsubscribe === 'function'
+      ) {
+        liveChatSubscriptionRef.current.unsubscribe();
+      }
+    } catch {
+      /* ignore */
+    }
+
+    try {
+      if (
+        liveChatSessionSubscriptionRef.current &&
+        typeof liveChatSessionSubscriptionRef.current.unsubscribe === 'function'
+      ) {
+        liveChatSessionSubscriptionRef.current.unsubscribe();
+      }
+    } catch {
+      /* ignore */
+    }
+  };
 
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
@@ -44,16 +83,40 @@ export function ChatWidget() {
   }, [isOpen]);
 
   const getRecentConversation = () =>
-    messages
-      .slice(-MAX_CONVERSATION_MESSAGES)
-      .map(({ author, content }) => ({
-        role: author,
-        content: content.trim().slice(0, MAX_MESSAGE_LENGTH),
-      }));
+    messages.slice(-MAX_CONVERSATION_MESSAGES).map(({ author, content }) => ({
+      role: author,
+      content: content.trim().slice(0, MAX_MESSAGE_LENGTH),
+    }));
 
-  const sendMessage = (content: string) => {
+  const sendMessage = async (content: string) => {
     const trimmed = content.trim();
     if (!trimmed || isSending || isTyping || trimmed.length > MAX_MESSAGE_LENGTH) {
+      return;
+    }
+    // If live chat is active, send via proxy to live chat messages and don't run bot response
+    if (isLiveChatActive && liveChatSessionId) {
+      const outgoingMessage: ChatMessageItem = {
+        id: `visitor-${Date.now()}`,
+        author: 'user',
+        content: trimmed,
+      };
+
+      setMessages((current) => [...current, outgoingMessage]);
+
+      try {
+        await createMessageProxy(liveChatSessionId, 'visitor', trimmed);
+      } catch (err) {
+        console.error('Failed to send live chat message', err);
+        setMessages((cur) => [
+          ...cur,
+          {
+            id: `assistant-error-${Date.now()}`,
+            author: 'assistant',
+            content: 'Failed to send message. Please try again.',
+          },
+        ]);
+      }
+
       return;
     }
 
@@ -88,8 +151,129 @@ export function ChatWidget() {
     }, TYPING_DELAY_MS);
   };
 
-  const handleQuickAction = (action: string) => {
-    sendMessage(action);
+  const handleQuickAction = (action: string | { href: string; type?: string }) => {
+    if (typeof action !== 'string' && action.type === 'live') {
+      startLiveChat();
+      return;
+    }
+
+    const value = typeof action === 'string' ? action : action.href;
+    sendMessage(value);
+  };
+
+  const startLiveChat = async () => {
+    if (isLiveChatActive) return;
+    // Ensure proxy URL is configured in production. Avoid falling back to '/api/live-chat'
+    // which doesn't exist in deployed production builds and causes misleading errors.
+    const proxyEnv = import.meta.env.VITE_LIVE_CHAT_PROXY_URL;
+    if (!proxyEnv && typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+      console.error(
+        'VITE_LIVE_CHAT_PROXY_URL is not set in the environment. Live chat proxy unavailable.'
+      );
+      setMessages((cur) => [
+        ...cur,
+        {
+          id: `assistant-error-${Date.now()}`,
+          author: 'assistant',
+          content: GENERIC_ERROR_MESSAGE,
+        },
+      ]);
+      return;
+    }
+
+    try {
+      const existing = await fetchSessionByTokenProxy(sessionTokenRef.current);
+      const session = existing ?? (await createSessionProxy(sessionTokenRef.current));
+      setLiveChatSessionId(session.id);
+      setIsLiveChatActive(true);
+
+      setMessages((current) => [
+        ...current,
+        {
+          id: `assistant-live-${Date.now()}`,
+          author: 'assistant',
+          content: `You're now connected to Oak Cherry Kraft live chat. A member of our team will join shortly.`,
+        },
+      ]);
+
+      await createMessageProxy(session.id, 'system', 'Live chat created by visitor via chatbot');
+
+      // Subscribe to server-sent events for this session
+      const proxyBase = import.meta.env.VITE_LIVE_CHAT_PROXY_URL;
+      const eventsUrl = `${proxyBase}/events?session_id=${encodeURIComponent(session.id)}`;
+      const es = new EventSource(eventsUrl);
+
+      es.addEventListener('message', (e: MessageEvent) => {
+        try {
+          const data = JSON.parse(e.data);
+          // generic catch-all for textual message events (deprecated)
+          if (data && data.id && data.content) {
+            if (data.author !== 'visitor') {
+              setMessages((cur) => [
+                ...cur,
+                { id: `agent-${data.id}`, author: 'assistant', content: data.content },
+              ]);
+            }
+          }
+        } catch (_) {}
+      });
+
+      es.addEventListener('history', (e: MessageEvent) => {
+        try {
+          const data = JSON.parse(e.data as string) as LiveChatMessage[];
+          if (Array.isArray(data)) {
+            setMessages((cur) => [
+              ...cur,
+              ...data.map((m): ChatMessageItem => ({
+                id: `history-${m.id}`,
+                author: m.author === 'visitor' ? 'user' : 'assistant',
+                content: m.content,
+              })),
+            ]);
+          }
+        } catch (_) {}
+      });
+
+      es.addEventListener('session', (e: MessageEvent) => {
+        try {
+          const data = JSON.parse(e.data);
+          if (data.status === 'active') {
+            setMessages((cur) => [
+              ...cur,
+              {
+                id: `assistant-active-${Date.now()}`,
+                author: 'assistant',
+                content: `You're now connected with Oak Cherry Kraft.`,
+              },
+            ]);
+          }
+          if (data.status === 'resolved' || data.status === 'closed') {
+            setIsLiveChatActive(false);
+            setMessages((cur) => [
+              ...cur,
+              {
+                id: `assistant-session-${Date.now()}`,
+                author: 'assistant',
+                content:
+                  'Live chat session has ended. If you need anything else, I am still here to help.',
+              },
+            ]);
+          }
+        } catch (_) {}
+      });
+
+      liveChatSubscriptionRef.current = es;
+    } catch (err) {
+      console.error(err);
+      setMessages((cur) => [
+        ...cur,
+        {
+          id: `assistant-error-${Date.now()}`,
+          author: 'assistant',
+          content: GENERIC_ERROR_MESSAGE,
+        },
+      ]);
+    }
   };
 
   const handleSend = (content: string) => {
@@ -97,7 +281,10 @@ export function ChatWidget() {
   };
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-end px-4 sm:bottom-5 sm:px-6" style={{ paddingBottom: 'env(safe-area-inset-bottom, 1rem)' }}>
+    <div
+      className="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-end px-4 sm:bottom-5 sm:px-6"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom, 1rem)' }}
+    >
       <div className="pointer-events-auto flex flex-col items-end gap-3">
         {isOpen ? (
           <div className="w-full max-w-[420px] sm:w-[420px] transition duration-300 ease-brand">

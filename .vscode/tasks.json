@@ -59,6 +59,55 @@
 			"command": "git add -A && git commit -m \"Rebuild: hero desktop layout - clean two-column grid; single frosted panel; centered equal feature cards\" && git log -1 --pretty=format:\"%h %s\"",
 			"isBackground": false,
 			"problemMatcher": []
+		},
+		{
+			"label": "Run chatbot audit harness",
+			"type": "shell",
+			"command": "npx tsc --module commonjs --target ES2020 --outDir .tmp-audit chatbot-audit.ts src/components/chatbot/chatKnowledge.ts && node .tmp-audit/chatbot-audit.js",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run chatbot audit harness",
+			"type": "shell",
+			"command": "npx tsc --module ES2020 --target ES2020 --outDir .tmp-audit chatbot-audit.ts src/components/chatbot/chatKnowledge.ts && node .tmp-audit/chatbot-audit.js",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Audit chatbot with ES module TS",
+			"type": "shell",
+			"command": "npx tsc --module es2020 --moduleResolution node --target ES2020 --outDir .tmp-audit chatbot-audit.ts src/components/chatbot/chatKnowledge.ts && node .tmp-audit/chatbot-audit.js",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Audit chatbot routing",
+			"type": "shell",
+			"command": "node ./node_modules/typescript/lib/tsc.js --pretty false --module ESNext --moduleResolution Bundler --target ES2020 --outDir .tmp-audit chatbot-audit.ts && node .tmp-audit/chatbot-audit.js",
+			"isBackground": false,
+			"group": "test"
+		},
+		{
+			"label": "Run full chatbot audit",
+			"type": "shell",
+			"command": "node ./node_modules/typescript/lib/tsc.js --pretty false --module ESNext --moduleResolution Bundler --target ES2020 --outDir .tmp-audit chatbot-audit.ts && node .tmp-audit/chatbot-audit.js",
+			"isBackground": false,
+			"group": "test"
+		},
+		{
+			"label": "Full audit + build verification",
+			"type": "shell",
+			"command": "node ./node_modules/typescript/lib/tsc.js --pretty false --module ESNext --moduleResolution Bundler --target ES2020 --outDir .tmp-audit chatbot-audit.ts && node .tmp-audit/chatbot-audit.js && npm run build",
+			"isBackground": false,
+			"group": "test"
+		},
+		{
+			"label": "Final audit and build check",
+			"type": "shell",
+			"command": "node ./node_modules/typescript/lib/tsc.js --pretty false --module ESNext --moduleResolution Bundler --target ES2020 --outDir .tmp-audit chatbot-audit.ts && node .tmp-audit/chatbot-audit.js && npm run build",
+			"isBackground": false,
+			"group": "test"
 		}
 	]
 }

@@ -225,6 +225,76 @@ export interface Database {
         };
         Relationships: [];
       };
+      live_chat_sessions: {
+        Row: {
+          id: string;
+          created_at: string | null;
+          updated_at: string | null;
+          status: 'pending' | 'active' | 'resolved' | 'closed';
+          visitor_name: string | null;
+          visitor_email: string | null;
+          visitor_phone: string | null;
+          visitor_token: string;
+          assigned_agent_id: string | null;
+          last_activity_at: string | null;
+          metadata: Json | null;
+        };
+        Insert: {
+          id?: string;
+          created_at?: string | null;
+          updated_at?: string | null;
+          status?: 'pending' | 'active' | 'resolved' | 'closed';
+          visitor_name?: string | null;
+          visitor_email?: string | null;
+          visitor_phone?: string | null;
+          visitor_token: string;
+          assigned_agent_id?: string | null;
+          last_activity_at?: string | null;
+          metadata?: Json | null;
+        };
+        Update: {
+          id?: string;
+          created_at?: string | null;
+          updated_at?: string | null;
+          status?: 'pending' | 'active' | 'resolved' | 'closed';
+          visitor_name?: string | null;
+          visitor_email?: string | null;
+          visitor_phone?: string | null;
+          visitor_token?: string;
+          assigned_agent_id?: string | null;
+          last_activity_at?: string | null;
+          metadata?: Json | null;
+        };
+        Relationships: [];
+      };
+      live_chat_messages: {
+        Row: {
+          id: string;
+          session_id: string;
+          created_at: string | null;
+          author: 'visitor' | 'assistant' | 'agent' | 'system';
+          content: string;
+          metadata: Json | null;
+        };
+        Insert: {
+          id?: string;
+          session_id: string;
+          created_at?: string | null;
+          author: 'visitor' | 'assistant' | 'agent' | 'system';
+          content: string;
+          metadata?: Json | null;
+        };
+        Update: {
+          id?: string;
+          session_id?: string;
+          created_at?: string | null;
+          author?: 'visitor' | 'assistant' | 'agent' | 'system';
+          content?: string;
+          metadata?: Json | null;
+        };
+        Relationships: [];
+      };
+
       configurator_selections: {
         Row: {
           id: string;

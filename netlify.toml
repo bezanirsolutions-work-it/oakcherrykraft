@@ -4,3 +4,7 @@ publish = "dist"
 
 [build.environment]
 NODE_VERSION = "22"
+VITE_LIVE_CHAT_PROXY_URL = "https://jmrxmexmlejfksjlzvit.supabase.co/functions/v1/live_chat_proxy"
+
+[dev]
+targetPort = 4173

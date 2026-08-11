@@ -3,6 +3,7 @@ export interface ChatAction {
   href: string;
   external?: boolean;
   variant?: 'primary' | 'secondary';
+  type?: 'live' | undefined;
 }
 
 export interface ChatResponse {
@@ -46,6 +47,7 @@ const hasAny = (text: string, patterns: string[]) =>
 
 function createHandoverActions(): ChatAction[] {
   return [
+    { label: 'Start Live Chat', href: 'start-live-chat', type: 'live', variant: 'primary' },
     { label: 'WhatsApp Us', href: WHATSAPP_URL, external: true },
     { label: `Call ${PHONE_1}`, href: `tel:${PHONE_1}`, external: true },
     { label: `Call ${PHONE_2}`, href: `tel:${PHONE_2}`, external: true },
@@ -60,6 +62,7 @@ function createQuickActions(): ChatAction[] {
     { label: 'Custom Furniture', href: ROUTES.configurationSelector },
     { label: 'Configure Furniture', href: ROUTES.configurationSelector },
     { label: 'Request a Quote', href: ROUTES.requestQuote },
+    { label: 'Talk to a Human', href: 'start-live-chat', type: 'live' },
     { label: 'Visit Our Studio', href: ROUTES.contact },
     { label: 'Talk to Someone', href: ROUTES.contact },
   ];
@@ -92,31 +95,37 @@ export function getChatResponse(
   ];
 
   const handoverPatterns = [
+    // direct asks for an agent / human (common phrasing and variants)
+    'i want to speak with an agent',
     'i want to speak to an agent',
     'i want to talk to an agent',
     'can i speak to an agent',
+    'can i speak with an agent',
     'can i talk to someone',
     'i want to speak to someone',
+    'i want to speak with someone',
     'i need to speak to someone',
+    'i need to speak with someone',
     'let me speak to an agent',
     'connect me to an agent',
+    'connect me with an agent',
     'can you connect me with someone',
     'i want a human',
+    'i need a human',
     'i want to talk to a human',
-    'can i speak with a person',
     'i need a real person',
+    'i want a real person',
     'i want customer service',
     'can i talk to customer service',
-    'i need customer support',
+    'can i speak with someone from oak cherry kraft',
+    'i want to speak with someone from oak cherry kraft',
     'please connect me with your team',
-    'i want to speak with the oak cherry kraft team',
     'can someone from oak cherry kraft contact me',
     'agent please',
     'human please',
     'talk to someone please',
     'i need an agent',
     'i want to speak to someone',
-    'i want to talk to a human',
     'can someone help me',
     'connect me to team',
     'can someone call me',

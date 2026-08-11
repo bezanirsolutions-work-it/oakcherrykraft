@@ -12,6 +12,7 @@ interface AdminLayoutProps {
 
 const navItems = [
   { label: 'Dashboard', path: '/admin' },
+  { label: 'Live Chat', path: '/admin/live-chat' },
   { label: 'Testimonials', path: '/admin/testimonials' },
   { label: 'Quotes', path: '/admin/quotes' },
   { label: 'Configurator Requests', path: '/admin/configurator' },

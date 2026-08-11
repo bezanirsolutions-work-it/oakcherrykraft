@@ -30,6 +30,7 @@ const ProjectsAdmin = lazy(() => import('./pages/admin/Projects').then(m => ({ d
 const Analytics = lazy(() => import('./pages/admin/AdminPagePlaceholder').then(m => ({ default: m.Analytics })));
 const TestimonialsAdmin = lazy(() => import('./pages/admin/Testimonials').then(m => ({ default: m.Testimonials })));
 const Contacts = lazy(() => import('./pages/admin/Contacts').then(m => ({ default: m.Contacts })));
+const LiveChatAdmin = lazy(() => import('./pages/admin/LiveChat').then(m => ({ default: m.default })));
 const Settings = lazy(() => import('./pages/admin/Settings').then(m => ({ default: m.Settings })));
 
 const pageTransition = {
@@ -265,6 +266,14 @@ export default function App() {
                 element={
                   <motion.div {...pageTransition} className="w-full">
                     <Settings />
+                  </motion.div>
+                }
+              />
+              <Route
+                path="live-chat"
+                element={
+                  <motion.div {...pageTransition} className="w-full">
+                    <LiveChatAdmin />
                   </motion.div>
                 }
               />
