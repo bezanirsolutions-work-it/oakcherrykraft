@@ -9,13 +9,43 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
 
 const supabase = createClient(SUPABASE_URL || '', SUPABASE_SERVICE_ROLE_KEY || '');
 
+function isValidUuid(value: string): boolean {
+  return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value.trim());
+}
+
+async function validateVisitorOwnership(
+  sessionId: string,
+  visitorToken: string
+): Promise<{ valid: boolean; session?: any; error?: string }> {
+  if (!sessionId || !visitorToken) {
+    return { valid: false, error: 'Forbidden' };
+  }
+
+  const { data: session, error } = await supabase
+    .from('live_chat_sessions')
+    .select('*')
+    .eq('id', sessionId)
+    .eq('visitor_token', visitorToken)
+    .maybeSingle();
+
+  if (error) {
+    return { valid: false, error: 'Forbidden' };
+  }
+
+  if (!session) {
+    return { valid: false, error: 'Forbidden' };
+  }
+
+  return { valid: true, session };
+}
+
 Deno.serve(async (req) => {
   try {
     const url = new URL(req.url);
     const pathname = url.pathname.replace(/\/$/, '');
 
     const origin = req.headers.get('origin');
-    const allowed = (Deno.env.get('ALLOWED_ORIGINS') || 'https://oakcherrykraft.netlify.app,http://localhost:4174').split(',');
+    const allowed = (Deno.env.get('ALLOWED_ORIGINS') || 'https://oakcherrykraft.netlify.app,http://localhost:4173,http://localhost:4174').split(',');
 
     const isAllowed = origin && allowed.includes(origin);
 
@@ -29,7 +59,6 @@ Deno.serve(async (req) => {
       return new Response(null, { status: 204, headers: { ...corsHeaders, 'Access-Control-Allow-Origin': isAllowed ? origin! : 'null' } });
     }
 
-    // helper to attach CORS headers
     const withCors = (res: Response) => {
       const headers = new Headers(res.headers);
       headers.set('Access-Control-Allow-Methods', corsHeaders['Access-Control-Allow-Methods']);
@@ -40,9 +69,15 @@ Deno.serve(async (req) => {
     };
 
     if (req.method === 'POST' && pathname.endsWith('/session')) {
-      const body = await req.json();
-      const visitor_token = body.visitor_token;
-      if (!visitor_token) return new Response(JSON.stringify({ error: 'visitor_token required' }), { status: 400 });
+      let body: any;
+      try {
+        body = await req.json();
+      } catch {
+        return withCors(new Response(JSON.stringify({ error: 'Invalid JSON body' }), { status: 400 }));
+      }
+      
+      const visitor_token = body?.visitor_token;
+      if (!visitor_token) return withCors(new Response(JSON.stringify({ error: 'visitor_token required' }), { status: 400 }));
 
       // create or return existing
       const { data: existing } = await supabase
@@ -76,11 +111,52 @@ Deno.serve(async (req) => {
     }
 
     if (req.method === 'POST' && pathname.endsWith('/message')) {
-      const body = await req.json();
-      const { session_id, author, content } = body;
-      if (!session_id || !author || !content) return new Response(JSON.stringify({ error: 'session_id, author, content required' }), { status: 400 });
+      let body: any;
+      try {
+        body = await req.json();
+      } catch {
+        return withCors(new Response(JSON.stringify({ error: 'Invalid JSON body' }), { status: 400 }));
+      }
 
-      const payload = { session_id, author, content };
+      if (!body || typeof body !== 'object' || Array.isArray(body)) {
+        return withCors(new Response(JSON.stringify({ error: 'Invalid JSON body' }), { status: 400 }));
+      }
+
+      const session_id = typeof body.session_id === 'string' ? body.session_id.trim() : '';
+      const visitor_token = typeof body.visitor_token === 'string' ? body.visitor_token.trim() : '';
+      const providedAuthor = body.author;
+      const author = providedAuthor === undefined ? 'visitor' : providedAuthor;
+      const content = typeof body.content === 'string' ? body.content : '';
+
+      // Validate session_id is a UUID
+      if (!session_id || !isValidUuid(session_id)) {
+        return withCors(new Response(JSON.stringify({ error: 'Invalid session_id' }), { status: 400 }));
+      }
+
+      // Validate visitor_token
+      if (!visitor_token || visitor_token.length > 2048) {
+        return withCors(new Response(JSON.stringify({ error: 'Invalid visitor_token' }), { status: 400 }));
+      }
+
+      // CRITICAL SECURITY: Validate author is exactly 'visitor' or reject
+      if (typeof author !== 'string' || author !== 'visitor') {
+        return withCors(new Response(JSON.stringify({ error: 'Invalid author' }), { status: 400 }));
+      }
+
+      // Validate content
+      const trimmedContent = content.trim();
+      if (!trimmedContent || trimmedContent.length > 4000) {
+        return withCors(new Response(JSON.stringify({ error: 'Invalid content' }), { status: 400 }));
+      }
+
+      // Verify visitor ownership of session
+      const validation = await validateVisitorOwnership(session_id, visitor_token);
+      if (!validation.valid) {
+        return withCors(new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 }));
+      }
+
+      // Server-side enforcement: always insert 'visitor' as author
+      const payload = { session_id, author: 'visitor', content: trimmedContent };
       const { data, error } = await supabase.from('live_chat_messages').insert(payload).select('*').maybeSingle();
       if (error) return withCors(new Response(JSON.stringify({ error: error.message }), { status: 500 }));
       // update session last_activity_at
@@ -90,7 +166,18 @@ Deno.serve(async (req) => {
 
     if (req.method === 'GET' && pathname.endsWith('/messages')) {
       const session_id = url.searchParams.get('session_id');
-      if (!session_id) return new Response(JSON.stringify({ error: 'session_id required' }), { status: 400 });
+      const visitor_token = url.searchParams.get('visitor_token');
+      
+      if (!session_id || !session_id.trim() || !visitor_token || !visitor_token.trim()) {
+        return withCors(new Response(JSON.stringify({ error: 'session_id and visitor_token required' }), { status: 400 }));
+      }
+
+      // Verify visitor ownership
+      const validation = await validateVisitorOwnership(session_id, visitor_token);
+      if (!validation.valid) {
+        return withCors(new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 }));
+      }
+
       const { data, error } = await supabase.from('live_chat_messages').select('*').eq('session_id', session_id).order('created_at', { ascending: true });
       if (error) return withCors(new Response(JSON.stringify({ error: error.message }), { status: 500 }));
       return withCors(new Response(JSON.stringify(data), { status: 200 }));
@@ -99,7 +186,17 @@ Deno.serve(async (req) => {
     // Server-Sent Events stream for realtime updates for a session.
     if (req.method === 'GET' && pathname.endsWith('/events')) {
       const session_id = url.searchParams.get('session_id');
-      if (!session_id) return new Response(JSON.stringify({ error: 'session_id required' }), { status: 400 });
+      const visitor_token = url.searchParams.get('visitor_token');
+      
+      if (!session_id || !session_id.trim() || !visitor_token || !visitor_token.trim()) {
+        return withCors(new Response(JSON.stringify({ error: 'session_id and visitor_token required' }), { status: 400 }));
+      }
+
+      // Verify visitor ownership
+      const validation = await validateVisitorOwnership(session_id, visitor_token);
+      if (!validation.valid) {
+        return withCors(new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 }));
+      }
 
       const stream = new ReadableStream({
         start(controller) {
@@ -145,6 +242,32 @@ Deno.serve(async (req) => {
       });
 
       return withCors(new Response(stream, { headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' } }));
+    }
+
+    if (req.method === 'POST' && pathname.endsWith('/session/close')) {
+      let body: any;
+      try {
+        body = await req.json();
+      } catch {
+        return withCors(new Response(JSON.stringify({ error: 'Invalid JSON body' }), { status: 400 }));
+      }
+      
+      const session_id = body?.session_id;
+      const visitor_token = body?.visitor_token;
+
+      if (!session_id || !visitor_token) {
+        return withCors(new Response(JSON.stringify({ error: 'session_id and visitor_token required' }), { status: 400 }));
+      }
+
+      // Verify visitor ownership
+      const validation = await validateVisitorOwnership(session_id, visitor_token);
+      if (!validation.valid) {
+        return withCors(new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 }));
+      }
+
+      const { error } = await supabase.from('live_chat_sessions').update({ status: 'closed' }).eq('id', session_id);
+      if (error) return withCors(new Response(JSON.stringify({ error: error.message }), { status: 500 }));
+      return withCors(new Response(JSON.stringify({ status: 'closed' }), { status: 200 }));
     }
 
     return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });

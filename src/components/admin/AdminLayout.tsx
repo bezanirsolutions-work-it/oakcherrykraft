@@ -1,6 +1,6 @@
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Globe2, X, Menu } from 'lucide-react';
+import { Globe2, X, Menu, Home, MessageSquare, FileText, Box, Settings, Users, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../ui';
 import { supabase } from '../../lib/supabase';
 import { getProfileName } from '../../lib/profile';
@@ -10,24 +10,24 @@ interface AdminLayoutProps {
   title?: string;
 }
 
-const navItems = [
-  { label: 'Dashboard', path: '/admin' },
-  { label: 'Live Chat', path: '/admin/live-chat' },
-  { label: 'Testimonials', path: '/admin/testimonials' },
-  { label: 'Quotes', path: '/admin/quotes' },
-  { label: 'Configurator Requests', path: '/admin/configurator' },
-  { label: 'Contact Messages', path: '/admin/contacts' },
-  { label: 'Products', path: '/admin/products' },
-  { label: 'Projects', path: '/admin/projects' },
-  { label: 'Settings', path: '/admin/settings' },
+const navItems: { label: string; path: string; icon?: any }[] = [
+  { label: 'Dashboard', path: '/admin', icon: Home },
+  { label: 'Live Chat', path: '/admin/live-chat', icon: MessageSquare },
+  { label: 'Testimonials', path: '/admin/testimonials', icon: FileText },
+  { label: 'Quotes', path: '/admin/quotes', icon: FileText },
+  { label: 'Configurator Requests', path: '/admin/configurator', icon: Box },
+  { label: 'Contact Messages', path: '/admin/contacts', icon: Users },
+  { label: 'Products', path: '/admin/products', icon: Box },
+  { label: 'Projects', path: '/admin/projects', icon: Box },
+  { label: 'Settings', path: '/admin/settings', icon: Settings },
 ];
 
 export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayoutProps) {
   const [isNavOpen, setIsNavOpen] = useState(false);
-  const [isCollapsed, _setIsCollapsed] = useState(() => {
+  const [isCollapsed, setIsCollapsed] = useState(() => {
     if (typeof window === 'undefined') return false;
     try {
-      return localStorage.getItem('admin-sidebar-collapsed') === 'true';
+      return localStorage.getItem('oak-cherry-admin-sidebar-collapsed') === 'true';
     } catch {
       return false;
     }
@@ -66,7 +66,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayout
   // Persist collapsed state
   useEffect(() => {
     try {
-      localStorage.setItem('admin-sidebar-collapsed', isCollapsed.toString());
+      localStorage.setItem('oak-cherry-admin-sidebar-collapsed', isCollapsed.toString());
     } catch {
       // localStorage not available
     }
@@ -109,19 +109,29 @@ export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayout
 
         <aside
           id="admin-sidebar"
-          className={`fixed inset-y-0 left-0 z-50 w-72 transform bg-white px-4 py-6 shadow-soft transition duration-200 lg:relative lg:block lg:w-72 lg:px-6 lg:py-8 lg:shadow-none ${
-            isNavOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-          } min-h-screen flex flex-col`}
+          className={`fixed inset-y-0 left-0 z-50 transform bg-white shadow-soft transition-all duration-200 lg:relative lg:block lg:shadow-none ${
+            isNavOpen ? 'translate-x-0 w-72' : '-translate-x-full lg:translate-x-0'
+          } ${
+            isCollapsed ? 'lg:w-20' : 'lg:w-72'
+          } min-h-screen flex flex-col ${
+            isCollapsed ? 'px-2 py-4 lg:px-3 lg:py-6' : 'px-4 py-6 lg:px-6 lg:py-8'
+          }`}
         >
-          <div className="mb-8 flex items-center justify-between px-2">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-[1.75rem] bg-oak-100 text-oak-700 font-bold">
+          <div className={`flex items-center justify-between ${
+            isCollapsed ? 'mb-6' : 'mb-8'
+          } px-2`}>
+            <div className={`flex items-center ${
+              isCollapsed ? 'gap-0 justify-center w-full' : 'gap-3'
+            }`}>
+              <div className="flex h-10 w-10 lg:h-12 lg:w-12 items-center justify-center rounded-[1.75rem] bg-oak-100 text-oak-700 font-bold text-sm lg:text-base flex-shrink-0">
                 OC
               </div>
-              <div>
-                <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Studio admin</p>
-                <h1 className="mt-2 text-2xl font-semibold text-bark">Oak Cherry</h1>
-              </div>
+              {!isCollapsed && (
+                <div className="hidden lg:block">
+                  <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Studio admin</p>
+                  <h1 className="mt-2 text-2xl font-semibold text-bark">Oak Cherry</h1>
+                </div>
+              )}
             </div>
             <button
               type="button"
@@ -140,30 +150,45 @@ export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayout
                 to={item.path}
                 end={item.path === '/admin'}
                 onClick={() => setIsNavOpen(false)}
+                title={isCollapsed ? item.label : undefined}
                 className={({ isActive }) =>
-                  `flex items-center rounded-[1.5rem] px-4 py-3 text-sm font-medium transition ${
+                  `flex items-center justify-center lg:justify-start rounded-[1.5rem] px-4 py-3 text-sm font-medium transition ${
                     isActive ? 'bg-oak-600 text-white shadow-soft' : 'text-bark/75 hover:bg-sand hover:text-bark'
+                  } ${
+                    isCollapsed ? 'lg:px-3' : 'lg:px-4'
                   }`
                 }
               >
-                {item.label}
+                {item.icon && <item.icon size={18} className="flex-shrink-0" />}
+                {!isCollapsed && <span className="ml-3">{item.label}</span>}
               </NavLink>
             ))}
           </nav>
 
-          <div className="border-t border-bark/10 pt-6">
+          <div className="border-t border-bark/10 pt-6 space-y-3">
+            <button
+              type="button"
+              onClick={() => setIsCollapsed((c) => !c)}
+              aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              title={isCollapsed ? 'Expand' : 'Collapse'}
+              className="hidden lg:flex w-full items-center justify-center rounded-full border border-bark/10 bg-sand px-4 py-3 text-sm font-semibold text-bark transition hover:bg-bark/5"
+            >
+              {isCollapsed ? '→' : '←'}
+            </button>
             <button
               type="button"
               onClick={handleSignOut}
               className="w-full rounded-full border border-bark/10 bg-sand px-4 py-3 text-sm font-semibold text-bark transition hover:bg-bark/5"
             >
-              Logout
+              {isCollapsed ? 'Out' : 'Logout'}
             </button>
           </div>
         </aside>
 
-        <div className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-6xl">
+        <div className="flex-1 px-4 py-6 sm:px-6 lg:px-8 transition-all duration-200">
+          <div className={`${
+            isCollapsed ? 'max-w-7xl' : 'max-w-6xl'
+          } mx-auto transition-all duration-200`}>
             <div className="mb-6 flex items-center justify-between lg:hidden">
               <button
                 type="button"

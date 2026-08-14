@@ -150,9 +150,34 @@ export async function closeLiveChatSession(sessionId: string) {
 }
 
 export async function sendAgentMessage(sessionId: string, agentId: string, agentName: string, content: string) {
+  console.info('[admin-live-chat-send] start', {
+    sessionId,
+    path: '/live_chat_messages',
+    author: 'agent',
+    contentLength: content.length,
+  });
+
   const payload = { session_id: sessionId, author: 'agent' as const, content, metadata: { agent_id: agentId, agent_name: agentName } };
   const { data, error } = await supabase.from('live_chat_messages').insert(payload).select('*').maybeSingle();
-  if (error || !data) throw new Error(error?.message ?? 'Failed to send agent message');
+  if (error || !data) {
+    console.warn('[admin-live-chat-send] failed', {
+      sessionId,
+      path: '/live_chat_messages',
+      success: false,
+      reason: error?.message ?? 'Failed to send agent message',
+    });
+    throw new Error(error?.message ?? 'Failed to send agent message');
+  }
+
+  console.info('[admin-live-chat-send] success', {
+    sessionId,
+    path: '/live_chat_messages',
+    success: true,
+    messageId: data.id,
+    author: data.author,
+    sessionIdFromResponse: data.session_id,
+  });
+
   await supabase.from('live_chat_sessions').update({ last_activity_at: new Date().toISOString() }).eq('id', sessionId);
   return data as LiveChatMessage;
 }

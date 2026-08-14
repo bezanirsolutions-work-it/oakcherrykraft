@@ -108,6 +108,14 @@
 			"command": "node ./node_modules/typescript/lib/tsc.js --pretty false --module ESNext --moduleResolution Bundler --target ES2020 --outDir .tmp-audit chatbot-audit.ts && node .tmp-audit/chatbot-audit.js && npm run build",
 			"isBackground": false,
 			"group": "test"
+		},
+		{
+			"label": "Deploy live chat proxy",
+			"type": "shell",
+			"command": "npx supabase@latest functions deploy live_chat_proxy --project-ref jmrxmexmlejfksjlzvit",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
 		}
 	]
 }

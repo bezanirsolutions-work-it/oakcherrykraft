@@ -1,0 +1,10 @@
+[1mdiff --git a/.gitignore b/.gitignore[m
+[1mindex af45a21f..67d13d9e 100644[m
+[1m--- a/.gitignore[m
+[1m+++ b/.gitignore[m
+[36m@@ -3,3 +3,5 @@[m [mdist[m
+ .env[m
+ .env.*[m
+ !.env.example[m
+[32m+[m[32m# Local Netlify folder[m
+[32m+[m[32m.netlify[m

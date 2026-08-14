@@ -16,11 +16,11 @@ export function ChatMessage({ author, content }: ChatMessageProps) {
 
   return (
     <div className={`flex ${isAssistant ? 'justify-start' : 'justify-end'}`}>
-      <div className="max-w-[84%] text-sm leading-7">
-        <div className={formatBubbleClasses(author)}>
-          <p className="whitespace-pre-wrap break-words px-4 py-3">{content}</p>
+        <div className="max-w-[96%] text-sm leading-7">
+          <div className={formatBubbleClasses(author)}>
+            <p className="whitespace-pre-wrap break-words px-5 py-2" style={{ lineHeight: '1.6' }}>{content}</p>
+          </div>
         </div>
       </div>
-    </div>
   );
 }

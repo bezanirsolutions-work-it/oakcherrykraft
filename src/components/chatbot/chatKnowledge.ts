@@ -64,7 +64,6 @@ function createQuickActions(): ChatAction[] {
     { label: 'Request a Quote', href: ROUTES.requestQuote },
     { label: 'Talk to a Human', href: 'start-live-chat', type: 'live' },
     { label: 'Visit Our Studio', href: ROUTES.contact },
-    { label: 'Talk to Someone', href: ROUTES.contact },
   ];
 }
 
@@ -736,11 +735,7 @@ export function getChatResponse(
 
   if (hasAny(normalized, greetingPatterns) && normalized.split(' ').length <= 3) {
     return {
-      message: `Welcome to Oak Cherry Kraft! 👋
-
-I'm the Oak Cherry Assistant. I can help you explore our furniture, learn about custom options, configure your furniture requirements, request a quote, or connect you with our team.
-
-How can I help you today?`,
+      message: `Hi! I'm OAKIES, your Oak Cherry Kraft assistant. I can help you explore our furniture, discuss custom designs, request a quote, or connect you with our team.`,
       actions: createQuickActions(),
     };
   }
@@ -868,7 +863,7 @@ How can I help you today?`,
       message: `Customers can request specific materials such as solid wood, engineered wood, plywood, metal, glass, upholstery, fabric, and hardware. Oak Cherry Kraft confirms availability, suitability, and compatibility before production.`,
       actions: [
         { label: 'Configure Furniture', href: ROUTES.configurationSelector },
-        { label: 'Talk to Someone', href: ROUTES.contact },
+        { label: 'Talk to a Human', href: 'start-live-chat', type: 'live' },
       ],
     };
   }

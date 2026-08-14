@@ -4,6 +4,7 @@ import { StatCard } from '../../components/ui/StatCard';
 import { AlertCircle, Inbox, MessageCircle, MessageSquare, ShoppingCart, LayoutGrid, ClipboardList, Star } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { getProfileName } from '../../lib/profile';
+import { fetchAllLiveChatSessions } from '../../lib/liveChat';
 
 interface Counts {
   quote_requests: number;
@@ -11,6 +12,8 @@ interface Counts {
   contact_messages: number;
   products: number;
   testimonials: number;
+  pending_chats: number;
+  active_chats: number;
 }
 
 interface QuoteRequestRow {
@@ -33,6 +36,8 @@ const initialCounts: Counts = {
   contact_messages: 0,
   products: 0,
   testimonials: 0,
+  pending_chats: 0,
+  active_chats: 0,
 };
 
 export function Dashboard() {
@@ -77,7 +82,7 @@ export function Dashboard() {
     setError(null);
 
     try {
-      const [quoteCount, configuratorCount, messageCount, productCount, testimonialCount, recentQuotes, recentMessages] = await Promise.all([
+      const [quoteCount, configuratorCount, messageCount, productCount, testimonialCount, recentQuotes, recentMessages, pendingChats, activeChats] = await Promise.all([
         supabase.from('quote_requests').select('id', { count: 'exact', head: true }),
         supabase.from('configurator_selections').select('id', { count: 'exact', head: true }),
         supabase.from('contact_messages').select('id', { count: 'exact', head: true }),
@@ -93,6 +98,8 @@ export function Dashboard() {
           .select('id, name, subject, created_at')
           .order('created_at', { ascending: false })
           .limit(5),
+        fetchAllLiveChatSessions('pending').catch(() => []),
+        fetchAllLiveChatSessions('active').catch(() => []),
       ]);
 
       if (!mountedRef.current) return;
@@ -111,6 +118,8 @@ export function Dashboard() {
         contact_messages: messageCount.count ?? 0,
         products: productCount.count ?? 0,
         testimonials: testimonialCount.count ?? 0,
+        pending_chats: Array.isArray(pendingChats) ? pendingChats.length : 0,
+        active_chats: Array.isArray(activeChats) ? activeChats.length : 0,
       });
 
       setQuoteRequests(recentQuotes.data ?? []);
@@ -190,6 +199,13 @@ export function Dashboard() {
 
       <div className="mt-8 grid gap-6 xl:grid-cols-4">
         <StatCard
+          icon={<MessageCircle className="h-5 w-5" />}
+          value={`${counts.pending_chats + counts.active_chats}`}
+          label="Live chat sessions"
+          description={`${counts.pending_chats} pending • ${counts.active_chats} active`}
+          className={counts.pending_chats > 0 ? 'border-orange-200 bg-orange-50' : ''}
+        />
+        <StatCard
           icon={<ClipboardList className="h-5 w-5" />}
           value={counts.quote_requests.toString()}
           label="Quote requests"
@@ -222,6 +238,18 @@ export function Dashboard() {
       </div>
 
       <section className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Link
+          to="/admin/live-chat"
+          className={`rounded-[1.5rem] border p-6 text-left transition hover:-translate-y-1 hover:shadow-medium ${
+            counts.pending_chats > 0 
+              ? 'border-orange-200 bg-orange-50' 
+              : 'border-bark/10 bg-white'
+          }`}
+        >
+          <p className="text-sm uppercase tracking-[0.35em] text-bark/60">Live Chat</p>
+          <p className="mt-4 text-lg font-semibold text-bark">Manage customer conversations in real-time.</p>
+          <p className="mt-6 text-sm font-medium text-oak-500">Open →</p>
+        </Link>
         <Link
           to="/admin/quotes"
           className="rounded-[1.5rem] border border-bark/10 bg-white p-6 text-left transition hover:-translate-y-1 hover:shadow-medium"

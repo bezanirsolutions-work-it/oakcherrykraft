@@ -32,7 +32,7 @@ export function ChatInput({ value, onChange, onSend, disabled }: ChatInputProps)
           value={value}
           onChange={(event) => onChange(event.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask Oak Cherry Assistant a question..."
+          placeholder="Ask OAKIES a question..."
           className="min-h-[3rem] flex-1 resize-none rounded-2xl border border-bark/10 bg-sand/80 px-4 py-3 text-sm leading-6 text-bark outline-none transition focus:border-oak-600 focus:ring-4 focus:ring-oak-200"
         />
         <Button
@@ -47,7 +47,7 @@ export function ChatInput({ value, onChange, onSend, disabled }: ChatInputProps)
           <Send size={18} aria-hidden="true" />
         </Button>
       </div>
-      <p className="mt-2 text-xs text-bark/60">Press Enter to send, Shift+Enter for a new line.</p>
+      <p className="mt-1 text-xs text-bark/60">Press Enter to send, Shift+Enter for a new line.</p>
     </div>
   );
 }

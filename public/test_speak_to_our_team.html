@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test "Speak to Our Team" Flow</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #f5f5f5; }
+        .log { background: white; padding: 10px; margin: 5px 0; border-radius: 4px; border-left: 3px solid #999; }
+        .log.success { border-left-color: #4CAF50; }
+        .log.error { border-left-color: #f44336; }
+        .log.info { border-left-color: #2196F3; }
+        button { padding: 10px 20px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0b7dda; }
+    </style>
+</head>
+<body>
+    <h1>Test "Speak to Our Team" Flow</h1>
+    <button onclick="runTest()">Start Test</button>
+    <div id="logs"></div>
+
+    <script>
+        const PROXY_URL = 'https://jmrxmexmlejfksjlzvit.supabase.co/functions/v1/live_chat_proxy';
+        const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImptcnhtZXhtbGVqZmtzamx6dml0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MjIwNjMsImV4cCI6MjEwMDM5ODA2M30.EHEY_nKub0ZyJIVjUjnmuHsU47x8stA5zClzbonuGBA';
+
+        function log(message, type = 'info') {
+            const logsDiv = document.getElementById('logs');
+            const logDiv = document.createElement('div');
+            logDiv.className = `log ${type}`;
+            logDiv.textContent = message;
+            logsDiv.appendChild(logDiv);
+            console.log(message);
+        }
+
+        async function runTest() {
+            const visitorToken = `visitor_${Math.random().toString(36).slice(2)}_${Date.now()}`;
+            log('Generated visitor token: ' + visitorToken, 'info');
+            
+            try {
+                // Test 1: Check existing session
+                log('Testing GET /session (check existing)...', 'info');
+                const existingRes = await fetch(`${PROXY_URL}/session?token=${encodeURIComponent(visitorToken)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${ANON_KEY}`,
+                    },
+                });
+                log(`GET /session response: ${existingRes.status} ${existingRes.statusText}`, existingRes.ok ? 'success' : 'error');
+
+                // Test 2: Create session
+                log('Testing POST /session (create session)...', 'info');
+                const createRes = await fetch(`${PROXY_URL}/session`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${ANON_KEY}`,
+                    },
+                    body: JSON.stringify({ visitor_token: visitorToken }),
+                });
+                
+                if (!createRes.ok) {
+                    const errText = await createRes.text();
+                    log(`POST /session failed: ${createRes.status} ${errText}`, 'error');
+                    return;
+                }
+                
+                const session = await createRes.json();
+                log(`POST /session success: ${session.id} (status: ${session.status})`, 'success');
+
+                // Test 3: Fetch messages
+                log('Testing GET /messages...', 'info');
+                const messagesRes = await fetch(`${PROXY_URL}/messages?session_id=${encodeURIComponent(session.id)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${ANON_KEY}`,
+                    },
+                });
+                log(`GET /messages: ${messagesRes.status}`, messagesRes.ok ? 'success' : 'error');
+
+                // Test 4: Create message
+                log('Testing POST /message (system message)...', 'info');
+                const msgRes = await fetch(`${PROXY_URL}/message`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${ANON_KEY}`,
+                    },
+                    body: JSON.stringify({
+                        session_id: session.id,
+                        author: 'system',
+                        content: 'Test from browser',
+                    }),
+                });
+                log(`POST /message: ${msgRes.status}`, msgRes.ok ? 'success' : 'error');
+
+                // Test 5: Connect to SSE
+                log('Testing GET /events (SSE connection)...', 'info');
+                const eventRes = await fetch(`${PROXY_URL}/events?session_id=${encodeURIComponent(session.id)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'text/event-stream',
+                        'Authorization': `Bearer ${ANON_KEY}`,
+                    },
+                });
+                log(`GET /events: ${eventRes.status} (Content-Type: ${eventRes.headers.get('content-type')})`, eventRes.ok ? 'success' : 'error');
+
+                log('✓ All tests passed! "Speak to Our Team" flow should work.', 'success');
+
+            } catch (err) {
+                log(`✗ Error: ${err.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

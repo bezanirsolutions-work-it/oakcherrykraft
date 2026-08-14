@@ -19,10 +19,14 @@ CREATE TABLE IF NOT EXISTS public.live_chat_messages (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   session_id uuid NOT NULL REFERENCES public.live_chat_sessions(id) ON DELETE CASCADE,
   created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
   author text NOT NULL CHECK (author IN ('visitor', 'assistant', 'agent', 'system')),
   content text NOT NULL,
   metadata jsonb
 );
+
+ALTER TABLE public.live_chat_messages
+  ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
 
 CREATE INDEX IF NOT EXISTS idx_live_chat_sessions_status ON public.live_chat_sessions(status);
 CREATE INDEX IF NOT EXISTS idx_live_chat_sessions_updated_at ON public.live_chat_sessions(updated_at DESC);
