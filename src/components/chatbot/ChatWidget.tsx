@@ -140,7 +140,6 @@ export function ChatWidget() {
                   const payload = data as { id?: string; content?: string; author?: string; session_id?: string };
                   const matchesSession = !payload.session_id || payload.session_id === liveChatSessionId;
                   const content = typeof payload?.content === 'string' ? payload.content : '';
-                  const isDuplicate = !!payload.id && messages.some((message) => message.id === `agent-${payload.id}`);
 
                   if (
                     matchesSession &&
@@ -155,11 +154,16 @@ export function ChatWidget() {
                       content,
                     };
 
-                    if (!isDuplicate) {
-                      setMessages((cur) => [...cur, nextMessage]);
-                      if (isMinimizedRef.current) {
-                        setUnreadCount((current) => current + 1);
+                    setMessages((cur) => {
+                      // Check against CURRENT state, not captured state
+                      const isDuplicate = !!payload.id && cur.some((message) => message.id === `agent-${payload.id}`);
+                      if (isDuplicate) {
+                        return cur; // Return current state unchanged
                       }
+                      return [...cur, nextMessage];
+                    });
+                    if (isMinimizedRef.current) {
+                      setUnreadCount((current) => current + 1);
                     }
                   }
                 } catch (_) {}
@@ -534,7 +538,6 @@ export function ChatWidget() {
               const payload = data as { id?: string; content?: string; author?: string; session_id?: string };
               const matchesSession = !payload.session_id || payload.session_id === session.id;
               const content = typeof payload?.content === 'string' ? payload.content : '';
-              const isDuplicate = !!payload.id && messages.some((message) => message.id === `agent-${payload.id}`);
 
               console.info('[live-chat-events] customer message received', {
                 sessionId: session.id,
@@ -542,7 +545,21 @@ export function ChatWidget() {
                 incomingAuthor: payload.author ?? null,
                 beforeCount: messages.length,
                 matchesSession,
-                isDuplicate,
+              });
+              console.info('[SESSION-TRACE][CHATWIDGET-ONMESSAGE]', {
+                activeSessionId: session.id,
+                payloadSessionId: payload.session_id ?? null,
+                payloadAuthor: payload.author ?? null,
+                payloadId: payload.id ?? null,
+                content,
+                matchesSession,
+                willSetMessages: !!(
+                  matchesSession &&
+                  payload &&
+                  payload.id &&
+                  content.length > 0 &&
+                  payload.author !== 'visitor'
+                ),
               });
 
               if (
@@ -558,16 +575,19 @@ export function ChatWidget() {
                   content,
                 };
 
-                if (isDuplicate) {
-                  console.info('[live-chat-events] rejected duplicate', {
-                    sessionId: session.id,
-                    messageId: payload.id,
-                    reason: 'duplicate message id',
-                  });
-                  return;
-                }
-
                 setMessages((cur) => {
+                  // Check against CURRENT state, not captured state, to avoid stale closure bugs
+                  const isDuplicate = !!payload.id && cur.some((message) => message.id === `agent-${payload.id}`);
+
+                  if (isDuplicate) {
+                    console.info('[live-chat-events] rejected duplicate', {
+                      sessionId: session.id,
+                      messageId: payload.id,
+                      reason: 'duplicate message id',
+                    });
+                    return cur; // Return current state unchanged
+                  }
+
                   console.info('[live-chat-events] state update', {
                     sessionId: session.id,
                     beforeCount: cur.length,

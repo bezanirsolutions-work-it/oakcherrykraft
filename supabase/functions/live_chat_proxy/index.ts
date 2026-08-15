@@ -206,12 +206,16 @@ Deno.serve(async (req) => {
         return withCors(new Response(JSON.stringify({ error: 'Invalid visitor_token' }), { status: 400 }));
       }
 
-      // create or return existing
-      const { data: existing } = await supabase
+      // Return the current open session only. Historical closed sessions must not block a new pending session.
+      const { data: openSessions } = await supabase
         .from('live_chat_sessions')
         .select('*')
         .eq('visitor_token', visitor_token)
-        .maybeSingle();
+        .in('status', ['pending', 'active'])
+        .order('last_activity_at', { ascending: false })
+        .limit(1);
+
+      const existing = openSessions && openSessions.length > 0 ? openSessions[0] : null;
 
       if (existing) return withCors(new Response(JSON.stringify(existing), { status: 200 }));
 
@@ -251,9 +255,17 @@ Deno.serve(async (req) => {
         );
       }
 
-      const { data, error } = await supabase.from('live_chat_sessions').select('*').eq('visitor_token', token).maybeSingle();
+      const { data, error } = await supabase
+        .from('live_chat_sessions')
+        .select('*')
+        .eq('visitor_token', token)
+        .in('status', ['pending', 'active'])
+        .order('last_activity_at', { ascending: false })
+        .limit(1);
+
       if (error) return withCors(new Response(JSON.stringify({ error: error.message }), { status: 500 }));
-      return withCors(new Response(JSON.stringify(data), { status: 200 }));
+      const currentOpenSession = data && data.length > 0 ? data[0] : null;
+      return withCors(new Response(JSON.stringify(currentOpenSession), { status: 200 }));
     }
 
     if (req.method === 'POST' && pathname.endsWith('/message')) {
@@ -435,17 +447,46 @@ Deno.serve(async (req) => {
             } catch {}
           })();
 
+          console.log('[SSE-TRACE] subscribing to live_chat_messages', {
+            sessionId: session_id,
+            visitorTokenPresent: Boolean(visitor_token),
+          });
+
           const channel = supabase
             .channel(`live_chat_messages_proxy:${session_id}`)
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'live_chat_messages', filter: `session_id=eq.${session_id}` }, (payload) => {
+              console.log('[SSE-TRACE] REALTIME INSERT RECEIVED', {
+                sessionId: session_id,
+                payloadSessionId: payload.new?.session_id,
+                messageId: payload.new?.id,
+                author: payload.new?.author,
+                contentLength:
+                  typeof payload.new?.content === 'string'
+                    ? payload.new.content.length
+                    : null,
+              });
+              console.log('[SSE-TRACE] realtime callback reached', {
+                closed,
+                sessionId: session_id,
+              });
               if (closed) return;
+              console.log('[SSE-TRACE] WRITING MESSAGE TO SSE', {
+                sessionId: session_id,
+                messageId: payload.new?.id,
+                author: payload.new?.author,
+              });
               writeEvent('message', payload.new);
             })
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'live_chat_sessions', filter: `id=eq.${session_id}` }, (payload) => {
               if (closed) return;
               writeEvent('session', payload.new);
             })
-            .subscribe();
+            .subscribe((status) => {
+              console.log('[SSE-TRACE] realtime channel status', {
+                sessionId: session_id,
+                status,
+              });
+            });
 
           req.signal.addEventListener('abort', () => {
             if (!closed) {

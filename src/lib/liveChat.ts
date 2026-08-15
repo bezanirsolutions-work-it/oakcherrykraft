@@ -177,6 +177,13 @@ export async function sendAgentMessage(sessionId: string, agentId: string, agent
     author: data.author,
     sessionIdFromResponse: data.session_id,
   });
+  console.info('[SESSION-TRACE][ADMIN-SEND]', {
+    selectedSessionId: sessionId,
+    messageId: data.id,
+    messageSessionId: data.session_id,
+    author: data.author,
+    content: data.content,
+  });
 
   await supabase.from('live_chat_sessions').update({ last_activity_at: new Date().toISOString() }).eq('id', sessionId);
   return data as LiveChatMessage;

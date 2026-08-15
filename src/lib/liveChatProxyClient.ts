@@ -66,6 +66,11 @@ export async function subscribeToSessionEventsProxy(
     url: requestUrl,
     contentType: 'text/event-stream',
   });
+  console.info('[SESSION-TRACE][SSE-URL]', {
+    activeSessionId: sessionId,
+    visitorToken,
+    subscriptionUrl: requestUrl,
+  });
 
   const res = await fetch(requestUrl, { method: 'GET', headers, signal });
 
@@ -73,6 +78,12 @@ export async function subscribeToSessionEventsProxy(
     sessionId,
     url: requestUrl,
     status: res.status,
+    contentType: res.headers.get('content-type'),
+  });
+  console.log('[SSE-BROWSER-TRACE] RESPONSE RECEIVED', {
+    sessionId,
+    status: res.status,
+    ok: res.ok,
     contentType: res.headers.get('content-type'),
   });
 
@@ -96,7 +107,17 @@ export async function subscribeToSessionEventsProxy(
 
   while (!signal?.aborted) {
     const { value, done } = await reader.read();
-    if (done) break;
+    if (done) {
+      console.log('[SSE-BROWSER-TRACE] STREAM CLOSED/ERROR', {
+        sessionId,
+        error: null,
+      });
+      break;
+    }
+    console.log('[SSE-BROWSER-TRACE] CHUNK RECEIVED', {
+      sessionId,
+      byteLength: value?.byteLength ?? value?.length ?? null,
+    });
     buffer += decoder.decode(value, { stream: true });
 
     let boundary = buffer.indexOf('\n\n');
@@ -115,6 +136,10 @@ export async function subscribeToSessionEventsProxy(
         }
       }
 
+      console.log('[SSE-BROWSER-TRACE] EVENT PARSED', {
+        sessionId,
+        eventName,
+      });
       console.info('[live-chat-events] received chunk', {
         sessionId,
         eventType: eventName,
@@ -140,9 +165,27 @@ export async function subscribeToSessionEventsProxy(
             accepted,
             reason: accepted ? 'recognized event format' : 'rejected event format',
           });
+          console.info('[SESSION-TRACE][SSE-CLIENT]', {
+            eventName,
+            parsedPayload: parsed,
+            payloadId: parsed?.id ?? null,
+            payloadAuthor: parsed?.author ?? null,
+            payloadSessionId: parsed?.session_id ?? null,
+            payloadContent: parsed?.content ?? null,
+          });
 
           if (accepted) {
             if (eventName === 'message') {
+              console.log('[SSE-BROWSER-TRACE] MESSAGE DISPATCH', {
+                sessionId,
+                messageId: parsed?.id,
+                payloadSessionId: parsed?.session_id,
+                author: parsed?.author,
+                contentLength:
+                  typeof parsed?.content === 'string'
+                    ? parsed.content.length
+                    : null,
+              });
               handlers.onMessage?.(parsed);
             } else if (eventName === 'history') {
               handlers.onHistory?.(parsed);
@@ -157,6 +200,10 @@ export async function subscribeToSessionEventsProxy(
             });
           }
         } catch (err) {
+          console.error('[SSE-BROWSER-TRACE] JSON PARSE ERROR', {
+            sessionId,
+            error: err instanceof Error ? err.message : String(err),
+          });
           console.warn('[live-chat-events] rejected event', {
             sessionId,
             eventType: eventName,
