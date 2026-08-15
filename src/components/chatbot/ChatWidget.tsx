@@ -23,6 +23,7 @@ const GENERIC_ERROR_MESSAGE =
 const generateVisitorToken = () => `visitor_${Math.random().toString(36).slice(2)}_${Date.now()}`;
 
 export function ChatWidget() {
+  console.log('[CHAT-LIFECYCLE] ChatWidget MOUNT');
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [visitorName, setVisitorName] = useState<string | undefined>(() => {
@@ -81,6 +82,10 @@ export function ChatWidget() {
   const liveChatSubscriptionRef = useRef<any | null>(null);
   const liveChatSessionSubscriptionRef = useRef<any | null>(null);
   const liveChatAbortControllerRef = useRef<AbortController | null>(null);
+  const liveChatSseCleanupRef = useRef<(() => void) | null>(null);
+  const startingLiveChatRef = useRef(false);
+  const subscriptionGenerationRef = useRef(0);
+  const connectedSystemMessageSessionIdsRef = useRef<Set<string>>(new Set());
   const isMinimizedRef = useRef(false);
 
   // Persist visitor token to localStorage on first mount
@@ -95,11 +100,11 @@ export function ChatWidget() {
   // Restore and reconnect session after refresh
   useEffect(() => {
     if (liveChatSessionId && isLiveChatActive) {
+      console.log('[CHAT-LIFECYCLE] SESSION RESTORE START', { sessionId: liveChatSessionId });
       const reconnectToSession = async () => {
         try {
           const existing = await fetchSessionByTokenProxy(sessionTokenRef.current);
           if (!existing || existing.status === 'closed') {
-            // Session closed or not found, reset state
             try {
               localStorage.removeItem('live-chat-session-id');
               localStorage.removeItem('live-chat-active');
@@ -109,10 +114,9 @@ export function ChatWidget() {
             return;
           }
 
-          // Session exists and is active/pending, reconnect SSE and load messages
+          console.log('[CHAT-LIFECYCLE] SESSION RESTORED', { sessionId: liveChatSessionId });
           console.log('[CHAT-REFRESH] restored session active, reconnecting SSE', { sessionId: liveChatSessionId });
-          
-          // Load existing messages
+
           const history = await fetchMessagesProxy(liveChatSessionId, sessionTokenRef.current);
           if (Array.isArray(history)) {
             const historyMessages = history.map((entry: LiveChatMessage): ChatMessageItem => ({
@@ -120,26 +124,35 @@ export function ChatWidget() {
               author: entry.author === 'visitor' ? 'user' : 'assistant',
               content: entry.content,
             }));
-            setMessages(historyMessages);
+            console.log('[CHAT-LIFECYCLE] HISTORY LOADED', { sessionId: liveChatSessionId, count: historyMessages.length });
+            setMessages((cur) => {
+              const seen = new Set(cur.map((message) => message.id));
+              const newMessages = historyMessages.filter((message) => !seen.has(message.id));
+              return newMessages.length > 0 ? [...cur, ...newMessages] : cur;
+            });
           }
 
-          // Reconnect SSE
-          if (liveChatAbortControllerRef.current) {
-            liveChatAbortControllerRef.current.abort();
-          }
+          cleanupActiveSseSubscription();
           const controller = new AbortController();
           liveChatAbortControllerRef.current = controller;
+          const generation = ++subscriptionGenerationRef.current;
 
-          console.log('[CHAT-REFRESH] subscribing to SSE for restored session', { sessionId: liveChatSessionId });
-          void subscribeToSessionEventsProxy(
+          console.log('[CHAT-LIFECYCLE] SSE RECONNECT', { sessionId: liveChatSessionId, generation });
+          console.log('[CHAT-REFRESH] subscribing to SSE for restored session', { sessionId: liveChatSessionId, generation });
+          const cleanup = subscribeToSessionEventsProxy(
             liveChatSessionId,
             sessionTokenRef.current,
             {
               onMessage: (data) => {
+                if (generation !== subscriptionGenerationRef.current) {
+                  return;
+                }
+                console.log('[CHAT-DIAGNOSTIC-REFRESH] onMessage callback received data', { dataId: (data as any)?.id, dataAuthor: (data as any)?.author });
                 try {
                   const payload = data as { id?: string; content?: string; author?: string; session_id?: string };
                   const matchesSession = !payload.session_id || payload.session_id === liveChatSessionId;
                   const content = typeof payload?.content === 'string' ? payload.content : '';
+                  console.log('[CHAT-DIAGNOSTIC-REFRESH] callback processing', { messageId: payload.id, matchesSession, willAdd: !!(matchesSession && payload.id && content && payload.author !== 'visitor') });
 
                   if (
                     matchesSession &&
@@ -155,12 +168,24 @@ export function ChatWidget() {
                     };
 
                     setMessages((cur) => {
-                      // Check against CURRENT state, not captured state
                       const isDuplicate = !!payload.id && cur.some((message) => message.id === `agent-${payload.id}`);
+                      console.log('[CHAT-DIAGNOSTIC-REFRESH] setMessages called', {
+                        messageId: payload.id,
+                        currentStateLength: cur.length,
+                        isDuplicate,
+                        currentMessageIds: cur.map(m => m.id),
+                      });
                       if (isDuplicate) {
-                        return cur; // Return current state unchanged
+                        console.log('[CHAT-DIAGNOSTIC-REFRESH] message was duplicate, skipping');
+                        return cur;
                       }
-                      return [...cur, nextMessage];
+                      const nextState = [...cur, nextMessage];
+                      console.log('[CHAT-DIAGNOSTIC-REFRESH] message added', {
+                        messageId: payload.id,
+                        previousStateLength: cur.length,
+                        newStateLength: nextState.length,
+                      });
+                      return nextState;
                     });
                     if (isMinimizedRef.current) {
                       setUnreadCount((current) => current + 1);
@@ -169,6 +194,9 @@ export function ChatWidget() {
                 } catch (_) {}
               },
               onHistory: (data) => {
+                if (generation !== subscriptionGenerationRef.current) {
+                  return;
+                }
                 try {
                   const history = data as LiveChatMessage[];
                   if (Array.isArray(history)) {
@@ -186,17 +214,13 @@ export function ChatWidget() {
                 } catch (_) {}
               },
               onSession: (data) => {
+                if (generation !== subscriptionGenerationRef.current) {
+                  return;
+                }
                 try {
                   const payload = data as { status?: string };
                   if (payload.status === 'active') {
-                    setMessages((cur) => [
-                      ...cur,
-                      {
-                        id: `assistant-active-${Date.now()}`,
-                        author: 'assistant',
-                        content: `You're now connected with Oak Cherry Kraft.`,
-                      },
-                    ]);
+                    addConnectedSystemMessage(liveChatSessionId);
                   }
                   if (payload.status === 'resolved' || payload.status === 'closed') {
                     setIsOpen(false);
@@ -224,6 +248,10 @@ export function ChatWidget() {
             },
             controller.signal
           );
+          liveChatSseCleanupRef.current = () => {
+            controller.abort();
+            cleanup?.();
+          };
         } catch (err) {
           console.warn('[CHAT-REFRESH] Failed to restore session:', err);
         }
@@ -234,10 +262,19 @@ export function ChatWidget() {
 
   useEffect(() => {
     return () => {
+      console.log('[CHAT-LIFECYCLE] ChatWidget UNMOUNT');
       if (timeoutRef.current) {
         window.clearTimeout(timeoutRef.current);
       }
+      cleanupActiveSseSubscription();
       supabaseChannelCleanup();
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      cleanupActiveSseSubscription();
+      liveChatSseCleanupRef.current = null;
     };
   }, []);
 
@@ -246,6 +283,7 @@ export function ChatWidget() {
   }, [isMinimized]);
 
   const supabaseChannelCleanup = () => {
+    console.log('[CHAT-LIFECYCLE] SSE CLEANUP', { sessionId: liveChatSessionId });
     try {
       if (
         liveChatSubscriptionRef.current &&
@@ -269,9 +307,34 @@ export function ChatWidget() {
     }
 
     if (liveChatAbortControllerRef.current) {
+      console.log('[CHAT-LIFECYCLE] SSE ABORT', { sessionId: liveChatSessionId });
       liveChatAbortControllerRef.current.abort();
       liveChatAbortControllerRef.current = null;
     }
+  };
+
+  const cleanupActiveSseSubscription = () => {
+    liveChatSseCleanupRef.current?.();
+    liveChatSseCleanupRef.current = null;
+  };
+
+  const addConnectedSystemMessage = (sessionId: string) => {
+    if (!sessionId) return;
+    if (connectedSystemMessageSessionIdsRef.current.has(sessionId)) {
+      return;
+    }
+    connectedSystemMessageSessionIdsRef.current.add(sessionId);
+    const systemMessage = {
+      id: `assistant-live-${Date.now()}`,
+      author: 'assistant' as const,
+      content: `You're now connected with Oak Cherry Kraft.`,
+    };
+    setMessages((cur) => [...cur, systemMessage]);
+    console.log('[CHAT-LIFECYCLE] SYSTEM MESSAGE ADDED', {
+      sessionId,
+      messageId: systemMessage.id,
+      contentLength: systemMessage.content.length,
+    });
   };
 
   useEffect(() => {
@@ -415,40 +478,44 @@ export function ChatWidget() {
   };
 
   const startLiveChat = async (contactDetails?: { name: string; phone: string; email: string }) => {
-    if (isLiveChatActive) return;
-    
-    console.log('[live-chat-start-debug] "Speak to Our Team" clicked');
-    console.log('[live-chat-start-debug] visitor token:', sessionTokenRef.current ? 'present' : 'undefined');
-    
-    const proxyEnv = import.meta.env.VITE_LIVE_CHAT_PROXY_URL;
-    if (!proxyEnv && typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
-      console.error(
-        'VITE_LIVE_CHAT_PROXY_URL is not set in the environment. Live chat proxy unavailable.'
-      );
-      setMessages((cur) => [
-        ...cur,
-        {
-          id: `assistant-error-${Date.now()}`,
-          author: 'assistant',
-          content: GENERIC_ERROR_MESSAGE,
-        },
-      ]);
+    if (startingLiveChatRef.current || isLiveChatActive) {
       return;
     }
 
+    startingLiveChatRef.current = true;
+
+    console.log('[live-chat-start-debug] "Speak to Our Team" clicked');
+    console.log('[live-chat-start-debug] visitor token:', sessionTokenRef.current ? 'present' : 'undefined');
+
     try {
+      const proxyEnv = import.meta.env.VITE_LIVE_CHAT_PROXY_URL;
+      if (!proxyEnv && typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+        console.error(
+          'VITE_LIVE_CHAT_PROXY_URL is not set in the environment. Live chat proxy unavailable.'
+        );
+        setMessages((cur) => [
+          ...cur,
+          {
+            id: `assistant-error-${Date.now()}`,
+            author: 'assistant',
+            content: GENERIC_ERROR_MESSAGE,
+          },
+        ]);
+        return;
+      }
+
       console.log('[live-chat-start-debug] checking for existing session');
       const existing = await fetchSessionByTokenProxy(sessionTokenRef.current);
       console.log('[live-chat-start-debug] existing session query result:', existing ? 'found' : 'not found');
       if (existing) {
         console.log('[live-chat-start-debug] existing session status:', existing.status);
       }
-      
+
       let session = existing;
       if (existing) {
         if (existing.status === 'closed') {
           console.log('[live-chat-start-debug] existing session is closed, creating new session');
-          session = await createSessionProxy(sessionTokenRef.current, { 
+          session = await createSessionProxy(sessionTokenRef.current, {
             name: contactDetails?.name || visitorName,
             phone: contactDetails?.phone || visitorPhone,
             email: contactDetails?.email || visitorEmail,
@@ -456,7 +523,7 @@ export function ChatWidget() {
         } else if (contactDetails || (visitorName && (existing.visitor_name == null || existing.visitor_name !== visitorName))) {
           try {
             console.log('[live-chat-start-debug] updating visitor details on existing session');
-            session = await createSessionProxy(sessionTokenRef.current, { 
+            session = await createSessionProxy(sessionTokenRef.current, {
               name: contactDetails?.name || visitorName,
               phone: contactDetails?.phone || visitorPhone,
               email: contactDetails?.email || visitorEmail,
@@ -467,23 +534,24 @@ export function ChatWidget() {
         }
       } else {
         console.log('[live-chat-start-debug] no existing session, creating new one');
-        session = await createSessionProxy(sessionTokenRef.current, { 
+        session = await createSessionProxy(sessionTokenRef.current, {
           name: contactDetails?.name || visitorName,
           phone: contactDetails?.phone || visitorPhone,
           email: contactDetails?.email || visitorEmail,
         });
       }
-      
+
       console.log('[live-chat-start-debug] session created/reused:', {
         sessionId: session?.id ?? 'undefined',
         status: session?.status ?? 'undefined',
       });
-      
+
       if (!session || !session.id) {
         throw new Error('Session creation failed: no session ID returned');
       }
-      
+
       setLiveChatSessionId(session.id);
+      console.log('[CHAT-LIFECYCLE] SESSION ID SET', { sessionId: session.id });
       try {
         localStorage.setItem('live-chat-session-id', session.id);
         localStorage.setItem('live-chat-active', 'true');
@@ -497,7 +565,7 @@ export function ChatWidget() {
         isArray: Array.isArray(history),
         count: Array.isArray(history) ? history.length : 0,
       });
-      
+
       if (Array.isArray(history)) {
         const historyMessages = history.map((entry: LiveChatMessage): ChatMessageItem => ({
           id: `history-${entry.id}`,
@@ -509,35 +577,39 @@ export function ChatWidget() {
           sessionId: session.id,
           count: historyMessages.length,
         });
+        console.log('[CHAT-LIFECYCLE] HISTORY LOADED', { sessionId: session.id, count: historyMessages.length });
 
-        setMessages((current) => [...current, ...historyMessages]);
+        setMessages((current) => {
+          const seen = new Set(current.map((message) => message.id));
+          const newMessages = historyMessages.filter((message) => !seen.has(message.id));
+          return newMessages.length > 0 ? [...current, ...newMessages] : current;
+        });
       }
 
-      setMessages((current) => [
-        ...current,
-        {
-          id: `assistant-live-${Date.now()}`,
-          author: 'assistant',
-          content: `You're now connected to OAKIES. A member of our team will join shortly.`,
-        },
-      ]);
+      addConnectedSystemMessage(session.id);
 
-      if (liveChatAbortControllerRef.current) {
-        liveChatAbortControllerRef.current.abort();
-      }
+      cleanupActiveSseSubscription();
       const controller = new AbortController();
       liveChatAbortControllerRef.current = controller;
+      const generation = ++subscriptionGenerationRef.current;
 
       console.log('[live-chat-start-debug] starting SSE subscription');
-      void subscribeToSessionEventsProxy(
+      console.log('[CHAT-LIFECYCLE] SSE SUBSCRIBE', { sessionId: session.id, generation });
+      console.log('[CHAT-DIAGNOSTIC-START] message state at subscription time', { messageCount: messages.length, messageIds: messages.map(m => m.id) });
+      const cleanup = subscribeToSessionEventsProxy(
         session.id,
         sessionTokenRef.current,
         {
           onMessage: (data) => {
+            if (generation !== subscriptionGenerationRef.current) {
+              return;
+            }
+            console.log('[CHAT-DIAGNOSTIC-START] onMessage callback received', { dataId: (data as any)?.id, dataAuthor: (data as any)?.author, dataSessionId: (data as any)?.session_id });
             try {
               const payload = data as { id?: string; content?: string; author?: string; session_id?: string };
               const matchesSession = !payload.session_id || payload.session_id === session.id;
               const content = typeof payload?.content === 'string' ? payload.content : '';
+              console.log('[CHAT-DIAGNOSTIC-START] after matching check', { messageId: payload.id, sessionId: session.id, matchesSession, contentLength: content.length, author: payload.author });
 
               console.info('[live-chat-events] customer message received', {
                 sessionId: session.id,
@@ -546,6 +618,7 @@ export function ChatWidget() {
                 beforeCount: messages.length,
                 matchesSession,
               });
+              console.log('[CHAT-SSE] MESSAGE', { sessionId: session.id, messageId: payload.id ?? null, author: payload.author ?? null, contentLength: content.length });
               console.info('[SESSION-TRACE][CHATWIDGET-ONMESSAGE]', {
                 activeSessionId: session.id,
                 payloadSessionId: payload.session_id ?? null,
@@ -576,8 +649,13 @@ export function ChatWidget() {
                 };
 
                 setMessages((cur) => {
-                  // Check against CURRENT state, not captured state, to avoid stale closure bugs
                   const isDuplicate = !!payload.id && cur.some((message) => message.id === `agent-${payload.id}`);
+                  console.log('[CHAT-DIAGNOSTIC-START] setMessages called', {
+                    messageId: payload.id,
+                    currentStateLength: cur.length,
+                    isDuplicate,
+                    currentMessageIds: cur.map(m => m.id),
+                  });
 
                   if (isDuplicate) {
                     console.info('[live-chat-events] rejected duplicate', {
@@ -585,17 +663,24 @@ export function ChatWidget() {
                       messageId: payload.id,
                       reason: 'duplicate message id',
                     });
-                    return cur; // Return current state unchanged
+                    return cur;
                   }
 
+                  const nextState = [...cur, nextMessage];
+                  console.log('[CHAT-DIAGNOSTIC-START] message added to state', {
+                    messageId: payload.id,
+                    previousStateLength: cur.length,
+                    newStateLength: nextState.length,
+                    addedMessageId: nextMessage.id,
+                  });
                   console.info('[live-chat-events] state update', {
                     sessionId: session.id,
                     beforeCount: cur.length,
-                    afterCount: cur.length + 1,
+                    afterCount: nextState.length,
                     messageId: payload.id ?? null,
                     uiAuthor: 'assistant',
                   });
-                  return [...cur, nextMessage];
+                  return nextState;
                 });
 
                 if (isMinimizedRef.current) {
@@ -612,6 +697,9 @@ export function ChatWidget() {
             } catch (_) {}
           },
           onHistory: (data) => {
+            if (generation !== subscriptionGenerationRef.current) {
+              return;
+            }
             try {
               const history = data as LiveChatMessage[];
               if (Array.isArray(history)) {
@@ -629,19 +717,16 @@ export function ChatWidget() {
             } catch (_) {}
           },
           onSession: (data) => {
+            if (generation !== subscriptionGenerationRef.current) {
+              return;
+            }
             try {
               const payload = data as { status?: string };
               if (payload.status === 'active') {
-                setMessages((cur) => [
-                  ...cur,
-                  {
-                    id: `assistant-active-${Date.now()}`,
-                    author: 'assistant',
-                    content: `You're now connected with Oak Cherry Kraft.`,
-                  },
-                ]);
+                addConnectedSystemMessage(session.id);
               }
               if (payload.status === 'resolved' || payload.status === 'closed') {
+                console.log('[CHAT-LIFECYCLE] SESSION CLOSED', { sessionId: session.id, status: payload.status });
                 setIsOpen(false);
                 setIsMinimized(false);
                 setIsLiveChatActive(false);
@@ -667,6 +752,10 @@ export function ChatWidget() {
         },
         controller.signal
       );
+      liveChatSseCleanupRef.current = () => {
+        controller.abort();
+        cleanup?.();
+      };
       console.log('[live-chat-start-debug] SSE subscription initiated');
     } catch (err) {
       console.error('[live-chat-start-debug] EXCEPTION in startLiveChat:', {
@@ -681,6 +770,8 @@ export function ChatWidget() {
           content: GENERIC_ERROR_MESSAGE,
         },
       ]);
+    } finally {
+      startingLiveChatRef.current = false;
     }
   };
 
@@ -715,6 +806,7 @@ export function ChatWidget() {
       localStorage.removeItem('live-chat-session-id');
       localStorage.removeItem('live-chat-active');
     } catch {}
+    cleanupActiveSseSubscription();
     supabaseChannelCleanup();
   };
 
