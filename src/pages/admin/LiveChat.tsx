@@ -33,7 +33,7 @@ export default function LiveChatAdminPage() {
   const [selected, setSelected] = useState<SessionRow | null>(null);
   const [messages, setMessages] = useState<MessageRow[]>([]);
   const [connectionState, setConnectionState] = useState<'connected' | 'reconnecting' | 'disconnected'>('disconnected');
-  const [filter, setFilter] = useState<'pending' | 'active' | 'closed' | 'all'>('pending');
+  const [filter, setFilter] = useState<'pending' | 'active' | 'closed' | 'all'>('all');
   const [initialLoading, setInitialLoading] = useState(true);
   const initialLoadingRef = useRef(true);
   const [messagesLoading, setMessagesLoading] = useState(false);
@@ -64,6 +64,10 @@ export default function LiveChatAdminPage() {
   useEffect(() => {
     filterRef.current = filter;
   }, [filter]);
+
+  const matchesSelectedFilter = (sessionStatus: string) => {
+    return filterRef.current === 'all' || sessionStatus === filterRef.current;
+  };
 
   // When the filter changes, run a background reconciliation immediately
   useEffect(() => {
@@ -139,18 +143,15 @@ export default function LiveChatAdminPage() {
                 if (!sessionId) return;
                 try {
                   const { data: sess } = await supabase.from('live_chat_sessions').select('*').eq('id', sessionId).maybeSingle();
-                  if (sess) {
-                    const statusFilter = filterRef.current === 'all' ? null : filterRef.current;
-                    if (!statusFilter || sess.status === statusFilter) {
-                      setSessions((prev) => {
-                        const mergedMap = new Map<string, SessionRow>();
-                        for (const s of prev) mergedMap.set(s.id, s);
-                        mergedMap.set(sess.id, sess as SessionRow);
-                        const arr = Array.from(mergedMap.values()).sort((a, b) => (b.last_activity_at ?? '').localeCompare(a.last_activity_at ?? ''));
-                        sessionsRef.current = arr;
-                        return arr;
-                      });
-                    }
+                  if (sess && matchesSelectedFilter(sess.status)) {
+                    setSessions((prev) => {
+                      const mergedMap = new Map<string, SessionRow>();
+                      for (const s of prev) mergedMap.set(s.id, s);
+                      mergedMap.set(sess.id, sess as SessionRow);
+                      const arr = Array.from(mergedMap.values()).sort((a, b) => (b.last_activity_at ?? '').localeCompare(a.last_activity_at ?? ''));
+                      sessionsRef.current = arr;
+                      return arr;
+                    });
                   }
                 } catch (e) {
                   console.warn('[live-chat-admin] fetch session on message insert failed', e);
@@ -174,8 +175,7 @@ export default function LiveChatAdminPage() {
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'live_chat_sessions' }, (payload) => {
         console.warn('[live-chat-admin] realtime session INSERT', payload?.new?.id);
         const s = payload.new as SessionRow;
-        const statusFilter = filterRef.current === 'all' ? null : filterRef.current;
-        if (statusFilter && s.status !== statusFilter) return;
+        if (!matchesSelectedFilter(s.status)) return;
         setSessions((cur) => {
           const map = new Map(cur.map((i) => [i.id, i]));
           map.set(s.id, s);
@@ -189,25 +189,23 @@ export default function LiveChatAdminPage() {
         const s = payload.new as SessionRow;
         setSessions((cur) => {
           const idx = cur.findIndex((it) => it.id === s.id);
-          const statusFilter = filterRef.current === 'all' ? null : filterRef.current;
           if (idx === -1) {
-            // add if matches current filter
-            if (!statusFilter || s.status === statusFilter) {
+            if (matchesSelectedFilter(s.status)) {
               const next = [s, ...cur];
               sessionsRef.current = next;
               return next;
             }
             return cur;
           }
-          // update existing
+
           const updated = [...cur];
           updated[idx] = { ...updated[idx], ...s };
-          // if status no longer matches filter, remove it
-          if (statusFilter && updated[idx].status !== statusFilter) {
+
+          if (!matchesSelectedFilter(updated[idx].status)) {
             updated.splice(idx, 1);
           }
+
           sessionsRef.current = updated;
-          // if selected matches, update selected
           if (selectedRef.current && selectedRef.current.id === s.id) {
             setSelected((sel) => (sel ? { ...sel, ...s } : sel));
             selectedRef.current = { ...selectedRef.current, ...s } as SessionRow;
