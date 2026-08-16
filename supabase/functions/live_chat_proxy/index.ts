@@ -765,9 +765,13 @@ Deno.serve(async (req) => {
     if (req.method === 'GET' && pathname.endsWith('/all-feedback')) {
       // Admin-only endpoint to fetch all feedback with optional filtering
       // Query parameters: rating (1-5), search, startDate (ISO), endDate (ISO)
+      console.log('[all-feedback] Handler entered');
+      
       const authResult = await resolveAuthenticatedUser(req);
+      console.log('[all-feedback] Auth result:', { isAdmin: authResult.isAdmin, hasUser: !!authResult.user });
       
       if (!authResult.isAdmin) {
+        console.log('[all-feedback] Request denied: not admin');
         return withCors(new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 }));
       }
 
@@ -779,6 +783,8 @@ Deno.serve(async (req) => {
         const endDate = searchParams.get('endDate');
         const limit = Math.min(parseInt(searchParams.get('limit') || '1000'), 1000);
         const offset = Math.max(parseInt(searchParams.get('offset') || '0'), 0);
+
+        console.log('[all-feedback] Query params:', { rating, search, startDate, endDate, limit, offset });
 
         // Build query
         let query = supabase
@@ -827,12 +833,23 @@ Deno.serve(async (req) => {
         // Apply pagination
         query = query.order('created_at', { ascending: false }).range(offset, offset + limit - 1);
 
+        console.log('[all-feedback] Executing database query');
         const { data: feedbackList, error: queryError, count } = await query;
 
         if (queryError) {
-          console.error('[live-chat-proxy] all-feedback query error:', queryError);
-          return withCors(new Response(JSON.stringify({ error: 'Failed to fetch feedback' }), { status: 500 }));
+          console.error('[all-feedback] Database query error:', {
+            message: queryError.message,
+            code: (queryError as any).code,
+            details: (queryError as any).details,
+            hint: (queryError as any).hint,
+          });
+          return withCors(new Response(JSON.stringify({ 
+            error: 'Failed to fetch feedback',
+            details: `${queryError.message}${(queryError as any).code ? ` (${(queryError as any).code})` : ''}`
+          }), { status: 500 }));
         }
+
+        console.log('[all-feedback] Query succeeded, records found:', feedbackList?.length ?? 0);
 
         // Filter by search term if provided (search in comment, visitor name, email)
         let filtered = feedbackList ?? [];
@@ -852,6 +869,7 @@ Deno.serve(async (req) => {
           });
         }
 
+        console.log('[all-feedback] Returning', filtered.length, 'records');
         return withCors(new Response(JSON.stringify({
           data: filtered,
           total: count || 0,
@@ -860,8 +878,14 @@ Deno.serve(async (req) => {
           limit,
         }), { status: 200 }));
       } catch (err) {
-        console.error('[live-chat-proxy] all-feedback exception:', err);
-        return withCors(new Response(JSON.stringify({ error: 'Failed to fetch feedback' }), { status: 500 }));
+        console.error('[all-feedback] Exception:', {
+          message: err instanceof Error ? err.message : String(err),
+          stack: err instanceof Error ? err.stack : undefined,
+        });
+        return withCors(new Response(JSON.stringify({ 
+          error: 'Failed to fetch feedback',
+          details: err instanceof Error ? err.message : String(err)
+        }), { status: 500 }));
       }
     }
 

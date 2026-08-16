@@ -30,7 +30,7 @@ export const getProfileRole = async (userId: string): Promise<string | null> => 
   const { data, error } = await supabase
     .from('profiles')
     .select('role')
-    .eq('user_id' as any, userId)
+    .eq('id', userId)
     .maybeSingle();
 
   if (error || !data?.role) {
@@ -63,7 +63,7 @@ export const getProfileName = async (userId: string): Promise<string | null> => 
   const { data, error } = await supabase
     .from('profiles')
     .select('full_name')
-    .eq('user_id' as any, userId)
+    .eq('id', userId)
     .maybeSingle();
 
   if (error || !data?.full_name) {
