@@ -786,26 +786,10 @@ Deno.serve(async (req) => {
 
         console.log('[all-feedback] Query params:', { rating, search, startDate, endDate, limit, offset });
 
-        // Build query
+        // Build query for feedback records
         let query = supabase
           .from('live_chat_feedback')
-          .select(`
-            id,
-            rating,
-            comment,
-            created_at,
-            updated_at,
-            session_id,
-            live_chat_sessions (
-              id,
-              visitor_name,
-              visitor_email,
-              visitor_phone,
-              status,
-              created_at,
-              assigned_agent_id
-            )
-          `, { count: 'exact' });
+          .select('id, rating, comment, created_at, updated_at, session_id', { count: 'exact' });
 
         // Apply filters
         if (rating && /^[1-5]$/.test(rating)) {
@@ -851,8 +835,41 @@ Deno.serve(async (req) => {
 
         console.log('[all-feedback] Query succeeded, records found:', feedbackList?.length ?? 0);
 
+        // If we have feedback records, fetch the corresponding sessions
+        let feedbackWithSessions: any[] = [];
+        if (feedbackList && feedbackList.length > 0) {
+          const sessionIds = feedbackList.map(fb => fb.session_id);
+          
+          // Fetch sessions for these session IDs
+          const { data: sessions, error: sessionsError } = await supabase
+            .from('live_chat_sessions')
+            .select('id, visitor_name, visitor_email, visitor_phone, status, created_at, assigned_agent_id')
+            .in('id', sessionIds);
+
+          if (sessionsError) {
+            console.error('[all-feedback] Failed to fetch sessions:', {
+              message: sessionsError.message,
+              code: (sessionsError as any).code,
+            });
+          }
+
+          // Create a map of sessions for quick lookup
+          const sessionsMap = new Map();
+          if (sessions) {
+            sessions.forEach(session => {
+              sessionsMap.set(session.id, session);
+            });
+          }
+
+          // Merge feedback with session data
+          feedbackWithSessions = feedbackList.map(fb => ({
+            ...fb,
+            live_chat_sessions: sessionsMap.get(fb.session_id) || null,
+          }));
+        }
+
         // Filter by search term if provided (search in comment, visitor name, email)
-        let filtered = feedbackList ?? [];
+        let filtered = feedbackWithSessions;
         if (search && search.trim()) {
           const term = search.toLowerCase().trim();
           filtered = filtered.filter((fb: any) => {
