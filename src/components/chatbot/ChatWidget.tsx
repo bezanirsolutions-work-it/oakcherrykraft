@@ -10,7 +10,9 @@ import {
   fetchMessagesProxy,
   subscribeToSessionEventsProxy,
   closeSessionProxy,
+  submitSessionFeedbackProxy,
 } from '../../lib/liveChatProxyClient';
+import { uploadAttachments } from '../../lib/attachmentClient';
 import chatbotIcon from '../../assets/chatbot-icon.png';
 import type { LiveChatMessage } from '../../lib/liveChat';
 
@@ -23,7 +25,6 @@ const GENERIC_ERROR_MESSAGE =
 const generateVisitorToken = () => `visitor_${Math.random().toString(36).slice(2)}_${Date.now()}`;
 
 export function ChatWidget() {
-  console.log('[CHAT-LIFECYCLE] ChatWidget MOUNT');
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [visitorName, setVisitorName] = useState<string | undefined>(() => {
@@ -53,6 +54,29 @@ export function ChatWidget() {
   const [messages, setMessages] = useState<ChatMessageItem[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  const [feedbackRating, setFeedbackRating] = useState<number | null>(null);
+  const [feedbackComment, setFeedbackComment] = useState('');
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
+  const feedbackPromptSuppressedRef = useRef(false);
+  const feedbackSubmittedRef = useRef(false);
+
+  useEffect(() => {
+    feedbackSubmittedRef.current = feedbackSubmitted;
+  }, [feedbackSubmitted]);
+
+  useEffect(() => {
+    if (!feedbackSubmitted) return;
+
+    const timeout = window.setTimeout(() => {
+      setFeedbackSubmitted(false);
+      feedbackSubmittedRef.current = false;
+    }, 3500);
+
+    return () => window.clearTimeout(timeout);
+  }, [feedbackSubmitted]);
+
   const timeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
   const [liveChatSessionId, setLiveChatSessionId] = useState<string | null>(() => {
     try {
@@ -100,7 +124,6 @@ export function ChatWidget() {
   // Restore and reconnect session after refresh
   useEffect(() => {
     if (liveChatSessionId && isLiveChatActive) {
-      console.log('[CHAT-LIFECYCLE] SESSION RESTORE START', { sessionId: liveChatSessionId });
       const reconnectToSession = async () => {
         try {
           const existing = await fetchSessionByTokenProxy(sessionTokenRef.current);
@@ -114,8 +137,7 @@ export function ChatWidget() {
             return;
           }
 
-          console.log('[CHAT-LIFECYCLE] SESSION RESTORED', { sessionId: liveChatSessionId });
-          console.log('[CHAT-REFRESH] restored session active, reconnecting SSE', { sessionId: liveChatSessionId });
+
 
           const history = await fetchMessagesProxy(liveChatSessionId, sessionTokenRef.current);
           if (Array.isArray(history)) {
@@ -124,7 +146,6 @@ export function ChatWidget() {
               author: entry.author === 'visitor' ? 'user' : 'assistant',
               content: entry.content,
             }));
-            console.log('[CHAT-LIFECYCLE] HISTORY LOADED', { sessionId: liveChatSessionId, count: historyMessages.length });
             setMessages((cur) => {
               const seen = new Set(cur.map((message) => message.id));
               const newMessages = historyMessages.filter((message) => !seen.has(message.id));
@@ -137,8 +158,6 @@ export function ChatWidget() {
           liveChatAbortControllerRef.current = controller;
           const generation = ++subscriptionGenerationRef.current;
 
-          console.log('[CHAT-LIFECYCLE] SSE RECONNECT', { sessionId: liveChatSessionId, generation });
-          console.log('[CHAT-REFRESH] subscribing to SSE for restored session', { sessionId: liveChatSessionId, generation });
           const cleanup = subscribeToSessionEventsProxy(
             liveChatSessionId,
             sessionTokenRef.current,
@@ -147,12 +166,10 @@ export function ChatWidget() {
                 if (generation !== subscriptionGenerationRef.current) {
                   return;
                 }
-                console.log('[CHAT-DIAGNOSTIC-REFRESH] onMessage callback received data', { dataId: (data as any)?.id, dataAuthor: (data as any)?.author });
                 try {
                   const payload = data as { id?: string; content?: string; author?: string; session_id?: string };
                   const matchesSession = !payload.session_id || payload.session_id === liveChatSessionId;
                   const content = typeof payload?.content === 'string' ? payload.content : '';
-                  console.log('[CHAT-DIAGNOSTIC-REFRESH] callback processing', { messageId: payload.id, matchesSession, willAdd: !!(matchesSession && payload.id && content && payload.author !== 'visitor') });
 
                   if (
                     matchesSession &&
@@ -169,22 +186,10 @@ export function ChatWidget() {
 
                     setMessages((cur) => {
                       const isDuplicate = !!payload.id && cur.some((message) => message.id === `agent-${payload.id}`);
-                      console.log('[CHAT-DIAGNOSTIC-REFRESH] setMessages called', {
-                        messageId: payload.id,
-                        currentStateLength: cur.length,
-                        isDuplicate,
-                        currentMessageIds: cur.map(m => m.id),
-                      });
                       if (isDuplicate) {
-                        console.log('[CHAT-DIAGNOSTIC-REFRESH] message was duplicate, skipping');
                         return cur;
                       }
                       const nextState = [...cur, nextMessage];
-                      console.log('[CHAT-DIAGNOSTIC-REFRESH] message added', {
-                        messageId: payload.id,
-                        previousStateLength: cur.length,
-                        newStateLength: nextState.length,
-                      });
                       return nextState;
                     });
                     if (isMinimizedRef.current) {
@@ -242,9 +247,8 @@ export function ChatWidget() {
                   }
                 } catch (_) {}
               },
-              onError: () => {
-                console.log('[CHAT-REFRESH] SSE error during restore');
-              },
+              onError: () => {},
+
             },
             controller.signal
           );
@@ -253,7 +257,7 @@ export function ChatWidget() {
             cleanup?.();
           };
         } catch (err) {
-          console.warn('[CHAT-REFRESH] Failed to restore session:', err);
+
         }
       };
       reconnectToSession();
@@ -262,7 +266,6 @@ export function ChatWidget() {
 
   useEffect(() => {
     return () => {
-      console.log('[CHAT-LIFECYCLE] ChatWidget UNMOUNT');
       if (timeoutRef.current) {
         window.clearTimeout(timeoutRef.current);
       }
@@ -283,7 +286,6 @@ export function ChatWidget() {
   }, [isMinimized]);
 
   const supabaseChannelCleanup = () => {
-    console.log('[CHAT-LIFECYCLE] SSE CLEANUP', { sessionId: liveChatSessionId });
     try {
       if (
         liveChatSubscriptionRef.current &&
@@ -307,7 +309,6 @@ export function ChatWidget() {
     }
 
     if (liveChatAbortControllerRef.current) {
-      console.log('[CHAT-LIFECYCLE] SSE ABORT', { sessionId: liveChatSessionId });
       liveChatAbortControllerRef.current.abort();
       liveChatAbortControllerRef.current = null;
     }
@@ -330,11 +331,6 @@ export function ChatWidget() {
       content: `You're now connected with Oak Cherry Kraft.`,
     };
     setMessages((cur) => [...cur, systemMessage]);
-    console.log('[CHAT-LIFECYCLE] SYSTEM MESSAGE ADDED', {
-      sessionId,
-      messageId: systemMessage.id,
-      contentLength: systemMessage.content.length,
-    });
   };
 
   useEffect(() => {
@@ -354,33 +350,62 @@ export function ChatWidget() {
       content: content.trim().slice(0, MAX_MESSAGE_LENGTH),
     }));
 
-  const sendMessage = async (content: string) => {
+  const sendMessage = async (content: string, attachments: File[] = []) => {
     const trimmed = content.trim();
-    if (!trimmed || isSending || isTyping || trimmed.length > MAX_MESSAGE_LENGTH) {
+    if (!trimmed && attachments.length === 0) {
+      return;
+    }
+    if (isSending || isTyping || (trimmed && trimmed.length > MAX_MESSAGE_LENGTH)) {
       return;
     }
     // If live chat is active, send via proxy to live chat messages and don't run bot response
     if (isLiveChatActive && liveChatSessionId) {
-      const outgoingMessage: ChatMessageItem = {
-        id: `visitor-${Date.now()}`,
-        author: 'user',
-        content: trimmed,
-      };
-
-      setMessages((current) => [...current, outgoingMessage]);
-
+      setIsSending(true);
       try {
-        await createMessageProxy(liveChatSessionId, sessionTokenRef.current, 'visitor', trimmed);
-      } catch (err) {
-        console.error('Failed to send live chat message', err);
-        setMessages((cur) => [
-          ...cur,
-          {
-            id: `assistant-error-${Date.now()}`,
-            author: 'assistant',
-            content: 'Failed to send message. Please try again.',
-          },
-        ]);
+        // Upload attachments and get metadata
+        let attachmentMetadata: any[] = [];
+        if (attachments.length > 0) {
+          try {
+            attachmentMetadata = await uploadAttachments(attachments, liveChatSessionId, sessionTokenRef.current);
+          } catch (err) {
+            console.error('Failed to upload attachments', err);
+            setMessages((cur) => [
+              ...cur,
+              {
+                id: `assistant-error-${Date.now()}`,
+                author: 'assistant',
+                content: 'Failed to upload files. Please try again.',
+              },
+            ]);
+            setIsSending(false);
+            return;
+          }
+        }
+
+        const outgoingMessage: ChatMessageItem = {
+          id: `visitor-${Date.now()}`,
+          author: 'user',
+          content: trimmed,
+          attachments: attachmentMetadata,
+        };
+
+        setMessages((current) => [...current, outgoingMessage]);
+
+        try {
+          await createMessageProxy(liveChatSessionId, sessionTokenRef.current, 'visitor', trimmed, attachmentMetadata);
+        } catch (err) {
+          console.error('Failed to send live chat message', err);
+          setMessages((cur) => [
+            ...cur,
+            {
+              id: `assistant-error-${Date.now()}`,
+              author: 'assistant',
+              content: 'Failed to send message. Please try again.',
+            },
+          ]);
+        }
+      } finally {
+        setIsSending(false);
       }
 
       return;
@@ -430,22 +455,17 @@ export function ChatWidget() {
   const showLiveContactForm = async () => {
     if (isLiveChatActive || showContactForm) return;
     
-    console.log('[live-chat-contact-form] checking for existing session');
-    
     try {
       // Check if there's an existing non-closed session
       const existing = await fetchSessionByTokenProxy(sessionTokenRef.current);
       if (existing && existing.status !== 'closed') {
         // Active session exists, skip form and go directly to live chat
-        console.log('[live-chat-contact-form] existing active session found, skipping form');
         await startLiveChat();
         return;
       }
     } catch (err) {
-      console.warn('[live-chat-contact-form] failed to check existing session', err);
     }
     
-    console.log('[live-chat-contact-form] showing contact form');
     setShowContactForm(true);
   };
 
@@ -482,10 +502,8 @@ export function ChatWidget() {
       return;
     }
 
+    resetFeedbackState();
     startingLiveChatRef.current = true;
-
-    console.log('[live-chat-start-debug] "Speak to Our Team" clicked');
-    console.log('[live-chat-start-debug] visitor token:', sessionTokenRef.current ? 'present' : 'undefined');
 
     try {
       const proxyEnv = import.meta.env.VITE_LIVE_CHAT_PROXY_URL;
@@ -504,17 +522,10 @@ export function ChatWidget() {
         return;
       }
 
-      console.log('[live-chat-start-debug] checking for existing session');
       const existing = await fetchSessionByTokenProxy(sessionTokenRef.current);
-      console.log('[live-chat-start-debug] existing session query result:', existing ? 'found' : 'not found');
-      if (existing) {
-        console.log('[live-chat-start-debug] existing session status:', existing.status);
-      }
-
       let session = existing;
       if (existing) {
         if (existing.status === 'closed') {
-          console.log('[live-chat-start-debug] existing session is closed, creating new session');
           session = await createSessionProxy(sessionTokenRef.current, {
             name: contactDetails?.name || visitorName,
             phone: contactDetails?.phone || visitorPhone,
@@ -522,7 +533,6 @@ export function ChatWidget() {
           });
         } else if (contactDetails || (visitorName && (existing.visitor_name == null || existing.visitor_name !== visitorName))) {
           try {
-            console.log('[live-chat-start-debug] updating visitor details on existing session');
             session = await createSessionProxy(sessionTokenRef.current, {
               name: contactDetails?.name || visitorName,
               phone: contactDetails?.phone || visitorPhone,
@@ -533,7 +543,6 @@ export function ChatWidget() {
           }
         }
       } else {
-        console.log('[live-chat-start-debug] no existing session, creating new one');
         session = await createSessionProxy(sessionTokenRef.current, {
           name: contactDetails?.name || visitorName,
           phone: contactDetails?.phone || visitorPhone,
@@ -541,30 +550,18 @@ export function ChatWidget() {
         });
       }
 
-      console.log('[live-chat-start-debug] session created/reused:', {
-        sessionId: session?.id ?? 'undefined',
-        status: session?.status ?? 'undefined',
-      });
-
       if (!session || !session.id) {
         throw new Error('Session creation failed: no session ID returned');
       }
 
       setLiveChatSessionId(session.id);
-      console.log('[CHAT-LIFECYCLE] SESSION ID SET', { sessionId: session.id });
       try {
         localStorage.setItem('live-chat-session-id', session.id);
         localStorage.setItem('live-chat-active', 'true');
       } catch {}
-      console.info('[live-chat-session] current session', { sessionId: session.id });
       setIsLiveChatActive(true);
 
-      console.log('[live-chat-start-debug] fetching message history');
       const history = await fetchMessagesProxy(session.id, sessionTokenRef.current);
-      console.log('[live-chat-start-debug] history fetch result:', {
-        isArray: Array.isArray(history),
-        count: Array.isArray(history) ? history.length : 0,
-      });
 
       if (Array.isArray(history)) {
         const historyMessages = history.map((entry: LiveChatMessage): ChatMessageItem => ({
@@ -572,12 +569,6 @@ export function ChatWidget() {
           author: entry.author === 'visitor' ? 'user' : 'assistant',
           content: entry.content,
         }));
-
-        console.info('[live-chat-session] history loaded', {
-          sessionId: session.id,
-          count: historyMessages.length,
-        });
-        console.log('[CHAT-LIFECYCLE] HISTORY LOADED', { sessionId: session.id, count: historyMessages.length });
 
         setMessages((current) => {
           const seen = new Set(current.map((message) => message.id));
@@ -593,9 +584,6 @@ export function ChatWidget() {
       liveChatAbortControllerRef.current = controller;
       const generation = ++subscriptionGenerationRef.current;
 
-      console.log('[live-chat-start-debug] starting SSE subscription');
-      console.log('[CHAT-LIFECYCLE] SSE SUBSCRIBE', { sessionId: session.id, generation });
-      console.log('[CHAT-DIAGNOSTIC-START] message state at subscription time', { messageCount: messages.length, messageIds: messages.map(m => m.id) });
       const cleanup = subscribeToSessionEventsProxy(
         session.id,
         sessionTokenRef.current,
@@ -604,36 +592,10 @@ export function ChatWidget() {
             if (generation !== subscriptionGenerationRef.current) {
               return;
             }
-            console.log('[CHAT-DIAGNOSTIC-START] onMessage callback received', { dataId: (data as any)?.id, dataAuthor: (data as any)?.author, dataSessionId: (data as any)?.session_id });
             try {
               const payload = data as { id?: string; content?: string; author?: string; session_id?: string };
               const matchesSession = !payload.session_id || payload.session_id === session.id;
               const content = typeof payload?.content === 'string' ? payload.content : '';
-              console.log('[CHAT-DIAGNOSTIC-START] after matching check', { messageId: payload.id, sessionId: session.id, matchesSession, contentLength: content.length, author: payload.author });
-
-              console.info('[live-chat-events] customer message received', {
-                sessionId: session.id,
-                incomingMessageId: payload.id ?? null,
-                incomingAuthor: payload.author ?? null,
-                beforeCount: messages.length,
-                matchesSession,
-              });
-              console.log('[CHAT-SSE] MESSAGE', { sessionId: session.id, messageId: payload.id ?? null, author: payload.author ?? null, contentLength: content.length });
-              console.info('[SESSION-TRACE][CHATWIDGET-ONMESSAGE]', {
-                activeSessionId: session.id,
-                payloadSessionId: payload.session_id ?? null,
-                payloadAuthor: payload.author ?? null,
-                payloadId: payload.id ?? null,
-                content,
-                matchesSession,
-                willSetMessages: !!(
-                  matchesSession &&
-                  payload &&
-                  payload.id &&
-                  content.length > 0 &&
-                  payload.author !== 'visitor'
-                ),
-              });
 
               if (
                 matchesSession &&
@@ -650,36 +612,11 @@ export function ChatWidget() {
 
                 setMessages((cur) => {
                   const isDuplicate = !!payload.id && cur.some((message) => message.id === `agent-${payload.id}`);
-                  console.log('[CHAT-DIAGNOSTIC-START] setMessages called', {
-                    messageId: payload.id,
-                    currentStateLength: cur.length,
-                    isDuplicate,
-                    currentMessageIds: cur.map(m => m.id),
-                  });
-
                   if (isDuplicate) {
-                    console.info('[live-chat-events] rejected duplicate', {
-                      sessionId: session.id,
-                      messageId: payload.id,
-                      reason: 'duplicate message id',
-                    });
                     return cur;
                   }
 
                   const nextState = [...cur, nextMessage];
-                  console.log('[CHAT-DIAGNOSTIC-START] message added to state', {
-                    messageId: payload.id,
-                    previousStateLength: cur.length,
-                    newStateLength: nextState.length,
-                    addedMessageId: nextMessage.id,
-                  });
-                  console.info('[live-chat-events] state update', {
-                    sessionId: session.id,
-                    beforeCount: cur.length,
-                    afterCount: nextState.length,
-                    messageId: payload.id ?? null,
-                    uiAuthor: 'assistant',
-                  });
                   return nextState;
                 });
 
@@ -687,12 +624,6 @@ export function ChatWidget() {
                   setUnreadCount((current) => current + 1);
                 }
               } else {
-                console.info('[live-chat-events] customer message rejected', {
-                  sessionId: session.id,
-                  incomingMessageId: payload.id ?? null,
-                  incomingAuthor: payload.author ?? null,
-                  reason: matchesSession ? 'message rejected by guard' : 'session mismatch',
-                });
               }
             } catch (_) {}
           },
@@ -726,10 +657,13 @@ export function ChatWidget() {
                 addConnectedSystemMessage(session.id);
               }
               if (payload.status === 'resolved' || payload.status === 'closed') {
-                console.log('[CHAT-LIFECYCLE] SESSION CLOSED', { sessionId: session.id, status: payload.status });
-                setIsOpen(false);
+                if (feedbackPromptSuppressedRef.current || feedbackSubmittedRef.current) {
+                  setShowFeedbackForm(false);
+                  return;
+                }
                 setIsMinimized(false);
                 setIsLiveChatActive(false);
+                setShowFeedbackForm(true);
                 try {
                   localStorage.removeItem('live-chat-session-id');
                   localStorage.removeItem('live-chat-active');
@@ -746,9 +680,7 @@ export function ChatWidget() {
               }
             } catch (_) {}
           },
-          onError: () => {
-            console.log('[live-chat-start-debug] SSE error handler called');
-          },
+          onError: () => {},
         },
         controller.signal
       );
@@ -756,12 +688,7 @@ export function ChatWidget() {
         controller.abort();
         cleanup?.();
       };
-      console.log('[live-chat-start-debug] SSE subscription initiated');
     } catch (err) {
-      console.error('[live-chat-start-debug] EXCEPTION in startLiveChat:', {
-        error: err instanceof Error ? err.message : String(err),
-        stack: err instanceof Error ? err.stack : 'no stack',
-      });
       setMessages((cur) => [
         ...cur,
         {
@@ -775,8 +702,8 @@ export function ChatWidget() {
     }
   };
 
-  const handleSend = (content: string) => {
-    sendMessage(content);
+  const handleSend = (content: string, attachments: File[]) => {
+    sendMessage(content, attachments);
   };
 
   const handleRestore = () => {
@@ -789,10 +716,21 @@ export function ChatWidget() {
     setIsOpen((current) => !current);
   };
 
+  const resetFeedbackState = () => {
+    feedbackPromptSuppressedRef.current = false;
+    feedbackSubmittedRef.current = false;
+    setShowFeedbackForm(false);
+    setFeedbackRating(null);
+    setFeedbackComment('');
+    setFeedbackSubmitted(false);
+    setFeedbackSubmitting(false);
+  };
+
   const handleClose = () => {
-    setIsOpen(false);
-    setIsMinimized(false);
-    if (isLiveChatActive && liveChatSessionId) {
+    // If we need to show feedback after closing, keep the window open
+    if (isLiveChatActive && liveChatSessionId && !feedbackPromptSuppressedRef.current && !feedbackSubmittedRef.current) {
+      setIsMinimized(false);
+      // Keep isOpen = true so feedback form can be shown
       void (async () => {
         try {
           await closeSessionProxy(liveChatSessionId, sessionTokenRef.current);
@@ -800,6 +738,16 @@ export function ChatWidget() {
           console.warn('Failed to close live chat session via proxy', err);
         }
       })();
+      feedbackPromptSuppressedRef.current = false;
+      setFeedbackRating(null);
+      setFeedbackComment('');
+      setFeedbackSubmitted(false);
+      setShowFeedbackForm(true);
+    } else {
+      // No feedback to show, fully close the window
+      setIsOpen(false);
+      setIsMinimized(false);
+      resetFeedbackState();
     }
     setIsLiveChatActive(false);
     try {
@@ -808,6 +756,41 @@ export function ChatWidget() {
     } catch {}
     cleanupActiveSseSubscription();
     supabaseChannelCleanup();
+  };
+
+  const handleFeedbackSubmit = async () => {
+    if (!liveChatSessionId || !feedbackRating || feedbackSubmitting) {
+      return;
+    }
+
+    setFeedbackSubmitting(true);
+    setShowFeedbackForm(false);
+    setFeedbackComment('');
+    setFeedbackRating(null);
+
+    try {
+      await submitSessionFeedbackProxy(liveChatSessionId, sessionTokenRef.current, feedbackRating, feedbackComment);
+      feedbackPromptSuppressedRef.current = true;
+      feedbackSubmittedRef.current = true;
+      setShowFeedbackForm(false);
+      setFeedbackSubmitted(true);
+      
+      // Close the chat window after showing the thank you message
+      const timer = window.setTimeout(() => {
+        setIsOpen(false);
+      }, 3500);
+      
+      return () => window.clearTimeout(timer);
+    } catch (err) {
+      console.warn('Failed to submit live chat feedback', err);
+      feedbackPromptSuppressedRef.current = false;
+      feedbackSubmittedRef.current = false;
+      setShowFeedbackForm(true);
+      setFeedbackRating(feedbackRating);
+      setFeedbackComment(feedbackComment);
+    } finally {
+      setFeedbackSubmitting(false);
+    }
   };
 
   const handleMinimize = () => {
@@ -857,16 +840,31 @@ export function ChatWidget() {
                   </div>
                 </div>
               ) : (
-                <ChatWindow
-                  messages={messages}
-                  isTyping={isTyping}
-                  onClose={handleClose}
-                  onMinimize={handleMinimize}
-                  onSend={handleSend}
-                  onQuickAction={handleQuickAction}
-                  isLiveChatActive={isLiveChatActive}
-                  logoSrc={chatbotIcon}
-                />
+                <>
+                  <ChatWindow
+                    messages={messages}
+                    isTyping={isTyping}
+                    onClose={handleClose}
+                    onMinimize={handleMinimize}
+                    onSend={handleSend}
+                    onQuickAction={handleQuickAction}
+                    isLiveChatActive={isLiveChatActive}
+                    logoSrc={chatbotIcon}
+                    showFeedbackForm={showFeedbackForm}
+                    feedbackRating={feedbackRating}
+                    feedbackComment={feedbackComment}
+                    feedbackSubmitting={feedbackSubmitting}
+                    onFeedbackRatingChange={setFeedbackRating}
+                    onFeedbackCommentChange={setFeedbackComment}
+                    onFeedbackSubmit={handleFeedbackSubmit}
+                    onFeedbackDismiss={() => setShowFeedbackForm(false)}
+                  />
+                  {feedbackSubmitted ? (
+                    <div className="mt-3 rounded-[2rem] border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 shadow-soft">
+                      Thanks for your feedback — it helps us improve the experience.
+                    </div>
+                  ) : null}
+                </>
               )}
             </div>
           </div>

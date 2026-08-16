@@ -1,11 +1,13 @@
 import { useEffect, useState, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '../../lib/supabase';
-import { fetchAllLiveChatSessions, fetchLiveChatMessages, assignAgentToSession, closeLiveChatSession, sendAgentMessage } from '../../lib/liveChat';
+import { fetchAllLiveChatSessions, fetchLiveChatMessages, fetchLiveChatFeedback, assignAgentToSession, closeLiveChatSession, sendAgentMessage, deleteLiveChatSession, deleteAllClosedChatSessions } from '../../lib/liveChat';
 import { useAuth } from '../../lib/AuthContext';
 import { LiveChatConversationList } from '../../components/admin/LiveChatConversationList';
 import { LiveChatMessages } from '../../components/admin/LiveChatMessages';
 import { LiveChatDetails } from '../../components/admin/LiveChatDetails';
+import { LiveChatFeedbackPanel } from '../../components/admin/LiveChatFeedbackPanel';
+import { formatFileSize } from '../../lib/attachmentUtils';
 
 interface SessionRow {
   id: string;
@@ -25,10 +27,19 @@ interface MessageRow {
   author: 'visitor' | 'assistant' | 'agent' | 'system';
   content: string;
   created_at: string | null;
+  metadata?: {
+    attachments?: Array<{
+      name: string;
+      type: string;
+      size: number;
+      path: string;
+    }>;
+  } | null;
 }
 
 export default function LiveChatAdminPage() {
   const { isAdmin } = useAuth();
+  const [activeTab, setActiveTab] = useState<'conversations' | 'feedback'>('conversations');
   const [sessions, setSessions] = useState<SessionRow[]>([]);
   const [selected, setSelected] = useState<SessionRow | null>(null);
   const [messages, setMessages] = useState<MessageRow[]>([]);
@@ -41,6 +52,10 @@ export default function LiveChatAdminPage() {
   const [accepting, setAccepting] = useState(false);
   const [closing, setClosing] = useState(false);
   const [sending, setSending] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteAllLoading, setDeleteAllLoading] = useState(false);
+  const [feedback, setFeedback] = useState<{ rating: number; comment: string | null; created_at: string | null } | null>(null);
   
   const globalMessagesChannelRef = useRef<any | null>(null);
   const selectedRef = useRef<SessionRow | null>(null);
@@ -113,7 +128,13 @@ export default function LiveChatAdminPage() {
           if (selectedRef.current && msg.session_id === selectedRef.current.id) {
             setMessages((cur) => {
               if (cur.some((m) => m.id === msg.id)) return cur;
-              const next = [...cur, { id: msg.id, author: msg.author, content: msg.content, created_at: msg.created_at }];
+              const next = [...cur, {
+                id: msg.id,
+                author: msg.author,
+                content: msg.content,
+                created_at: msg.created_at,
+                metadata: msg.metadata ?? null,
+              }];
               messagesRef.current = next;
               return next;
             });
@@ -348,16 +369,30 @@ export default function LiveChatAdminPage() {
     selectedRef.current = session;
     setComposer('');
     setMessagesLoading(true);
+    setFeedback(null);
     try {
-      const msgs = await fetchLiveChatMessages(session.id);
+      const [msgs, sessionFeedback] = await Promise.all([
+        fetchLiveChatMessages(session.id),
+        fetchLiveChatFeedback(session.id),
+      ]);
       setMessages(msgs ?? []);
       messagesRef.current = msgs ?? [];
+      setFeedback(sessionFeedback ? { rating: sessionFeedback.rating, comment: sessionFeedback.comment, created_at: sessionFeedback.created_at } : null);
       // mark unread count cleared locally when opening
       setSessions((cur) => cur.map((s) => (s.id === session.id ? { ...s, unread_count: 0 } : s)));
     } catch (err) {
       console.error(err);
     } finally {
       setMessagesLoading(false);
+    }
+  };
+
+  const refreshSelectedFeedback = async (sessionId: string) => {
+    try {
+      const sessionFeedback = await fetchLiveChatFeedback(sessionId);
+      setFeedback(sessionFeedback ? { rating: sessionFeedback.rating, comment: sessionFeedback.comment, created_at: sessionFeedback.created_at } : null);
+    } catch (err) {
+      console.error('[live-chat-admin] feedback refresh failed', err);
     }
   };
 
@@ -386,6 +421,7 @@ export default function LiveChatAdminPage() {
       await closeLiveChatSession(selected.id);
       await fetchList();
       setSelected({ ...selected, status: 'closed' });
+      await refreshSelectedFeedback(selected.id);
     } catch (err) {
       console.error(err);
     } finally {
@@ -411,6 +447,198 @@ export default function LiveChatAdminPage() {
     }
   };
 
+  const formatTranscriptDate = (dateString: string | null): string => {
+    if (!dateString) return 'Not provided';
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return 'Not provided';
+    return date.toLocaleString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  };
+
+  const sanitizeFilename = (value: string) => value
+    .replace(/[\\/:*?"<>|]+/g, '-')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 80) || 'conversation';
+
+  const getSenderLabel = (author: string) => {
+    switch (author) {
+      case 'visitor':
+        return 'Visitor';
+      case 'agent':
+      case 'assistant':
+        return 'Oak Cherry Kraft';
+      case 'system':
+        return 'System';
+      default:
+        return 'Visitor';
+    }
+  };
+
+  const exportConversation = async () => {
+    if (!selected) {
+      alert('There are no messages to export.');
+      return;
+    }
+
+    setExporting(true);
+
+    try {
+      const fullHistory = await fetchLiveChatMessages(selected.id);
+      if (!fullHistory || fullHistory.length === 0) {
+        alert('There are no messages to export.');
+        return;
+      }
+
+      const orderedMessages = [...fullHistory].sort((a, b) => {
+        const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return aTime - bTime;
+      });
+
+      const sessionStarted = selected.created_at ? formatTranscriptDate(selected.created_at) : 'Not provided';
+      const exportedAt = formatTranscriptDate(new Date().toISOString());
+      const shortId = sanitizeFilename(selected.id.slice(0, 8));
+      const dateStamp = new Date().toISOString().slice(0, 10);
+      const filename = `oak-cherry-kraft-chat-${dateStamp}-${shortId}.txt`;
+
+      const feedbackLine = feedback && feedback.rating
+        ? `Visitor feedback: ${'★'.repeat(feedback.rating)}${'☆'.repeat(5 - feedback.rating)} (${feedback.rating}/5)`
+        : 'Visitor feedback: Not provided';
+
+      const lines: string[] = [
+        '# Oak Cherry Kraft - Live Chat Conversation',
+        `Visitor: ${selected.visitor_name || 'Not provided'}`,
+        `Email: ${selected.visitor_email || 'Not provided'}`,
+        `Phone: ${selected.visitor_phone || 'Not provided'}`,
+        `Session ID: ${selected.id || 'Not provided'}`,
+        `Conversation Started: ${sessionStarted}`,
+        `Conversation Exported: ${exportedAt}`,
+        feedbackLine,
+        feedback?.comment ? `Feedback comment: ${feedback.comment}` : 'Feedback comment: Not provided',
+        '',
+        '---',
+      ];
+
+      for (const msg of orderedMessages) {
+        const timestamp = formatTranscriptDate(msg.created_at);
+        const cleanContent = (msg.content ?? '').replace(/\r\n/g, '\n').trim();
+        lines.push(``);
+        lines.push(`[${timestamp}] ${getSenderLabel(msg.author)}`);
+        if (cleanContent) {
+          lines.push(cleanContent);
+        }
+
+        const attachments = Array.isArray(msg.metadata?.attachments) ? msg.metadata.attachments : [];
+        if (attachments.length) {
+          for (const attachment of attachments) {
+            lines.push('');
+            lines.push(`[Attachment: ${attachment.name || 'Unknown attachment'}]`);
+            if (attachment.type) lines.push(`Type: ${attachment.type}`);
+            if (typeof attachment.size === 'number') lines.push(`Size: ${formatFileSize(attachment.size)}`);
+          }
+        }
+      }
+
+      lines.push('');
+      lines.push('---');
+      lines.push('End of conversation');
+
+      const transcript = `${lines.join('\n')}\n`;
+      const blob = new Blob([transcript], { type: 'text/plain;charset=utf-8' });
+      const objectUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = objectUrl;
+      anchor.download = filename;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(objectUrl);
+    } catch (error) {
+      console.error('[live-chat-admin] export failed', error);
+      alert('Unable to export this conversation. Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selected) return;
+    const confirmDelete = window.confirm('Delete this closed chat permanently? This will remove the chat session and its messages and cannot be undone.');
+    if (!confirmDelete) return;
+    
+    setDeleting(true);
+    try {
+      await deleteLiveChatSession(selected.id);
+      await fetchList();
+      setSelected(null);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to delete chat session');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteAllClosed = async () => {
+    try {
+      const closedCount = sessions.filter(s => s.status === 'closed').length;
+      if (closedCount === 0) {
+        alert('No closed chats to delete');
+        return;
+      }
+      
+      const confirmDelete = window.confirm(`Delete all ${closedCount} closed chat(s) permanently? This cannot be undone.`);
+      if (!confirmDelete) return;
+      
+      setDeleteAllLoading(true);
+      await deleteAllClosedChatSessions();
+      await fetchList();
+      if (selected?.status === 'closed') {
+        setSelected(null);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to delete closed chat sessions');
+    } finally {
+      setDeleteAllLoading(false);
+    }
+  };
+
+  const handleViewConversationFromFeedback = async (sessionId: string) => {
+    try {
+      // Find the session by ID, or fetch it if not in current list
+      let session = sessions.find(s => s.id === sessionId);
+      
+      if (!session) {
+        // Try to fetch the session directly from Supabase
+        const { data } = await supabase
+          .from('live_chat_sessions')
+          .select('*')
+          .eq('id', sessionId)
+          .maybeSingle();
+        
+        if (data) {
+          session = data as SessionRow;
+        }
+      }
+
+      if (session) {
+        setActiveTab('conversations');
+        await handleSelect(session);
+      }
+    } catch (err) {
+      console.error('Failed to view conversation:', err);
+      alert('Failed to load conversation');
+    }
+  };
+
   return (
     <>
       <Helmet>
@@ -418,6 +646,33 @@ export default function LiveChatAdminPage() {
       </Helmet>
 
       <div className="flex flex-col gap-6">
+        {/* Tab Navigation */}
+        <div className="flex gap-2 border-b border-bark/10">
+          <button
+            onClick={() => setActiveTab('conversations')}
+            className={`px-4 py-3 font-medium text-sm transition border-b-2 ${
+              activeTab === 'conversations'
+                ? 'border-oak-600 text-oak-600'
+                : 'border-transparent text-bark/60 hover:text-bark'
+            }`}
+          >
+            Conversations
+          </button>
+          <button
+            onClick={() => setActiveTab('feedback')}
+            className={`px-4 py-3 font-medium text-sm transition border-b-2 ${
+              activeTab === 'feedback'
+                ? 'border-oak-600 text-oak-600'
+                : 'border-transparent text-bark/60 hover:text-bark'
+            }`}
+          >
+            Feedback
+          </button>
+        </div>
+
+        {/* Conversations Tab */}
+        {activeTab === 'conversations' && (
+          <>
         {/* Mobile: Conversation List Only (Default View) */}
         <div className="md:hidden">
           <div className="rounded-[1.75rem] border border-bark/10 bg-white overflow-hidden">
@@ -429,6 +684,8 @@ export default function LiveChatAdminPage() {
               onFilterChange={setFilter}
               loading={initialLoading}
               connectionState={connectionState}
+              onDeleteAllClosed={handleDeleteAllClosed}
+              deleteAllLoading={deleteAllLoading}
             />
           </div>
         </div>
@@ -443,7 +700,10 @@ export default function LiveChatAdminPage() {
                 composer={composer}
                 onComposerChange={setComposer}
                 onSend={handleSend}
+                onExport={exportConversation}
                 sending={sending}
+                exporting={exporting}
+                feedback={feedback}
               />
             </div>
             <div className="mt-4 flex gap-3">
@@ -481,6 +741,8 @@ export default function LiveChatAdminPage() {
               onFilterChange={setFilter}
               loading={initialLoading}
               connectionState={connectionState}
+              onDeleteAllClosed={handleDeleteAllClosed}
+              deleteAllLoading={deleteAllLoading}
             />
           </div>
 
@@ -492,7 +754,10 @@ export default function LiveChatAdminPage() {
               composer={composer}
               onComposerChange={setComposer}
               onSend={handleSend}
+              onExport={exportConversation}
               sending={sending}
+              exporting={exporting}
+              feedback={feedback}
             />
             
           </div>
@@ -503,11 +768,35 @@ export default function LiveChatAdminPage() {
               session={selected}
               onAccept={handleAccept}
               onClose={handleClose}
+              onDelete={handleDelete}
               accepting={accepting}
               closing={closing}
+              deleting={deleting}
             />
           </div>
         </div>
+        </>
+        )}
+
+        {/* Feedback Tab */}
+        {activeTab === 'feedback' && (
+          <div className="hidden md:block rounded-[1.75rem] border border-bark/10 bg-white overflow-hidden md:h-[600px]">
+            <LiveChatFeedbackPanel
+              onSelectSession={handleViewConversationFromFeedback}
+              loading={initialLoading}
+            />
+          </div>
+        )}
+
+        {/* Mobile Feedback Tab */}
+        {activeTab === 'feedback' && (
+          <div className="md:hidden rounded-[1.75rem] border border-bark/10 bg-white overflow-hidden h-[600px]">
+            <LiveChatFeedbackPanel
+              onSelectSession={handleViewConversationFromFeedback}
+              loading={initialLoading}
+            />
+          </div>
+        )}
       </div>
     </>
   );

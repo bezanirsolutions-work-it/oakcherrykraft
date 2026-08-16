@@ -15,8 +15,10 @@ interface LiveChatDetailsProps {
   session: Session | null;
   onAccept: () => void;
   onClose: () => void;
+  onDelete?: () => void;
   accepting: boolean;
   closing: boolean;
+  deleting?: boolean;
 }
 
 function formatDateTime(dateString: string | null): string {
@@ -34,8 +36,10 @@ export function LiveChatDetails({
   session,
   onAccept,
   onClose,
+  onDelete,
   accepting,
   closing,
+  deleting = false,
 }: LiveChatDetailsProps) {
   if (!session) {
     return (
@@ -171,10 +175,16 @@ export function LiveChatDetails({
           </Button>
         ) : null}
 
-        {isClosed ? (
-          <div className="flex items-center justify-center rounded-lg bg-gray-100 py-2">
-            <p className="text-xs font-medium text-gray-600">Conversation closed</p>
-          </div>
+        {isClosed && onDelete ? (
+          <Button
+            onClick={onDelete}
+            disabled={deleting}
+            variant="secondary"
+            className="w-full"
+            size="sm"
+          >
+            {deleting ? 'Deleting...' : 'Delete Chat'}
+          </Button>
         ) : null}
       </div>
     </div>

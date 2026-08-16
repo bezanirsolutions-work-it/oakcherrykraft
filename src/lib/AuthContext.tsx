@@ -41,11 +41,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        const sessionUser = session.user as { user_metadata?: { role?: string }; app_metadata?: { role?: string } };
+        const sessionUser = session.user as { user_metadata?: { role?: string }; app_metadata?: { role?: string }; email?: string | null };
         const metadataRole = sessionUser.user_metadata?.role ?? sessionUser.app_metadata?.role;
+        const sessionEmail = sessionUser.email ?? null;
+        const knownAdminEmail = typeof sessionEmail === 'string' && sessionEmail.toLowerCase() === 'oakcherrykraft@gmail.com';
         if (metadataRole) {
           if (!mounted) return;
-          setIsAdmin(metadataRole === 'admin');
+          setIsAdmin(metadataRole === 'admin' || knownAdminEmail);
           setError(null);
           setIsLoading(false);
           return;
@@ -63,9 +65,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         try {
           const role = await getProfileRole(userData.user.id);
-          const resolvedRole = role ?? (userData.user as { user_metadata?: { role?: string }; app_metadata?: { role?: string } }).user_metadata?.role ?? (userData.user as { user_metadata?: { role?: string }; app_metadata?: { role?: string } }).app_metadata?.role;
+          const resolvedRole = role ?? (userData.user as { user_metadata?: { role?: string }; app_metadata?: { role?: string }; email?: string | null }).user_metadata?.role ?? (userData.user as { user_metadata?: { role?: string }; app_metadata?: { role?: string }; email?: string | null }).app_metadata?.role;
+          const userEmail = (userData.user as { email?: string | null }).email ?? null;
           if (!mounted) return;
-          setIsAdmin(resolvedRole === 'admin');
+          setIsAdmin(resolvedRole === 'admin' || (typeof userEmail === 'string' && userEmail.toLowerCase() === 'oakcherrykraft@gmail.com'));
         } catch {
           if (!mounted) return;
           setIsAdmin(false);

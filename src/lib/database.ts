@@ -177,6 +177,41 @@ export interface Database {
         };
         Relationships: [];
       };
+      live_chat_feedback: {
+        Row: {
+          id: string;
+          session_id: string;
+          rating: number;
+          comment: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          session_id: string;
+          rating: number;
+          comment?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          session_id?: string;
+          rating?: number;
+          comment?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'live_chat_feedback_session_id_fkey';
+            columns: ['session_id'];
+            isOneToOne: true;
+            referencedRelation: 'live_chat_sessions';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
       quote_requests: {
         Row: {
           id: string;

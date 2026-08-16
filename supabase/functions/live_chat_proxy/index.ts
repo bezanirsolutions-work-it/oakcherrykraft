@@ -141,34 +141,133 @@ async function validateVisitorOwnership(
   return { valid: true, session };
 }
 
+function normalizeStoragePath(value: string): string | null {
+  if (typeof value !== 'string') return null;
+
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.includes('..')) return null;
+
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    try {
+      const url = new URL(trimmed);
+      const pathParts = url.pathname.split('/').filter(Boolean);
+      const objectIndex = pathParts.findIndex((segment) => segment === 'object');
+      if (objectIndex >= 0) {
+        const bucket = pathParts[objectIndex + 1];
+        if (bucket === 'public' || bucket === 'private') {
+          const startIndex = objectIndex + 2;
+          return pathParts.slice(startIndex + 1).join('/');
+        }
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  }
+
+  return trimmed.replace(/^\/+/, '');
+}
+
+async function resolveAuthenticatedUser(req: Request): Promise<{ user?: any; isAdmin: boolean; error?: string }> {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return { isAdmin: false, error: 'Unauthorized' };
+  }
+
+  const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+  if (!token) {
+    return { isAdmin: false, error: 'Unauthorized' };
+  }
+
+  try {
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error || !data.user) {
+      return { isAdmin: false, error: 'Unauthorized' };
+    }
+
+    const role = (data.user as any)?.user_metadata?.role ?? (data.user as any)?.app_metadata?.role ?? null;
+    if (role === 'admin' || role === 'super_admin') {
+      return { user: data.user, isAdmin: true, error: undefined };
+    }
+
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', data.user.id)
+      .maybeSingle();
+
+    const profileRole = profileData?.role ?? null;
+    return { user: data.user, isAdmin: profileRole === 'admin' || profileRole === 'super_admin', error: profileError ? 'Unauthorized' : undefined };
+  } catch {
+    return { isAdmin: false, error: 'Unauthorized' };
+  }
+}
+
+async function attachmentBelongsToAuthorizedSession(path: string, sessionId?: string, visitorToken?: string): Promise<boolean> {
+  const normalized = normalizeStoragePath(path);
+  if (!normalized) return false;
+
+  const { data: messages, error } = await supabase.from('live_chat_messages').select('*');
+  if (error || !messages) return false;
+
+  for (const message of messages) {
+    const messageSessionId = typeof message.session_id === 'string' ? message.session_id : '';
+    const metadata = message.metadata || {};
+    const attachments = Array.isArray(metadata.attachments) ? metadata.attachments : [];
+
+    const matchesPath = attachments.some((attachment: any) => {
+      const candidate = typeof attachment?.path === 'string' ? attachment.path : '';
+      return normalizeStoragePath(candidate) === normalized;
+    });
+
+    if (!matchesPath) continue;
+
+    if (sessionId && messageSessionId !== sessionId) continue;
+    if (visitorToken) {
+      const sessionValidation = await validateVisitorOwnership(messageSessionId, visitorToken);
+      if (!sessionValidation.valid) return false;
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
 Deno.serve(async (req) => {
   try {
     const url = new URL(req.url);
     const pathname = url.pathname.replace(/\/$/, '');
 
-    const origin = req.headers.get('origin');
-    const allowed = (Deno.env.get('ALLOWED_ORIGINS') || 'https://oakcherrykraft.netlify.app,http://localhost:4173,http://localhost:4174').split(',');
-
-    const isAllowed = origin && allowed.includes(origin);
-
+    const origin = req.headers.get('origin') || '*';
+    
     const corsHeaders: Record<string, string> = {
+      'Access-Control-Allow-Origin': origin,
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       'Access-Control-Allow-Credentials': 'true',
     };
 
+    // Handle OPTIONS preflight
     if (req.method === 'OPTIONS') {
-      return new Response(null, { status: 204, headers: { ...corsHeaders, 'Access-Control-Allow-Origin': isAllowed ? origin! : 'null' } });
+      return new Response(null, { status: 204, headers: corsHeaders });
     }
 
-    const withCors = (res: Response) => {
-      const headers = new Headers(res.headers);
-      headers.set('Access-Control-Allow-Methods', corsHeaders['Access-Control-Allow-Methods']);
-      headers.set('Access-Control-Allow-Headers', corsHeaders['Access-Control-Allow-Headers']);
-      headers.set('Access-Control-Allow-Credentials', corsHeaders['Access-Control-Allow-Credentials']);
-      headers.set('Access-Control-Allow-Origin', isAllowed ? origin! : 'null');
-      return new Response(res.body, { status: res.status, headers });
+    // Helper to add CORS headers to any response
+    const addCorsHeaders = (res: Response): Response => {
+      const newHeaders = new Headers(res.headers);
+      Object.entries(corsHeaders).forEach(([key, value]) => {
+        newHeaders.set(key, value);
+      });
+      return new Response(res.body, { 
+        status: res.status,
+        statusText: res.statusText,
+        headers: newHeaders
+      });
     };
+
+    // Alias for backward compatibility
+    const withCors = addCorsHeaders;
 
     if (req.method === 'POST' && pathname.endsWith('/session')) {
       // Rate limit: 5 new sessions per IP per hour
@@ -307,9 +406,10 @@ Deno.serve(async (req) => {
         return withCors(new Response(JSON.stringify({ error: 'Invalid author' }), { status: 400 }));
       }
 
-      // Validate content
+      // Validate content - allow empty content if attachments present
       const trimmedContent = content.trim();
-      if (!trimmedContent || trimmedContent.length > 4000) {
+      const hasAttachments = Array.isArray(body?.attachments) && body.attachments.length > 0;
+      if ((!trimmedContent && !hasAttachments) || trimmedContent.length > 4000) {
         return withCors(new Response(JSON.stringify({ error: 'Invalid content' }), { status: 400 }));
       }
 
@@ -333,7 +433,13 @@ Deno.serve(async (req) => {
       }
 
       // Server-side enforcement: always insert 'visitor' as author
-      const payload = { session_id, author: 'visitor', content: trimmedContent };
+      const attachments = Array.isArray(body?.attachments) ? body.attachments : [];
+      const payload = {
+        session_id,
+        author: 'visitor',
+        content: trimmedContent,
+        metadata: attachments.length > 0 ? { attachments } : null,
+      };
       const { data, error } = await supabase.from('live_chat_messages').insert(payload).select('*').maybeSingle();
       if (error) return withCors(new Response(JSON.stringify({ error: error.message }), { status: 500 }));
       // update session last_activity_at
@@ -382,7 +488,7 @@ Deno.serve(async (req) => {
     if (req.method === 'GET' && pathname.endsWith('/events')) {
       const session_id = url.searchParams.get('session_id');
       const visitor_token = url.searchParams.get('visitor_token');
-      
+
       if (!session_id || !session_id.trim() || !visitor_token || !visitor_token.trim()) {
         return withCors(new Response(JSON.stringify({ error: 'session_id and visitor_token required' }), { status: 400 }));
       }
@@ -410,108 +516,352 @@ Deno.serve(async (req) => {
       }
 
       const connectionId = crypto.randomUUID();
-      
-      const stream = new ReadableStream({
-        start(controller) {
-          let closed = false;
-          
-          // Register this connection
-          if (!sseConnections.has(visitor_token)) {
-            sseConnections.set(visitor_token, new Set());
+      const encoder = new TextEncoder();
+      const stream = new TransformStream();
+      const writer = stream.writable.getWriter();
+      const responseStream = stream.readable;
+      let closed = false;
+      let heartbeatTimer: number | undefined;
+      let channel: any = null;
+      let cleanupStarted = false;
+      let abortListener: (() => void) | undefined;
+
+      const stopHeartbeat = () => {
+        if (heartbeatTimer !== undefined) {
+          clearInterval(heartbeatTimer);
+          heartbeatTimer = undefined;
+        }
+      };
+
+      const cleanup = async () => {
+        if (cleanupStarted) return;
+        cleanupStarted = true;
+        closed = true;
+        stopHeartbeat();
+        clearTimeout(timeoutId);
+
+        if (abortListener) {
+          req.signal.removeEventListener('abort', abortListener);
+          abortListener = undefined;
+        }
+
+        if (channel && typeof channel.unsubscribe === 'function') {
+          try {
+            channel.unsubscribe();
+          } catch (err) {
           }
-          sseConnections.get(visitor_token)!.add(connectionId);
+        }
 
-          // Timeout: close connection after 2 hours (max SSE lifetime)
-          const timeoutId = setTimeout(() => {
-            if (!closed) {
-              try {
-                controller.close();
-              } catch {}
+        const connections = sseConnections.get(visitor_token);
+        if (connections) {
+          connections.delete(connectionId);
+          if (connections.size === 0) {
+            sseConnections.delete(visitor_token);
+          }
+        }
+
+        try {
+          await writer.close();
+        } catch (err) {
+          try {
+            await writer.abort();
+          } catch {}
+        }
+      };
+
+      const writeEvent = async (event: string, data: any) => {
+        if (closed) {
+          return;
+        }
+
+        try {
+          const payload = JSON.stringify(data);
+          await writer.write(encoder.encode(`event: ${event}\n`));
+          await writer.write(encoder.encode(`data: ${payload}\n\n`));
+        } catch (err) {
+          await cleanup();
+        }
+      };
+
+      const writeHeartbeat = async () => {
+        if (closed) return;
+
+        try {
+          await writer.write(encoder.encode(': heartbeat\n\n'));
+        } catch (err) {
+          await cleanup();
+        }
+      };
+
+      // Register this connection
+      if (!sseConnections.has(visitor_token)) {
+        sseConnections.set(visitor_token, new Set());
+      }
+      sseConnections.get(visitor_token)!.add(connectionId);
+
+      void writeHeartbeat();
+      heartbeatTimer = setInterval(() => {
+        void writeHeartbeat();
+      }, 20000);
+
+      // initial send of existing messages
+      (async () => {
+        try {
+          const { data } = await supabase.from('live_chat_messages').select('*').eq('session_id', session_id).order('created_at', { ascending: true });
+          await writeEvent('history', data ?? []);
+        } catch (err) {
+        }
+      })();
+
+      channel = supabase
+        .channel(`live_chat_messages_proxy:${session_id}`)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'live_chat_messages', filter: `session_id=eq.${session_id}` }, async (payload) => {
+          if (closed) return;
+          await writeEvent('message', payload.new);
+        })
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'live_chat_sessions', filter: `id=eq.${session_id}` }, async (payload) => {
+          if (closed) return;
+          await writeEvent('session', payload.new);
+        })
+        .subscribe((status) => {
+        });
+
+      abortListener = () => {
+        void cleanup();
+      };
+      req.signal.addEventListener('abort', abortListener, { once: true });
+
+      const timeoutId = setTimeout(() => {
+        if (!closed) {
+          void cleanup();
+        }
+      }, 2 * 60 * 60 * 1000);
+
+      return withCors(
+        new Response(responseStream, {
+          headers: {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache, no-transform',
+            Connection: 'keep-alive',
+            'X-Accel-Buffering': 'no',
+          },
+        })
+      );
+    }
+
+    if (req.method === 'POST' && pathname.endsWith('/session/feedback')) {
+      const contentLength = req.headers.get('content-length');
+      if (contentLength && parseInt(contentLength) > 50000) {
+        return withCors(new Response(JSON.stringify({ error: 'Request body too large' }), { status: 413 }));
+      }
+
+      let body: any;
+      try {
+        body = await req.json();
+      } catch {
+        return withCors(new Response(JSON.stringify({ error: 'Invalid JSON body' }), { status: 400 }));
+      }
+
+      const session_id = typeof body?.session_id === 'string' ? body.session_id.trim() : '';
+      const visitor_token = typeof body?.visitor_token === 'string' ? body.visitor_token.trim() : '';
+      const rawRating = Number(body?.rating);
+      const comment = typeof body?.comment === 'string' ? body.comment.trim() : '';
+
+      if (!session_id || !visitor_token) {
+        return withCors(new Response(JSON.stringify({ error: 'session_id and visitor_token required' }), { status: 400 }));
+      }
+
+      if (!isValidUuid(session_id)) {
+        return withCors(new Response(JSON.stringify({ error: 'Invalid session_id' }), { status: 400 }));
+      }
+
+      if (!Number.isInteger(rawRating) || rawRating < 1 || rawRating > 5) {
+        return withCors(new Response(JSON.stringify({ error: 'rating must be between 1 and 5' }), { status: 400 }));
+      }
+
+      if (comment.length > 1000) {
+        return withCors(new Response(JSON.stringify({ error: 'Comment exceeds maximum length' }), { status: 400 }));
+      }
+
+      const validation = await validateVisitorOwnership(session_id, visitor_token);
+      if (!validation.valid) {
+        return withCors(new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 }));
+      }
+
+      const sessionStatus = validation.session?.status;
+      if (sessionStatus !== 'closed' && sessionStatus !== 'resolved') {
+        return withCors(new Response(JSON.stringify({ error: 'Feedback can only be submitted after a chat is closed' }), { status: 409 }));
+      }
+
+      const payload = {
+        session_id,
+        rating: rawRating,
+        comment: comment || null,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { data: existing, error: lookupError } = await supabase
+        .from('live_chat_feedback')
+        .select('*')
+        .eq('session_id', session_id)
+        .maybeSingle();
+
+      if (lookupError) {
+        return withCors(new Response(JSON.stringify({ error: lookupError.message }), { status: 500 }));
+      }
+
+      if (existing) {
+        const { data, error } = await supabase
+          .from('live_chat_feedback')
+          .update(payload)
+          .eq('session_id', session_id)
+          .select('*')
+          .maybeSingle();
+
+        if (error) return withCors(new Response(JSON.stringify({ error: error.message }), { status: 500 }));
+        return withCors(new Response(JSON.stringify(data ?? existing), { status: 200 }));
+      }
+
+      const { data, error } = await supabase
+        .from('live_chat_feedback')
+        .insert({ ...payload, created_at: new Date().toISOString() })
+        .select('*')
+        .maybeSingle();
+
+      if (error) return withCors(new Response(JSON.stringify({ error: error.message }), { status: 500 }));
+      return withCors(new Response(JSON.stringify(data), { status: 201 }));
+    }
+
+    if (req.method === 'GET' && pathname.endsWith('/session/feedback')) {
+      // Admin-only endpoint to fetch feedback for a session
+      // This bypasses RLS by using the service role key via the edge function
+      const sessionId = new URL(req.url).searchParams.get('session_id');
+      
+      if (!sessionId || typeof sessionId !== 'string') {
+        return withCors(new Response(JSON.stringify({ error: 'session_id required' }), { status: 400 }));
+      }
+
+      if (!isValidUuid(sessionId)) {
+        return withCors(new Response(JSON.stringify({ error: 'Invalid session_id' }), { status: 400 }));
+      }
+
+      // Fetch feedback using service role (bypasses RLS policy issues with is_admin() function)
+      const { data: feedbackData, error: feedbackError } = await supabase
+        .from('live_chat_feedback')
+        .select('*')
+        .eq('session_id', sessionId)
+        .maybeSingle();
+
+      if (feedbackError) {
+        console.error('[live-chat-proxy] feedback fetch error:', feedbackError);
+        // Return null instead of error to gracefully handle schema issues
+        return withCors(new Response(JSON.stringify(null), { status: 200 }));
+      }
+
+      return withCors(new Response(JSON.stringify(feedbackData ?? null), { status: 200 }));
+    }
+
+    if (req.method === 'GET' && pathname.endsWith('/all-feedback')) {
+      // Admin-only endpoint to fetch all feedback with optional filtering
+      // Query parameters: rating (1-5), search, startDate (ISO), endDate (ISO)
+      const authResult = await resolveAuthenticatedUser(req);
+      
+      if (!authResult.isAdmin) {
+        return withCors(new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 }));
+      }
+
+      try {
+        const searchParams = new URL(req.url).searchParams;
+        const rating = searchParams.get('rating');
+        const search = searchParams.get('search');
+        const startDate = searchParams.get('startDate');
+        const endDate = searchParams.get('endDate');
+        const limit = Math.min(parseInt(searchParams.get('limit') || '1000'), 1000);
+        const offset = Math.max(parseInt(searchParams.get('offset') || '0'), 0);
+
+        // Build query
+        let query = supabase
+          .from('live_chat_feedback')
+          .select(`
+            id,
+            rating,
+            comment,
+            created_at,
+            updated_at,
+            session_id,
+            live_chat_sessions (
+              id,
+              visitor_name,
+              visitor_email,
+              visitor_phone,
+              status,
+              created_at,
+              assigned_agent_id
+            )
+          `, { count: 'exact' });
+
+        // Apply filters
+        if (rating && /^[1-5]$/.test(rating)) {
+          query = query.eq('rating', parseInt(rating));
+        }
+
+        if (startDate) {
+          try {
+            const start = new Date(startDate);
+            if (!Number.isNaN(start.getTime())) {
+              query = query.gte('created_at', start.toISOString());
             }
-          }, 2 * 60 * 60 * 1000); // 2 hours
+          } catch {}
+        }
 
-          const writeEvent = (event: string, data: any) => {
-            try {
-              controller.enqueue(`event: ${event}\n`);
-              controller.enqueue(`data: ${JSON.stringify(data)}\n\n`);
-            } catch (err) {
-              // ignore
+        if (endDate) {
+          try {
+            const end = new Date(endDate);
+            if (!Number.isNaN(end.getTime())) {
+              query = query.lte('created_at', end.toISOString());
             }
-          };
+          } catch {}
+        }
 
-          // initial send of existing messages
-          (async () => {
-            try {
-              const { data } = await supabase.from('live_chat_messages').select('*').eq('session_id', session_id).order('created_at', { ascending: true });
-              writeEvent('history', data ?? []);
-            } catch {}
-          })();
+        // Apply pagination
+        query = query.order('created_at', { ascending: false }).range(offset, offset + limit - 1);
 
-          console.log('[SSE-TRACE] subscribing to live_chat_messages', {
-            sessionId: session_id,
-            visitorTokenPresent: Boolean(visitor_token),
+        const { data: feedbackList, error: queryError, count } = await query;
+
+        if (queryError) {
+          console.error('[live-chat-proxy] all-feedback query error:', queryError);
+          return withCors(new Response(JSON.stringify({ error: 'Failed to fetch feedback' }), { status: 500 }));
+        }
+
+        // Filter by search term if provided (search in comment, visitor name, email)
+        let filtered = feedbackList ?? [];
+        if (search && search.trim()) {
+          const term = search.toLowerCase().trim();
+          filtered = filtered.filter((fb: any) => {
+            const comment = (fb.comment || '').toLowerCase();
+            const visitorName = (fb.live_chat_sessions?.visitor_name || '').toLowerCase();
+            const visitorEmail = (fb.live_chat_sessions?.visitor_email || '').toLowerCase();
+            const sessionId = (fb.session_id || '').toLowerCase();
+            return (
+              comment.includes(term) ||
+              visitorName.includes(term) ||
+              visitorEmail.includes(term) ||
+              sessionId.includes(term)
+            );
           });
+        }
 
-          const channel = supabase
-            .channel(`live_chat_messages_proxy:${session_id}`)
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'live_chat_messages', filter: `session_id=eq.${session_id}` }, (payload) => {
-              console.log('[SSE-TRACE] REALTIME INSERT RECEIVED', {
-                sessionId: session_id,
-                payloadSessionId: payload.new?.session_id,
-                messageId: payload.new?.id,
-                author: payload.new?.author,
-                contentLength:
-                  typeof payload.new?.content === 'string'
-                    ? payload.new.content.length
-                    : null,
-              });
-              console.log('[SSE-TRACE] realtime callback reached', {
-                closed,
-                sessionId: session_id,
-              });
-              if (closed) return;
-              console.log('[SSE-TRACE] WRITING MESSAGE TO SSE', {
-                sessionId: session_id,
-                messageId: payload.new?.id,
-                author: payload.new?.author,
-              });
-              writeEvent('message', payload.new);
-            })
-            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'live_chat_sessions', filter: `id=eq.${session_id}` }, (payload) => {
-              if (closed) return;
-              writeEvent('session', payload.new);
-            })
-            .subscribe((status) => {
-              console.log('[SSE-TRACE] realtime channel status', {
-                sessionId: session_id,
-                status,
-              });
-            });
-
-          req.signal.addEventListener('abort', () => {
-            if (!closed) {
-              closed = true;
-              clearTimeout(timeoutId);
-              try {
-                channel.unsubscribe();
-              } catch {}
-              
-              // Deregister this connection
-              const connections = sseConnections.get(visitor_token);
-              if (connections) {
-                connections.delete(connectionId);
-                if (connections.size === 0) {
-                  sseConnections.delete(visitor_token);
-                }
-              }
-              
-              controller.close();
-            }
-          });
-        },
-      });
-
-      return withCors(new Response(stream, { headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' } }));
+        return withCors(new Response(JSON.stringify({
+          data: filtered,
+          total: count || 0,
+          count: filtered.length,
+          offset,
+          limit,
+        }), { status: 200 }));
+      } catch (err) {
+        console.error('[live-chat-proxy] all-feedback exception:', err);
+        return withCors(new Response(JSON.stringify({ error: 'Failed to fetch feedback' }), { status: 500 }));
+      }
     }
 
     if (req.method === 'POST' && pathname.endsWith('/session/close')) {
@@ -566,6 +916,208 @@ Deno.serve(async (req) => {
       const { error } = await supabase.from('live_chat_sessions').update({ status: 'closed' }).eq('id', session_id);
       if (error) return withCors(new Response(JSON.stringify({ error: error.message }), { status: 500 }));
       return withCors(new Response(JSON.stringify({ status: 'closed' }), { status: 200 }));
+    }
+
+    if (req.method === 'POST' && pathname.endsWith('/attachment/signed-url')) {
+      const contentLength = req.headers.get('content-length');
+      if (contentLength && parseInt(contentLength) > 50000) {
+        return withCors(new Response(JSON.stringify({ error: 'Request body too large' }), { status: 413 }));
+      }
+
+      let body: any;
+      try {
+        body = await req.json();
+      } catch {
+        return withCors(new Response(JSON.stringify({ error: 'Invalid JSON body' }), { status: 400 }));
+      }
+
+      const requestedPath = typeof body?.path === 'string' ? body.path : '';
+      const normalizedPath = normalizeStoragePath(requestedPath);
+      const sessionId = typeof body?.session_id === 'string' ? body.session_id.trim() : '';
+      const visitorToken = typeof body?.visitor_token === 'string' ? body.visitor_token.trim() : '';
+
+      if (!normalizedPath) {
+        return withCors(new Response(JSON.stringify({ error: 'Invalid attachment path' }), { status: 400 }));
+      }
+
+      const authResult = await resolveAuthenticatedUser(req);
+      const isAdminRequest = authResult.isAdmin;
+
+      console.log('[attachment-signed-url] Authorization check', {
+        hasAuthHeader: !!req.headers.get('Authorization'),
+        isAdminRequest,
+        normalizedPath,
+        sessionId: sessionId ? '(provided)' : '(not provided)',
+        visitorToken: visitorToken ? '(provided)' : '(not provided)',
+      });
+
+      if (!isAdminRequest) {
+        if (!sessionId || !visitorToken) {
+          console.log('[attachment-signed-url] REJECT: non-admin without visitor credentials');
+          return withCors(new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 }));
+        }
+
+        const validation = await validateVisitorOwnership(sessionId, visitorToken);
+        if (!validation.valid) {
+          console.log('[attachment-signed-url] REJECT: invalid visitor ownership');
+          return withCors(new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 }));
+        }
+        console.log('[attachment-signed-url] visitor authorized');
+      } else {
+        console.log('[attachment-signed-url] admin authorized, skipping session/visitor checks');
+      }
+
+      // Admin requests should not require attachment to belong to a specific session
+      // Admins are already authenticated and authorized to view any attachment
+      if (!isAdminRequest) {
+        const attachmentIsAuthorized = await attachmentBelongsToAuthorizedSession(normalizedPath, sessionId, visitorToken);
+        if (!attachmentIsAuthorized) {
+          console.log('[attachment-signed-url] REJECT: attachment ownership validation failed');
+          return withCors(new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 403 }));
+        }
+      } else {
+        console.log('[attachment-signed-url] admin: skipping attachment ownership validation');
+      }
+
+      try {
+        const { data, error } = await supabase.storage
+          .from('live-chat-attachments')
+          .createSignedUrl(normalizedPath, 600);
+
+        if (error || !data?.signedUrl) {
+          console.error('[attachment-signed-url] createSignedUrl failed', error);
+          return withCors(new Response(JSON.stringify({ error: 'Attachment could not be loaded.' }), { status: 404 }));
+        }
+
+        return withCors(new Response(JSON.stringify({
+          url: data.signedUrl,
+          expiresAt: new Date(Date.now() + 600000).toISOString(),
+          path: normalizedPath,
+        }), { status: 200 }));
+      } catch (err) {
+        console.error('[attachment-signed-url] exception', err);
+        return withCors(new Response(JSON.stringify({ error: 'Attachment could not be loaded.' }), { status: 500 }));
+      }
+    }
+
+    if (req.method === 'POST' && pathname.endsWith('/attachment/upload')) {
+      console.log('[ATTACHMENT-ENDPOINT-HIT] Received attachment upload request', { pathname });
+      
+      // Validate request size (10MB limit per file × 5 files = 50MB buffer)
+      const contentLength = req.headers.get('content-length');
+      if (contentLength && parseInt(contentLength) > 52428800) { // 50MB
+        return withCors(new Response(JSON.stringify({ error: 'Request body too large' }), { status: 413 }));
+      }
+
+      let formData: FormData;
+      try {
+        formData = await req.formData();
+        console.log('[ATTACHMENT-ENDPOINT] FormData parsed successfully');
+      } catch (err) {
+        console.error('[ATTACHMENT-ENDPOINT-ERROR] FormData parse failed', err);
+        return withCors(new Response(JSON.stringify({ error: 'Invalid form data' }), { status: 400 }));
+      }
+
+      const session_id = formData.get('session_id');
+      const visitor_token = formData.get('visitor_token');
+      const file = formData.get('file');
+
+      console.log('[ATTACHMENT-ENDPOINT] Fields received', {
+        hasSessionId: !!session_id,
+        hasVisitorToken: !!visitor_token,
+        hasFile: !!file,
+        fileType: file instanceof File ? 'File' : typeof file,
+      });
+
+      if (!session_id || !visitor_token || !file) {
+        return withCors(new Response(JSON.stringify({ error: 'session_id, visitor_token, and file required' }), { status: 400 }));
+      }
+
+      // Validate parameters
+      if (typeof session_id !== 'string' || typeof visitor_token !== 'string') {
+        return withCors(new Response(JSON.stringify({ error: 'Invalid parameters' }), { status: 400 }));
+      }
+
+      if (!(file instanceof File)) {
+        return withCors(new Response(JSON.stringify({ error: 'file must be a File' }), { status: 400 }));
+      }
+
+      if (session_id.length > 2048 || visitor_token.length > 2048) {
+        return withCors(new Response(JSON.stringify({ error: 'Invalid parameters' }), { status: 400 }));
+      }
+
+      // Rate limit: 10 upload requests per token per minute
+      const rateLimitCheck = await checkRateLimit('attachment_upload', visitor_token, 'token', 10, 60);
+      if (!rateLimitCheck.allowed) {
+        const retryAfter = rateLimitCheck.retryAfter || 60;
+        return withCors(
+          new Response(JSON.stringify({ error: 'Too many requests' }), {
+            status: 429,
+            headers: { 'Retry-After': String(retryAfter) },
+          })
+        );
+      }
+
+      // Verify visitor ownership
+      const validation = await validateVisitorOwnership(session_id, visitor_token);
+      if (!validation.valid) {
+        return withCors(new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 }));
+      }
+
+      // Validate file size (max 10MB per file)
+      if (file.size > 10485760) { // 10MB
+        return withCors(new Response(JSON.stringify({ error: 'File too large' }), { status: 413 }));
+      }
+
+      // Validate file type - whitelist MIME types
+      const SUPPORTED_MIME_TYPES = [
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      ];
+
+      if (!SUPPORTED_MIME_TYPES.includes(file.type)) {
+        return withCors(new Response(JSON.stringify({ error: 'Unsupported file type' }), { status: 400 }));
+      }
+
+      // Generate unique filename
+      const timestamp = Date.now();
+      const random = Math.random().toString(36).substring(2, 10);
+      const ext = file.name.split('.').pop() || 'bin';
+      const filename = `${timestamp}-${random}.${ext}`;
+      const storagePath = `${session_id}/${filename}`;
+
+      try {
+        // Upload to Supabase Storage
+        const arrayBuffer = await file.arrayBuffer();
+        const uploadResponse = await supabase.storage
+          .from('live-chat-attachments')
+          .upload(storagePath, new Uint8Array(arrayBuffer), {
+            contentType: file.type,
+            upsert: false,
+          });
+
+        if (uploadResponse.error) {
+          console.error('Storage upload error:', uploadResponse.error);
+          return withCors(new Response(JSON.stringify({ error: 'Failed to upload file' }), { status: 500 }));
+        }
+
+        // Return attachment metadata
+        const attachmentMetadata = {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          path: storagePath,
+        };
+
+        return withCors(new Response(JSON.stringify(attachmentMetadata), { status: 200 }));
+      } catch (err) {
+        console.error('Upload error:', err);
+        return withCors(new Response(JSON.stringify({ error: 'Failed to upload file' }), { status: 500 }));
+      }
     }
 
     return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });

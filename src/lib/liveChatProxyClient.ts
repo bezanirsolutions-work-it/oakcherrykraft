@@ -66,48 +66,15 @@ export function subscribeToSessionEventsProxy(
   const combinedSignal = signal ? AbortSignal.any([signal, controller.signal]) : controller.signal;
 
   const cleanup = () => {
-    console.log('[CHAT-SSE] CLEANUP', { subscriptionId, sessionId, reason: 'cleanup-called' });
     controller.abort();
   };
 
   void (async () => {
-    console.info('[live-chat-events] connecting', {
-      sessionId,
-      url: requestUrl,
-      contentType: 'text/event-stream',
-    });
-    console.log('[CHAT-SSE] SUBSCRIBE', { subscriptionId, sessionId });
-    console.info('[SESSION-TRACE][SSE-URL]', {
-      activeSessionId: sessionId,
-      visitorToken,
-      subscriptionUrl: requestUrl,
-    });
-
     try {
       const res = await fetch(requestUrl, { method: 'GET', headers, signal: combinedSignal });
 
-      console.info('[live-chat-events] response', {
-        sessionId,
-        url: requestUrl,
-        status: res.status,
-        contentType: res.headers.get('content-type'),
-      });
-      console.log('[SSE-BROWSER-TRACE] RESPONSE RECEIVED', {
-        sessionId,
-        status: res.status,
-        ok: res.ok,
-        contentType: res.headers.get('content-type'),
-      });
-
       if (!res.ok || !res.body) {
         const reason = `Live chat events request failed with status ${res.status}`;
-        console.warn('[live-chat-events] rejected', {
-          sessionId,
-          url: requestUrl,
-          status: res.status,
-          contentType: res.headers.get('content-type'),
-          reason,
-        });
         throw new Error(reason);
       }
 
@@ -120,17 +87,8 @@ export function subscribeToSessionEventsProxy(
       while (!combinedSignal.aborted) {
         const { value, done } = await reader.read();
         if (done) {
-          console.log('[SSE-BROWSER-TRACE] STREAM CLOSED/ERROR', {
-            sessionId,
-            error: null,
-          });
-          console.log('[CHAT-SSE] CLEANUP', { subscriptionId, sessionId, reason: 'reader-done' });
           break;
         }
-        console.log('[SSE-BROWSER-TRACE] CHUNK RECEIVED', {
-          sessionId,
-          byteLength: value?.byteLength ?? value?.length ?? null,
-        });
         buffer += decoder.decode(value, { stream: true });
 
         let boundary = buffer.indexOf('\n\n');
@@ -148,18 +106,6 @@ export function subscribeToSessionEventsProxy(
               eventData = eventData ? `${eventData}\n${dataLine}` : dataLine;
             }
           }
-
-          console.log('[SSE-BROWSER-TRACE] EVENT PARSED', {
-            sessionId,
-            eventName,
-          });
-          console.log('[CHAT-SSE] PARSED', { subscriptionId, sessionId, eventName });
-          console.info('[live-chat-events] received chunk', {
-            sessionId,
-            eventType: eventName,
-            url: requestUrl,
-          });
-
           if (eventData) {
             try {
               const parsed = JSON.parse(eventData);
@@ -170,37 +116,8 @@ export function subscribeToSessionEventsProxy(
                 (eventName === 'message' || eventName === 'history' || eventName === 'session') &&
                 (parsed && typeof parsed === 'object');
 
-              console.info('[live-chat-events] parsed payload', {
-                sessionId,
-                eventType: eventName,
-                parsedSessionId,
-                parsedAuthor,
-                contentLength,
-                accepted,
-                reason: accepted ? 'recognized event format' : 'rejected event format',
-              });
-              console.info('[SESSION-TRACE][SSE-CLIENT]', {
-                eventName,
-                parsedPayload: parsed,
-                payloadId: parsed?.id ?? null,
-                payloadAuthor: parsed?.author ?? null,
-                payloadSessionId: parsed?.session_id ?? null,
-                payloadContent: parsed?.content ?? null,
-              });
-
               if (accepted) {
                 if (eventName === 'message') {
-                  console.log('[SSE-BROWSER-TRACE] MESSAGE DISPATCH', {
-                    sessionId,
-                    messageId: parsed?.id,
-                    payloadSessionId: parsed?.session_id,
-                    author: parsed?.author,
-                    contentLength:
-                      typeof parsed?.content === 'string'
-                        ? parsed.content.length
-                        : null,
-                  });
-                  console.log('[CHAT-SSE] MESSAGE', { subscriptionId, sessionId, messageId: parsed?.id ?? null, author: parsed?.author ?? null, contentLength: typeof parsed?.content === 'string' ? parsed.content.length : 0 });
                   handlers.onMessage?.(parsed);
                 } else if (eventName === 'history') {
                   handlers.onHistory?.(parsed);
@@ -208,40 +125,17 @@ export function subscribeToSessionEventsProxy(
                   handlers.onSession?.(parsed);
                 }
               } else {
-                console.warn('[live-chat-events] rejected event', {
-                  sessionId,
-                  eventType: eventName,
-                  reason: 'event format or payload not recognized',
-                });
               }
             } catch (err) {
-              console.error('[SSE-BROWSER-TRACE] JSON PARSE ERROR', {
-                sessionId,
-                error: err instanceof Error ? err.message : String(err),
-              });
-              console.warn('[live-chat-events] rejected event', {
-                sessionId,
-                eventType: eventName,
-                reason: err instanceof Error ? err.message : 'JSON parse error',
-              });
               handlers.onError?.(err);
             }
           } else {
-            console.warn('[live-chat-events] rejected event', {
-              sessionId,
-              eventType: eventName,
-              reason: 'missing data payload',
-            });
           }
 
           boundary = buffer.indexOf('\n\n');
         }
       }
     } catch (err) {
-      console.warn('[SSE-BROWSER-TRACE] STREAM_ERROR', {
-        sessionId,
-        err: err instanceof Error ? err.message : String(err),
-      });
       handlers.onError?.(err);
     }
   })();
@@ -257,9 +151,9 @@ export async function fetchSessionByTokenProxy(visitorToken: string) {
   return jsonFetch(`/session?token=${encodeURIComponent(visitorToken)}`, { method: 'GET' });
 }
 
-export async function createMessageProxy(sessionId: string, visitorToken: string, author: string, content: string) {
-  console.log('[CHAT-SEND] SEND START', { sessionId, author, contentLength: content.length });
-  const result = await jsonFetch('/message', { method: 'POST', body: JSON.stringify({ session_id: sessionId, visitor_token: visitorToken, author, content }) });
+export async function createMessageProxy(sessionId: string, visitorToken: string, author: string, content: string, attachments?: Array<{ name: string; type: string; size: number; path: string }>) {
+  console.log('[CHAT-SEND] SEND START', { sessionId, author, contentLength: content.length, attachmentCount: attachments?.length ?? 0 });
+  const result = await jsonFetch('/message', { method: 'POST', body: JSON.stringify({ session_id: sessionId, visitor_token: visitorToken, author, content, attachments }) });
   console.log('[CHAT-SEND] SEND SUCCESS', { sessionId, author, messageId: result?.id ?? null, contentLength: content.length });
   return result;
 }
@@ -270,4 +164,21 @@ export async function fetchMessagesProxy(sessionId: string, visitorToken: string
 
 export async function closeSessionProxy(sessionId: string, visitorToken: string) {
   return jsonFetch('/session/close', { method: 'POST', body: JSON.stringify({ session_id: sessionId, visitor_token: visitorToken }) });
+}
+
+export async function submitSessionFeedbackProxy(
+  sessionId: string,
+  visitorToken: string,
+  rating: number,
+  comment?: string
+) {
+  return jsonFetch('/session/feedback', {
+    method: 'POST',
+    body: JSON.stringify({
+      session_id: sessionId,
+      visitor_token: visitorToken,
+      rating,
+      comment,
+    }),
+  });
 }

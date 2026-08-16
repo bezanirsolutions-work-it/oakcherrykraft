@@ -21,6 +21,8 @@ interface ConversationListProps {
   onFilterChange: (filter: 'pending' | 'active' | 'closed' | 'all') => void;
   loading: boolean;
   connectionState?: 'connected' | 'reconnecting' | 'disconnected';
+  onDeleteAllClosed?: () => void;
+  deleteAllLoading?: boolean;
 }
 
 function formatTime(dateString: string | null): string {
@@ -61,6 +63,8 @@ export function LiveChatConversationList({
   onFilterChange,
   loading,
   connectionState = 'connected',
+  onDeleteAllClosed,
+  deleteAllLoading = false,
 }: ConversationListProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -102,7 +106,7 @@ export function LiveChatConversationList({
 
       {/* Filter */}
       <div className="border-b border-bark/10 px-4 py-3 flex-shrink-0">
-        <div className="flex gap-2">
+        <div className="flex gap-2 mb-2">
           {(['pending', 'active', 'closed', 'all'] as const).map((f) => (
             <button
               key={f}
@@ -117,6 +121,15 @@ export function LiveChatConversationList({
             </button>
           ))}
         </div>
+        {onDeleteAllClosed && (
+          <button
+            onClick={onDeleteAllClosed}
+            disabled={deleteAllLoading}
+            className="w-full text-xs font-medium px-3 py-2 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 disabled:opacity-60 transition"
+          >
+            {deleteAllLoading ? 'Deleting...' : 'Delete All Closed'}
+          </button>
+        )}
       </div>
 
       {/* Conversations List */}

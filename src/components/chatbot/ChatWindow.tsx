@@ -12,6 +12,7 @@ export interface ChatMessageItem {
   author: 'assistant' | 'user';
   content: string;
   actions?: ChatAction[];
+  attachments?: Array<{ name: string; type: string; size: number; path: string }>;
 }
 
 interface ChatWindowProps {
@@ -19,10 +20,18 @@ interface ChatWindowProps {
   isTyping: boolean;
   onClose: () => void;
   onMinimize: () => void;
-  onSend: (message: string) => void;
+  onSend: (message: string, attachments: File[]) => void;
   onQuickAction: (action: string | ChatAction) => void;
   isLiveChatActive?: boolean;
   logoSrc?: string;
+  showFeedbackForm?: boolean;
+  feedbackRating?: number | null;
+  feedbackComment?: string;
+  feedbackSubmitting?: boolean;
+  onFeedbackRatingChange?: (value: number | null) => void;
+  onFeedbackCommentChange?: (value: string) => void;
+  onFeedbackSubmit?: () => void;
+  onFeedbackDismiss?: () => void;
 }
 
 const quickActions = [
@@ -32,7 +41,24 @@ const quickActions = [
   'Speak to Our Team',
 ];
 
-export function ChatWindow({ messages, isTyping, onClose, onMinimize, onSend, onQuickAction, isLiveChatActive, logoSrc }: ChatWindowProps) {
+export function ChatWindow({
+  messages,
+  isTyping,
+  onClose,
+  onMinimize,
+  onSend,
+  onQuickAction,
+  isLiveChatActive,
+  logoSrc,
+  showFeedbackForm = false,
+  feedbackRating = null,
+  feedbackComment = '',
+  feedbackSubmitting = false,
+  onFeedbackRatingChange,
+  onFeedbackCommentChange,
+  onFeedbackSubmit,
+  onFeedbackDismiss,
+}: ChatWindowProps) {
   const [draft, setDraft] = useState('');
   const messageEndRef = useRef<HTMLDivElement | null>(null);
   const messageListRef = useRef<HTMLDivElement | null>(null);
@@ -41,21 +67,15 @@ export function ChatWindow({ messages, isTyping, onClose, onMinimize, onSend, on
   const showQuickActions = messages.length === 0;
 
   useEffect(() => {
-    console.info('[chat-window] render', {
-      messageCount: messages.length,
-      isTyping,
-      latestAuthor: messages[messages.length - 1]?.author ?? null,
-      latestId: messages[messages.length - 1]?.id ?? null,
-    });
     messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  const handleSend = () => {
-    const trimmed = draft.trim();
-    if (!trimmed) {
+  const handleSend = (message: string, attachments: File[]) => {
+    const trimmed = message.trim();
+    if (!trimmed && attachments.length === 0) {
       return;
     }
-    onSend(trimmed);
+    onSend(trimmed, attachments);
     setDraft('');
   };
 
@@ -109,7 +129,7 @@ export function ChatWindow({ messages, isTyping, onClose, onMinimize, onSend, on
           <div className="space-y-3">
             {messages.map((message) => (
               <div key={message.id} className="space-y-3">
-                <ChatMessage author={message.author} content={message.content} />
+                <ChatMessage author={message.author} content={message.content} attachments={message.attachments} />
                 {message.author === 'assistant' && message.actions?.length ? (
                   <div className="grid gap-2 sm:grid-cols-2">
                     {message.actions.map((action) => {
@@ -202,14 +222,77 @@ export function ChatWindow({ messages, isTyping, onClose, onMinimize, onSend, on
           <div ref={messageEndRef} />
         </div>
 
-        <div className="mt-3">
-          <ChatInput
-            value={draft}
-            onChange={setDraft}
-            onSend={handleSend}
-            disabled={isTyping}
-          />
-        </div>
+        {showFeedbackForm ? (
+          <div className="mt-3 rounded-[1.5rem] border border-bark/10 bg-sand/40 p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-bark">How was your experience?</p>
+                <p className="mt-1 text-xs text-bark/60">A quick rating helps us improve.</p>
+              </div>
+              {onFeedbackDismiss ? (
+                <button
+                  type="button"
+                  onClick={onFeedbackDismiss}
+                  className="text-lg leading-none text-bark/60 transition hover:text-bark"
+                  aria-label="Dismiss feedback form"
+                >
+                  ×
+                </button>
+              ) : null}
+            </div>
+
+            <div className="mt-4 flex gap-2">
+              {[1, 2, 3, 4, 5].map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => onFeedbackRatingChange?.(value)}
+                  className={`flex h-10 w-10 items-center justify-center rounded-full border text-sm font-semibold transition ${feedbackRating === value ? 'border-oak-600 bg-oak-600 text-white' : 'border-bark/20 bg-white text-bark hover:border-oak-300'}`}
+                  aria-label={`Rate ${value} out of 5`}
+                >
+                  {value}
+                </button>
+              ))}
+            </div>
+
+            <textarea
+              value={feedbackComment}
+              onChange={(event) => onFeedbackCommentChange?.(event.target.value.slice(0, 1000))}
+              rows={3}
+              placeholder="Optional comments..."
+              className="mt-4 w-full resize-none rounded-xl border border-bark/10 bg-white px-3 py-2 text-sm text-bark placeholder-bark/40 focus:border-oak-600 focus:outline-none focus:ring-2 focus:ring-oak-200"
+            />
+
+            <div className="mt-4 flex justify-end gap-2">
+              {onFeedbackDismiss ? (
+                <button
+                  type="button"
+                  onClick={onFeedbackDismiss}
+                  className="rounded-full border border-bark/20 bg-white px-4 py-2 text-sm text-bark/70 transition hover:bg-sand"
+                >
+                  Skip
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={onFeedbackSubmit}
+                disabled={!feedbackRating || feedbackSubmitting}
+                className="rounded-full bg-oak-600 px-4 py-2 text-sm font-medium text-white transition disabled:cursor-not-allowed disabled:bg-oak-300"
+              >
+                {feedbackSubmitting ? 'Sending...' : 'Submit'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-3">
+            <ChatInput
+              value={draft}
+              onChange={setDraft}
+              onSend={handleSend}
+              disabled={isTyping}
+            />
+          </div>
+        )}
       </div>
     </Card>
   );
