@@ -235,39 +235,40 @@ async function attachmentBelongsToAuthorizedSession(path: string, sessionId?: st
 }
 
 Deno.serve(async (req) => {
+  // Set up CORS headers outside try-catch so they're always available
+  const origin = req.headers.get('origin') || '*';
+  
+  const corsHeaders: Record<string, string> = {
+    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Credentials': 'true',
+  };
+
+  // Helper to add CORS headers to any response
+  const addCorsHeaders = (res: Response): Response => {
+    const newHeaders = new Headers(res.headers);
+    Object.entries(corsHeaders).forEach(([key, value]) => {
+      newHeaders.set(key, value);
+    });
+    return new Response(res.body, { 
+      status: res.status,
+      statusText: res.statusText,
+      headers: newHeaders
+    });
+  };
+
+  // Alias for backward compatibility
+  const withCors = addCorsHeaders;
+
+  // Handle OPTIONS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }
+
   try {
     const url = new URL(req.url);
     const pathname = url.pathname.replace(/\/$/, '');
-
-    const origin = req.headers.get('origin') || '*';
-    
-    const corsHeaders: Record<string, string> = {
-      'Access-Control-Allow-Origin': origin,
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      'Access-Control-Allow-Credentials': 'true',
-    };
-
-    // Handle OPTIONS preflight
-    if (req.method === 'OPTIONS') {
-      return new Response(null, { status: 204, headers: corsHeaders });
-    }
-
-    // Helper to add CORS headers to any response
-    const addCorsHeaders = (res: Response): Response => {
-      const newHeaders = new Headers(res.headers);
-      Object.entries(corsHeaders).forEach(([key, value]) => {
-        newHeaders.set(key, value);
-      });
-      return new Response(res.body, { 
-        status: res.status,
-        statusText: res.statusText,
-        headers: newHeaders
-      });
-    };
-
-    // Alias for backward compatibility
-    const withCors = addCorsHeaders;
 
     if (req.method === 'POST' && pathname.endsWith('/session')) {
       // Rate limit: 5 new sessions per IP per hour
@@ -1120,9 +1121,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });
+    return withCors(new Response(JSON.stringify({ error: 'Not found' }), { status: 404 }));
   } catch (err) {
     console.error(err);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 });
+    return withCors(new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 }));
   }
 });
