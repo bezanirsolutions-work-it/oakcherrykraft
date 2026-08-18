@@ -55,6 +55,16 @@ interface LongTaskData {
   containerType?: string;
 }
 
+interface BodyHeightSample {
+  time: number;
+  scrollHeight: number;
+  clientHeight: number;
+  offsetHeight: number;
+  numImages: number;
+  firstImageHeight: number | null;
+  footerPosition: number | null;
+}
+
 export interface PerfInstrumentationData {
   clsEvents: CLSEvent[];
   footerSamples: Array<{
@@ -64,6 +74,7 @@ export interface PerfInstrumentationData {
     bodyHeight: number;
     contentHeight: number;
   }>;
+  bodyHeightSamples: BodyHeightSample[];
   lcpElement: LCPData | null;
   lcpResource: ResourceTiming | null;
   longTasks: LongTaskData[];
@@ -80,6 +91,7 @@ export interface PerfInstrumentationData {
 const data: PerfInstrumentationData = {
   clsEvents: [],
   footerSamples: [],
+  bodyHeightSamples: [],
   lcpElement: null,
   lcpResource: null,
   longTasks: [],
@@ -93,16 +105,81 @@ const data: PerfInstrumentationData = {
   layoutStateChanges: [],
 };
 
+// Initialize CLS observer IMMEDIATELY when module loads, before main.tsx render
+function observeCLSEarly() {
+  if (!isDev || !('PerformanceObserver' in window)) return;
+
+  try {
+    console.log('[PERF][CLS] Setting up PerformanceObserver EARLY for layout-shift');
+    const observer = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        if (!(entry instanceof (window as any).LayoutShift)) return;
+        const shift = entry as any;
+
+        console.log(`[PERF][CLS] Detected shift at ${performance.now().toFixed(1)}ms: value=${shift.value.toFixed(4)}, hadRecentUserInput=${shift.hadRecentUserInput}`);
+
+        if (shift.hadRecentUserInput) {
+          console.log('[PERF][CLS] Shift ignored (user input)');
+          return;
+        }
+
+        const elements = [];
+        if (shift.sources) {
+          for (const source of shift.sources) {
+            const node = source.node as HTMLElement;
+            if (!node) continue;
+
+            const tag = node.tagName.toLowerCase();
+            const className = node.className || '';
+            const id = node.id || '';
+            const selector = `${tag}${id ? '#' + id : ''}${className ? '.' + className.split(' ')[0] : ''}`;
+
+            const rect = node.getBoundingClientRect();
+            elements.push({
+              selector,
+              tag,
+              class: className,
+              before: { top: rect.top, height: rect.height },
+              after: { top: rect.top, height: rect.height },
+            });
+          }
+        }
+
+        data.clsEvents.push({
+          timestamp: performance.now(),
+          value: shift.value,
+          hadRecentInput: shift.hadRecentUserInput,
+          elements,
+        });
+
+        console.log(
+          `[PERF][CLS] Recorded event at ${performance.now().toFixed(1)}ms value=${shift.value.toFixed(4)} elements=${elements.length}`,
+          elements
+        );
+      }
+    });
+
+    observer.observe({ entryTypes: ['layout-shift'] });
+    console.log('[PERF][CLS] PerformanceObserver ACTIVE at ' + performance.now().toFixed(1) + 'ms');
+  } catch (e) {
+    console.log('[PERF][CLS] Observer setup failed:', e);
+  }
+}
+
+// Call immediately
+observeCLSEarly();
+
 export function initPerfInstrumentation() {
   if (!isDev) return;
 
-  console.log('[PERF] Initializing performance instrumentation');
+  console.log('[PERF] Initializing performance instrumentation at ' + performance.now().toFixed(1) + 'ms');
 
-  // Monitor CLS
-  observeCLS();
+  // CLS observer already initialized above
+  // Monitor body height changes which could cause CLS
+  sampleBodyHeight();
 
-  // Sample footer position
-  sampleFooterPosition();
+  // Sample footer position starting from ~100ms
+  setTimeout(() => sampleFooterPosition(), 100);
 
   // Monitor LCP
   observeLCP();
@@ -178,6 +255,50 @@ function observeCLS() {
   } catch (e) {
     console.log('[PERF][CLS] Observer setup failed:', e);
   }
+}
+
+function sampleBodyHeight() {
+  if (!isDev) return;
+
+  const sample = () => {
+    const body = document.body;
+    const numImages = document.querySelectorAll('img').length;
+    const firstImage = document.querySelector('img');
+    const firstImageHeight = firstImage ? firstImage.getBoundingClientRect().height : null;
+    const footer = document.querySelector('footer');
+    const footerPosition = footer ? footer.getBoundingClientRect().top : null;
+
+    data.bodyHeightSamples.push({
+      time: performance.now(),
+      scrollHeight: body.scrollHeight,
+      clientHeight: body.clientHeight,
+      offsetHeight: body.offsetHeight,
+      numImages,
+      firstImageHeight,
+      footerPosition,
+    });
+
+    // Log significant body height changes
+    if (data.bodyHeightSamples.length > 1) {
+      const prev = data.bodyHeightSamples[data.bodyHeightSamples.length - 2];
+      const curr = data.bodyHeightSamples[data.bodyHeightSamples.length - 1];
+      const heightChanged = Math.abs(curr.scrollHeight - prev.scrollHeight) > 20;
+      const footerMoved = prev.footerPosition && curr.footerPosition && Math.abs(curr.footerPosition - prev.footerPosition) > 10;
+
+      if (heightChanged || footerMoved) {
+        console.log(
+          `[PERF][BODY] CHANGE at ${curr.time.toFixed(1)}ms: scrollHeight ${prev.scrollHeight}→${curr.scrollHeight} (Δ${(curr.scrollHeight - prev.scrollHeight).toFixed(0)}), footer moved ${footerMoved ? 'YES' : 'NO'}`
+        );
+      }
+    }
+  };
+
+  // Sample body height every 50ms for first 8 seconds
+  const sampleInterval = window.setInterval(sample, 50);
+  setTimeout(() => {
+    clearInterval(sampleInterval);
+    console.log(`[PERF][BODY] Sampling complete. Recorded ${data.bodyHeightSamples.length} samples.`);
+  }, 8000);
 }
 
 function sampleFooterPosition() {
