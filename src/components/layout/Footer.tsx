@@ -1,6 +1,7 @@
 import { ArrowUpRight, Facebook, Instagram, Linkedin, Mail, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
+import { recordLayoutStateChange } from '../../lib/perfInstrumentation';
 
 export function Footer() {
   const [newsletterStatus, setNewsletterStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -14,11 +15,13 @@ export function Footer() {
     if (!email || !email.includes('@') || !email.includes('.')) {
       setNewsletterStatus('error');
       setNewsletterMessage('Please enter a valid email address to subscribe.');
+      recordLayoutStateChange('Newsletter error message shown');
       return;
     }
 
     setNewsletterStatus('success');
     setNewsletterMessage('Thanks for subscribing. We will keep you updated with our latest projects and notes.');
+    recordLayoutStateChange('Newsletter success message shown');
     form.reset();
   };
 

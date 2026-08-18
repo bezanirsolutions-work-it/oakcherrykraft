@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { SEO } from '../components/layout/SEO';
-import { motion } from 'framer-motion';
 import { ArrowUpRight, Check, Clock3, Search } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { PageHeader } from '../components/layout/PageHeader';
@@ -9,16 +8,13 @@ import { PageContainer } from '../components/layout/PageContainer';
 import { Button, EmptyState, LoadingState, SectionHeader } from '../components/ui';
 import { getProductImage, normalizeProducts, productSelectColumns, type Product } from '../lib/products';
 import { supabase } from '../lib/supabase';
-
-const fadeIn = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] as const } },
-};
-
-const sectionStagger = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.1, delayChildren: 0.08 } },
-};
+import {
+  recordProductsFetchStart,
+  recordProductsFetchEnd,
+  recordProductsStateUpdate,
+  recordImagesStartLoading,
+  recordImagesFinishedLoading,
+} from '../lib/perfInstrumentation';
 
 const normalizeCategorySlug = (category: string) =>
   category
@@ -58,6 +54,7 @@ export function Products() {
 
   useEffect(() => {
     const fetchProducts = async () => {
+      recordProductsFetchStart();
       setLoading(true);
       setError(null);
 
@@ -77,7 +74,13 @@ export function Products() {
           return normalizeProducts(data);
         });
 
+        recordProductsFetchEnd();
+        recordImagesStartLoading();
         setProducts(data);
+        recordProductsStateUpdate();
+        
+        // Record when images actually finish loading
+        setTimeout(() => recordImagesFinishedLoading(), 5000);
       } catch (fetchError) {
         setError('Unable to load products. Please try again later.');
       } finally {
@@ -185,11 +188,7 @@ export function Products() {
         showBreadcrumb
       />
 
-      <motion.section
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.2 }}
-        variants={fadeIn}
+      <section
         className="grid gap-8 lg:grid-cols-[1fr_0.75fr] lg:items-end lg:gap-16"
       >
         <SectionHeader
@@ -202,13 +201,9 @@ export function Products() {
         <p className="max-w-md text-base leading-8 text-bark/65 lg:pb-1">
           Choose a signature form or use the collection as a starting point for a fully bespoke commission.
         </p>
-      </motion.section>
+      </section>
 
-      <motion.div
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.18 }}
-        variants={sectionStagger}
+      <div
         className="space-y-6"
       >
         <div className="rounded-[1.75rem] border border-bark/10 bg-white p-5 shadow-soft">
@@ -258,11 +253,7 @@ export function Products() {
             }
           />
         ) : (
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.18 }}
-            variants={sectionStagger}
+          <div
             className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
           >
             {filteredProducts.map((product, index) => {
@@ -270,18 +261,16 @@ export function Products() {
               const productSlug = product.slug || product.id;
               const categorySlug = normalizeCategorySlug(product.category || '');
               return (
-                <motion.article
+                <article
                   key={product.id}
-                  variants={fadeIn}
-                  whileHover={{ y: -6 }}
-                  transition={{ duration: 0.25, ease: 'easeOut' }}
-                  className="group overflow-hidden rounded-[1.5rem] border border-bark/10 bg-white shadow-card transition duration-300 hover:shadow-medium"
+                  className="group overflow-hidden rounded-[1.5rem] border border-bark/10 bg-white shadow-card transition duration-300 hover:shadow-medium hover:-translate-y-1"
                 >
                   <div className="relative aspect-[4/3] overflow-hidden bg-surface-strong">
                     <img
                       src={displayImage}
                       alt={product.name ?? ''}
                       loading={index === 0 ? 'eager' : 'lazy'}
+                      fetchPriority={index === 0 ? 'high' : 'auto'}
                       decoding="async"
                       className="h-full w-full object-cover transition duration-700 ease-brand group-hover:scale-105"
                     />
@@ -330,18 +319,14 @@ export function Products() {
                       </div>
                     </div>
                   </div>
-                </motion.article>
+                </article>
               );
             })}
-          </motion.div>
+          </div>
         )}
-      </motion.div>
+      </div>
 
-      <motion.section
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.2 }}
-        variants={fadeIn}
+      <section
         className="rounded-[2rem] bg-sand p-8 sm:p-12 lg:flex lg:items-center lg:justify-between lg:gap-12"
       >
         <div>
@@ -351,7 +336,7 @@ export function Products() {
         <Button asChild className="mt-7 shrink-0 lg:mt-0" icon={<ArrowUpRight size={17} aria-hidden="true" />}>
           <Link to="/contact">Discuss a custom design</Link>
         </Button>
-      </motion.section>
+      </section>
     </PageContainer>
   );
 }
