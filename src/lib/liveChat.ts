@@ -147,12 +147,62 @@ export async function updateLiveChatSessionStatus(sessionId: string, status: Liv
 }
 
 export async function fetchAllLiveChatSessions(status?: LiveChatSessionStatus) {
-  let query = supabase.from('live_chat_sessions').select('*').order('last_activity_at', { ascending: false });
-  if (status) query = query.eq('status', status);
+  const proxyUrl = import.meta.env.VITE_LIVE_CHAT_PROXY_URL;
 
-  const { data, error } = await query;
-  if (error) throw new Error(error.message);
-  return data as LiveChatSession[];
+  try {
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+    console.info('[liveChat] fetchAllLiveChatSessions start', {
+      status: status ?? null,
+      hasProxyUrl: Boolean(proxyUrl),
+      hasSession: Boolean(session),
+      userId: session?.user?.id ?? null,
+      requestPath: proxyUrl ? '/sessions' : null,
+    });
+
+    if (sessionError || !session) {
+      throw new Error('Unauthorized: No active session');
+    }
+
+    if (proxyUrl) {
+      const url = new URL(`${proxyUrl}/sessions`);
+      if (status) url.searchParams.set('status', status);
+
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[liveChat] sessions fetch failed', {
+          status: response.status,
+          statusText: response.statusText,
+          responsePreview: errorText.slice(0, 250),
+        });
+        throw new Error(`Failed to fetch sessions: ${response.status}`);
+      }
+
+      const payload = await response.json();
+      return Array.isArray(payload) ? (payload as LiveChatSession[]) : (Array.isArray(payload?.data) ? (payload.data as LiveChatSession[]) : []);
+    }
+
+    let query = supabase.from('live_chat_sessions').select('*').order('last_activity_at', { ascending: false });
+    if (status) query = query.eq('status', status);
+
+    const { data, error } = await query;
+    if (error) throw new Error(error.message);
+    return data as LiveChatSession[];
+  } catch (err) {
+    console.error('[liveChat] fetchAllLiveChatSessions error', {
+      message: err instanceof Error ? err.message : 'Unknown error',
+      status: status ?? null,
+    });
+    throw err;
+  }
 }
 
 export async function assignAgentToSession(sessionId: string, agentId: string) {

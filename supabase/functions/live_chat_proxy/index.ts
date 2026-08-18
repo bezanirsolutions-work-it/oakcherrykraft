@@ -650,6 +650,39 @@ Deno.serve(async (req) => {
       );
     }
 
+    if (req.method === 'GET' && pathname.endsWith('/sessions')) {
+      const authResult = await resolveAuthenticatedUser(req);
+      console.info('[live-chat-proxy] sessions auth check', {
+        isAdmin: authResult.isAdmin,
+        hasUser: !!authResult.user,
+        error: authResult.error ?? null,
+      });
+
+      if (!authResult.isAdmin) {
+        return withCors(new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 }));
+      }
+
+      const status = url.searchParams.get('status');
+      const allowedStatuses = ['pending', 'active', 'resolved', 'closed'];
+
+      let query = supabase.from('live_chat_sessions').select('*').order('last_activity_at', { ascending: false });
+      if (status && allowedStatuses.includes(status)) {
+        query = query.eq('status', status);
+      }
+
+      const { data, error } = await query;
+      if (error) {
+        console.error('[live-chat-proxy] sessions query error', {
+          message: error.message,
+          code: (error as any).code,
+          details: (error as any).details,
+        });
+        return withCors(new Response(JSON.stringify({ error: 'Failed to fetch sessions' }), { status: 500 }));
+      }
+
+      return withCors(new Response(JSON.stringify(data ?? []), { status: 200 }));
+    }
+
     if (req.method === 'POST' && pathname.endsWith('/session/feedback')) {
       const contentLength = req.headers.get('content-length');
       if (contentLength && parseInt(contentLength) > 50000) {
@@ -765,13 +798,13 @@ Deno.serve(async (req) => {
     if (req.method === 'GET' && pathname.endsWith('/all-feedback')) {
       // Admin-only endpoint to fetch all feedback with optional filtering
       // Query parameters: rating (1-5), search, startDate (ISO), endDate (ISO)
-      console.log('[all-feedback] Handler entered');
-      
+      console.log('[all-feedback] ENTER');
+
       const authResult = await resolveAuthenticatedUser(req);
-      console.log('[all-feedback] Auth result:', { isAdmin: authResult.isAdmin, hasUser: !!authResult.user });
-      
+      console.log('[all-feedback] AUTH_RESULT', { isAdmin: authResult.isAdmin, hasUser: !!authResult.user, error: authResult.error ?? null });
+
       if (!authResult.isAdmin) {
-        console.log('[all-feedback] Request denied: not admin');
+        console.log('[all-feedback] AUTH_DENIED');
         return withCors(new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 }));
       }
 
@@ -784,14 +817,13 @@ Deno.serve(async (req) => {
         const limit = Math.min(parseInt(searchParams.get('limit') || '1000'), 1000);
         const offset = Math.max(parseInt(searchParams.get('offset') || '0'), 0);
 
-        console.log('[all-feedback] Query params:', { rating, search, startDate, endDate, limit, offset });
+        console.log('[all-feedback] QUERY_PARAMS', { rating, search, startDate, endDate, limit, offset });
 
-        // Build query for feedback records
+        console.log('[all-feedback] FEEDBACK_QUERY_START');
         let query = supabase
           .from('live_chat_feedback')
           .select('id, rating, comment, created_at, updated_at, session_id', { count: 'exact' });
 
-        // Apply filters
         if (rating && /^[1-5]$/.test(rating)) {
           query = query.eq('rating', parseInt(rating));
         }
@@ -802,7 +834,9 @@ Deno.serve(async (req) => {
             if (!Number.isNaN(start.getTime())) {
               query = query.gte('created_at', start.toISOString());
             }
-          } catch {}
+          } catch {
+            console.warn('[all-feedback] INVALID_START_DATE', { startDate });
+          }
         }
 
         if (endDate) {
@@ -811,67 +845,105 @@ Deno.serve(async (req) => {
             if (!Number.isNaN(end.getTime())) {
               query = query.lte('created_at', end.toISOString());
             }
-          } catch {}
+          } catch {
+            console.warn('[all-feedback] INVALID_END_DATE', { endDate });
+          }
         }
 
-        // Apply pagination
         query = query.order('created_at', { ascending: false }).range(offset, offset + limit - 1);
 
-        console.log('[all-feedback] Executing database query');
         const { data: feedbackList, error: queryError, count } = await query;
-
         if (queryError) {
-          console.error('[all-feedback] Database query error:', {
+          console.error('[all-feedback] FEEDBACK_QUERY_ERROR', {
             message: queryError.message,
             code: (queryError as any).code,
             details: (queryError as any).details,
             hint: (queryError as any).hint,
           });
-          return withCors(new Response(JSON.stringify({ 
+          return withCors(new Response(JSON.stringify({
             error: 'Failed to fetch feedback',
-            details: `${queryError.message}${(queryError as any).code ? ` (${(queryError as any).code})` : ''}`
+            stage: 'FEEDBACK_QUERY',
+            code: (queryError as any).code ?? 'UNKNOWN',
+            details: (queryError as any).details ?? queryError.message,
+            hint: (queryError as any).hint ?? null,
           }), { status: 500 }));
         }
 
-        console.log('[all-feedback] Query succeeded, records found:', feedbackList?.length ?? 0);
+        console.log('[all-feedback] FEEDBACK_QUERY_SUCCESS', { records: feedbackList?.length ?? 0, total: count ?? 0 });
 
-        // If we have feedback records, fetch the corresponding sessions
         let feedbackWithSessions: any[] = [];
         if (feedbackList && feedbackList.length > 0) {
-          const sessionIds = feedbackList.map(fb => fb.session_id);
-          
-          // Fetch sessions for these session IDs
-          const { data: sessions, error: sessionsError } = await supabase
-            .from('live_chat_sessions')
-            .select('id, visitor_name, visitor_email, visitor_phone, status, created_at, assigned_agent_id')
-            .in('id', sessionIds);
+          const sessionIds = Array.from(new Set(
+            feedbackList
+              .map((fb: any) => (typeof fb.session_id === 'string' ? fb.session_id : null))
+              .filter((id): id is string => Boolean(id))
+          ));
 
-          if (sessionsError) {
-            console.error('[all-feedback] Failed to fetch sessions:', {
-              message: sessionsError.message,
-              code: (sessionsError as any).code,
-            });
+          if (sessionIds.length === 0) {
+            console.log('[all-feedback] SESSION_IDS_EMPTY');
+            feedbackWithSessions = feedbackList.map((fb: any) => ({ ...fb, live_chat_sessions: null }));
+          } else {
+            try {
+              console.log('[all-feedback] SESSION_QUERY_START', { sessionCount: sessionIds.length });
+              const { data: sessions, error: sessionsError } = await supabase
+                .from('live_chat_sessions')
+                .select('id, visitor_name, visitor_email, visitor_phone, status, created_at, assigned_agent_id')
+                .in('id', sessionIds);
+
+              if (sessionsError) {
+                console.error('[all-feedback] SESSION_QUERY_ERROR', {
+                  message: sessionsError.message,
+                  code: (sessionsError as any).code,
+                  details: (sessionsError as any).details,
+                  hint: (sessionsError as any).hint,
+                });
+                return withCors(new Response(JSON.stringify({
+                  error: 'Failed to fetch feedback',
+                  stage: 'SESSION_QUERY',
+                  code: (sessionsError as any).code ?? 'UNKNOWN',
+                  details: (sessionsError as any).details ?? sessionsError.message,
+                  hint: (sessionsError as any).hint ?? null,
+                }), { status: 500 }));
+              }
+
+              console.log('[all-feedback] SESSION_QUERY_SUCCESS', { records: sessions?.length ?? 0 });
+
+              const sessionsMap = new Map();
+              if (sessions) {
+                sessions.forEach((session: any) => {
+                  sessionsMap.set(session.id, session);
+                });
+              }
+
+              console.log('[all-feedback] MERGE_START');
+              feedbackWithSessions = feedbackList.map((fb: any) => ({
+                ...fb,
+                live_chat_sessions: sessionsMap.get(fb.session_id) || null,
+              }));
+              console.log('[all-feedback] MERGE_COMPLETE');
+            } catch (err) {
+              console.error('[all-feedback] SESSION_QUERY_EXCEPTION', {
+                message: err instanceof Error ? err.message : String(err),
+                code: 'EXCEPTION',
+                details: err instanceof Error ? err.stack ?? err.message : String(err),
+                hint: null,
+              });
+              return withCors(new Response(JSON.stringify({
+                error: 'Failed to fetch feedback',
+                stage: 'SESSION_QUERY',
+                code: 'EXCEPTION',
+                details: err instanceof Error ? err.message : String(err),
+                hint: null,
+              }), { status: 500 }));
+            }
           }
-
-          // Create a map of sessions for quick lookup
-          const sessionsMap = new Map();
-          if (sessions) {
-            sessions.forEach(session => {
-              sessionsMap.set(session.id, session);
-            });
-          }
-
-          // Merge feedback with session data
-          feedbackWithSessions = feedbackList.map(fb => ({
-            ...fb,
-            live_chat_sessions: sessionsMap.get(fb.session_id) || null,
-          }));
         }
 
-        // Filter by search term if provided (search in comment, visitor name, email)
         let filtered = feedbackWithSessions;
-        if (search && search.trim()) {
-          const term = search.toLowerCase().trim();
+        const searchTerm = search?.trim();
+        if (searchTerm) {
+          console.log('[all-feedback] SEARCH_FILTER_START', { searchTerm });
+          const term = searchTerm.toLowerCase();
           filtered = filtered.filter((fb: any) => {
             const comment = (fb.comment || '').toLowerCase();
             const visitorName = (fb.live_chat_sessions?.visitor_name || '').toLowerCase();
@@ -884,24 +956,30 @@ Deno.serve(async (req) => {
               sessionId.includes(term)
             );
           });
+          console.log('[all-feedback] SEARCH_FILTER_COMPLETE', { records: filtered.length });
         }
 
-        console.log('[all-feedback] Returning', filtered.length, 'records');
+        console.log('[all-feedback] RESPONSE_READY', { count: filtered.length, total: count ?? 0 });
         return withCors(new Response(JSON.stringify({
           data: filtered,
-          total: count || 0,
+          total: count ?? 0,
           count: filtered.length,
           offset,
           limit,
         }), { status: 200 }));
       } catch (err) {
-        console.error('[all-feedback] Exception:', {
+        console.error('[all-feedback] RESPONSE_EXCEPTION', {
           message: err instanceof Error ? err.message : String(err),
-          stack: err instanceof Error ? err.stack : undefined,
+          code: 'EXCEPTION',
+          details: err instanceof Error ? err.stack ?? err.message : String(err),
+          hint: null,
         });
-        return withCors(new Response(JSON.stringify({ 
+        return withCors(new Response(JSON.stringify({
           error: 'Failed to fetch feedback',
-          details: err instanceof Error ? err.message : String(err)
+          stage: 'RESPONSE_TRANSFORM',
+          code: 'EXCEPTION',
+          details: err instanceof Error ? err.message : String(err),
+          hint: null,
         }), { status: 500 }));
       }
     }

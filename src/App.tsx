@@ -2,8 +2,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { ErrorBoundary, Layout } from './components/layout';
-import { Home } from './pages/Home';
 
+const Home = lazy(() => import('./pages/Home').then(m => ({ default: m.Home })));
 const Login = lazy(() => import('./pages/admin/Login').then(m => ({ default: m.Login })));
 const AdminLayout = lazy(() => import('./components/admin/AdminLayout').then(m => ({ default: m.AdminLayout })));
 const ProtectedRoute = lazy(() => import('./components/admin/ProtectedRoute').then(m => ({ default: m.ProtectedRoute })));

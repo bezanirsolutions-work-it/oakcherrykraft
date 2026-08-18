@@ -71,6 +71,34 @@ export const normalizeProductImageFields = <T extends {
   };
 };
 
+export const getOptimizedSupabaseImageUrl = (
+  src: string,
+  width = 800,
+  height = 600,
+  quality = 80
+): string => {
+  if (!src) return src;
+
+  const trimmed = src.trim();
+  if (!trimmed) return trimmed;
+
+  const storageObjectMatch = trimmed.match(/\/storage\/v1\/object\/public\//i);
+  if (!storageObjectMatch) {
+    return trimmed;
+  }
+
+  try {
+    const renderUrl = new URL(trimmed.replace(/\/storage\/v1\/object\/public\//i, '/storage/v1/render/image/public/'));
+    renderUrl.searchParams.set('width', String(width));
+    renderUrl.searchParams.set('height', String(height));
+    renderUrl.searchParams.set('quality', String(quality));
+    renderUrl.searchParams.set('resize', 'cover');
+    return renderUrl.toString();
+  } catch {
+    return trimmed;
+  }
+};
+
 export const getProductImage = (
   product: Partial<{
     cover_image?: string | null;
@@ -84,7 +112,7 @@ export const getProductImage = (
   for (const source of sources) {
     const normalized = normalizeImageUrl(source);
     if (normalized) {
-      return getSafeImageSrc(normalized, placeholder);
+      return getSafeImageSrc(getOptimizedSupabaseImageUrl(normalized, 800, 600, 80), placeholder);
     }
   }
 

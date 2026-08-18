@@ -1,8 +1,7 @@
-import { AnimatePresence, motion } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { Link, NavLink } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import logoPath from '../../../public/assets/logo/LOGO.png';
+import logoPath from '../../../public/assets/logo/LOGO-mobile.webp';
 
 const links = [
   { label: 'Home', path: '/' },
@@ -52,6 +51,9 @@ export function Navbar() {
             src={logoPath}
             alt="Oak Cherry Kraft logo"
             className="h-11 w-11 rounded-full object-contain shadow-sm transition-all duration-300 ease-brand sm:h-12 sm:w-12"
+            width={48}
+            height={48}
+            decoding="async"
           />
           <div className="flex flex-col leading-tight">
             <span className="text-[0.71rem] font-semibold uppercase tracking-[0.25em] text-bark/90 sm:text-[0.78rem]">
@@ -84,26 +86,21 @@ export function Navbar() {
         </button>
       </div>
 
-      <AnimatePresence>
-        {open ? (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.28, ease: 'easeOut' }}
-            className="overflow-hidden border-t border-bark/10 bg-sand px-4 pb-6 sm:px-8 md:hidden"
-          >
-            <div className="flex flex-col gap-4">{navItems}</div>
-            <Link
-              to="/request-quote"
-              className="btn-base btn-primary mt-4 inline-flex h-11 w-full items-center justify-center px-5 text-sm font-semibold"
-              onClick={() => setOpen(false)}
-            >
-              Request quote
-            </Link>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+      <div
+        className={`overflow-hidden border-t border-bark/10 bg-sand px-4 transition-all duration-300 ease-brand md:hidden ${
+          open ? 'max-h-96 opacity-100 pb-6 sm:px-8' : 'max-h-0 opacity-0 sm:px-8'
+        }`}
+        aria-hidden={!open}
+      >
+        <div className="flex flex-col gap-4">{navItems}</div>
+        <Link
+          to="/request-quote"
+          className="btn-base btn-primary mt-4 inline-flex h-11 w-full items-center justify-center px-5 text-sm font-semibold"
+          onClick={() => setOpen(false)}
+        >
+          Request quote
+        </Link>
+      </div>
     </header>
   );
 }

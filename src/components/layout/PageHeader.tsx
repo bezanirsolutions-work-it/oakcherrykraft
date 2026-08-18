@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 
@@ -19,19 +18,23 @@ export function PageHeader({ title, subtitle, height = 'min-h-[320px] sm:min-h-[
       style={{
         minHeight: height,
         backgroundColor: '#F8F4EE',
-        backgroundImage: `url('/assets/hero/GENERATED.webp')`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
       }}
     >
+      <img
+        src="/assets/hero/GENERATED.webp"
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 h-full w-full object-cover"
+        width={1800}
+        height={900}
+        loading="eager"
+        fetchPriority="high"
+        decoding="async"
+      />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(12,10,8,0.38),rgba(12,10,8,0.16),rgba(12,10,8,0.34))]" aria-hidden="true" />
+
       <div className="relative z-10 mx-auto flex h-full max-w-[1400px] items-center">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="max-w-3xl rounded-[24px] border border-white/15 bg-[rgba(12,10,8,0.2)] p-8 backdrop-blur-[2px] sm:p-10 lg:p-12"
-        >
+        <div className="max-w-3xl rounded-[24px] border border-white/15 bg-[rgba(12,10,8,0.2)] p-8 backdrop-blur-[2px] sm:p-10 lg:p-12">
           {showBreadcrumb ? (
             <nav aria-label="Breadcrumb" className="mb-6 flex flex-wrap items-center gap-2 text-sm text-[#e9dcc8]">
               <Link to="/" className="transition hover:text-white">
@@ -66,26 +69,16 @@ export function PageHeader({ title, subtitle, height = 'min-h-[320px] sm:min-h-[
             </span>
           </div>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-7 max-w-[760px] font-serif text-[2.4rem] leading-[1.04] tracking-[-0.03em] text-white sm:text-[3rem] md:text-[3.5rem] lg:text-[4rem]"
-          >
+          <h1 className="mt-7 max-w-[760px] font-serif text-[2.4rem] leading-[1.04] tracking-[-0.03em] text-white sm:text-[3rem] md:text-[3.5rem] lg:text-[4rem]">
             {title}
-          </motion.h1>
+          </h1>
 
           {subtitle ? (
-            <motion.p
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
-              className="mt-6 max-w-2xl text-base leading-8 text-[#efe2d0] sm:text-lg"
-            >
+            <p className="mt-6 max-w-2xl text-base leading-8 text-[#efe2d0] sm:text-lg">
               {subtitle}
-            </motion.p>
+            </p>
           ) : null}
-        </motion.div>
+        </div>
       </div>
     </section>
   );

@@ -31,7 +31,7 @@ import { getCachedData } from '../lib/cache';
 import { featuredProductSelectColumns, getProductImage, normalizeProducts, type Product } from '../lib/products';
 import { supabase } from '../lib/supabase';
 import { fetchFeaturedProjects, fetchProjectOfMonth, type Project } from '../lib/projects';
-import { Testimonial, useTestimonials } from '../hooks/useTestimonials';
+import type { Testimonial } from '../hooks/useTestimonials';
 
 const reveal = {
   hidden: { opacity: 0, y: 24 },
@@ -52,7 +52,7 @@ const categoryCards = [
   { title: 'Bedroom Furniture', description: 'Quietly luxurious pieces designed around rest, ritual, and lasting comfort.', image: '/assets/bedroom-furniture-cover.webp', pathValue: 'bedroom' },
   { title: 'Office Furniture', description: 'Confident executive desks and storage that make focused work feel elevated.', image: '/assets/office-furniture-cover.webp', pathValue: 'office' },
   { title: 'Kitchen Furniture', description: 'Tailored cabinetry and fitted storage with practical intelligence and a beautiful material presence.', image: '/assets/19.webp', pathValue: 'kitchen' },
-  { title: 'Outdoor Furniture', description: 'Durable outdoor forms for slow mornings, open-air dinners, and generous hosting.', image: '/assets/outdoor-furniture.webp', pathValue: null },
+  { title: 'Outdoor Furniture', description: 'Durable outdoor forms for slow mornings, open-air dinners, and generous hosting.', image: '/assets/outdoor-furniture.webp', pathValue: 'outdoor' },
 ];
 
 const defaultFeaturedProducts = normalizeProducts(products).slice(0, 3);
@@ -142,6 +142,24 @@ function formatStat(value: number) {
   return `${value}+`;
 }
 
+const deferAfterHeroPaint = (callback: () => void) => {
+  const run = () => {
+    if (typeof requestIdleCallback !== 'undefined') {
+      requestIdleCallback(() => callback());
+      return;
+    }
+
+    window.setTimeout(callback, 0);
+  };
+
+  if (typeof requestAnimationFrame !== 'undefined') {
+    requestAnimationFrame(run);
+    return;
+  }
+
+  run();
+};
+
 const testimonials: Testimonial[] = [
   {
     id: 'testimonial-1',
@@ -215,6 +233,8 @@ export function Home() {
   const [projectsError, setProjectsError] = useState<string | null>(null);
 
   useEffect(() => {
+    let mounted = true;
+
     const fetchFeaturedProducts = async () => {
       setIsFeaturedLoading(true);
       setFeaturedError(null);
@@ -231,26 +251,40 @@ export function Home() {
           return normalizeProducts(data);
         });
 
-        const featuredItems = activeProducts.slice(0, 4);
+        if (!mounted) return;
 
+        const featuredItems = activeProducts.slice(0, 4);
         setFeaturedProducts(featuredItems);
       } catch (error) {
+        if (!mounted) return;
         setFeaturedError(error instanceof Error ? error.message : 'Unable to load featured products.');
       } finally {
-        setIsFeaturedLoading(false);
+        if (mounted) {
+          setIsFeaturedLoading(false);
+        }
       }
     };
 
-    fetchFeaturedProducts();
+    deferAfterHeroPaint(() => {
+      void fetchFeaturedProducts();
+    });
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   useEffect(() => {
     let mounted = true;
+
     const loadProjects = async () => {
       setIsProjectsLoading(true);
       setProjectsError(null);
       try {
-        const [featured, projectOfMonthData] = await Promise.all([fetchFeaturedProjects(), fetchProjectOfMonth()]);
+        const [featured, projectOfMonthData] = await Promise.all([
+          fetchFeaturedProjects(),
+          fetchProjectOfMonth(),
+        ]);
         if (mounted) {
           setFeaturedProjects(featured);
           setProjectOfMonth(projectOfMonthData ?? defaultProjectOfMonth);
@@ -265,27 +299,33 @@ export function Home() {
       }
     };
 
-    void loadProjects();
+    deferAfterHeroPaint(() => {
+      if (!mounted) return;
+      void loadProjects();
+    });
+
     return () => {
       mounted = false;
     };
   }, []);
 
   useEffect(() => {
+    let mounted = true;
+
     const loadTrustMetrics = async () => {
       try {
-        const [projectCount, clientCount] = await Promise.all([
-          supabase.from('projects').select('id', { count: 'exact', head: true }),
-          supabase.from('contact_messages').select('id', { count: 'exact', head: true }),
-        ]);
+        const projectCount = await supabase.from('projects').select('id', { count: 'exact', head: true });
 
-        if (projectCount.error || clientCount.error) {
+        if (!mounted) {
           return;
         }
 
+        // Use actual count from database if query succeeds, otherwise use fallback
+        const actualCount = !projectCount.error && projectCount.count != null ? projectCount.count : initialStatistics[0].value;
+
         setTrustMetrics([
-          { label: 'Projects Completed', value: projectCount.count ?? initialStatistics[0].value },
-          { label: 'Happy Clients', value: clientCount.count ?? initialStatistics[1].value },
+          { label: 'Projects Completed', value: actualCount },
+          { label: 'Happy Clients', value: initialStatistics[1].value },
           { label: 'Years Experience', value: initialStatistics[2].value },
           { label: 'States Served', value: initialStatistics[3].value },
         ]);
@@ -294,12 +334,18 @@ export function Home() {
       }
     };
 
-    void loadTrustMetrics();
+    deferAfterHeroPaint(() => {
+      if (!mounted) return;
+      void loadTrustMetrics();
+    });
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const [selectedSwatch, setSelectedSwatch] = useState(materialSwatches[0]);
   const [trustMetrics, setTrustMetrics] = useState(initialStatistics);
-  const { testimonials: loadedTestimonials, loading: isTestimonialsLoading } = useTestimonials();
   const previewImage = useMemo(() => selectedSwatch.previewImage ?? projectOfMonth?.cover_image ?? defaultProjectOfMonth.cover_image ?? '', [selectedSwatch, projectOfMonth?.cover_image]);
 
 const normalizeCategorySlug = (category: string) =>
@@ -398,7 +444,7 @@ const normalizeCategorySlug = (category: string) =>
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-sm font-medium text-bark/70">{product.material || 'Fine wood'}</p>
                     <Button variant="link" size="sm" asChild className="px-0">
-                      <Link to={`/products/${normalizeCategorySlug(product.category ?? '')}/${product.slug ?? product.id}`}>View product</Link>
+                      <Link to={`/products/${normalizeCategorySlug(product.category ?? '')}/${product.slug ?? product.id}`} aria-label={`View ${product.name}`}>View product</Link>
                     </Button>
                   </div>
                 </div>
@@ -524,7 +570,7 @@ const normalizeCategorySlug = (category: string) =>
                       <span className="text-sm font-semibold">{index + 1}</span>
                     </div>
                     <div className="ml-16">
-                      <p className="text-sm uppercase tracking-[0.3em] text-bark/60">Step {index + 1}</p>
+                      <p className="text-sm uppercase tracking-[0.3em] text-bark">Step {index + 1}</p>
                       <h3 className="mt-3 text-xl font-semibold text-bark">{step.title}</h3>
                       <p className="mt-2 text-sm leading-7 text-bark/70">{step.description}</p>
                     </div>
@@ -667,26 +713,8 @@ const normalizeCategorySlug = (category: string) =>
       </FeaturedProjectsSection>
 
       <Suspense fallback={null}>
-        <TestimonialsSection>
-          <SectionHeader
-            eyebrow="Client stories"
-            title="The details people remember."
-            description="Our work is measured not only in finish and form, but in how beautifully it becomes part of everyday life."
-            className="mb-8"
-          />
-          <div className="grid gap-5 lg:grid-cols-3">
-            {(isTestimonialsLoading ? testimonials : loadedTestimonials.length > 0 ? loadedTestimonials : testimonials).slice(0, 3).map((testimonial, index) => (
-              <Card key={testimonial.id ?? `testimonial-${index}`} className="rounded-[1.75rem] border border-bark/10 bg-white p-8 shadow-soft">
-                <p className="text-sm tracking-[0.22em] text-clay" aria-label="Five stars">{Array.from({ length: testimonial.rating ?? 5 }).map(() => '★').join('')}</p>
-                <blockquote className="mt-5 font-display text-2xl leading-snug text-bark">“{testimonial.testimonial}”</blockquote>
-                <div className="mt-6 text-sm leading-7 text-bark/70">
-                  <p className="font-semibold text-bark">{testimonial.name ?? 'Client'}</p>
-                  {testimonial.company ? <p>{testimonial.company}</p> : null}
-                </div>
-              </Card>
-            ))}
-          </div>
-        </TestimonialsSection>
+        <TestimonialsSection />
+                </Suspense>
 
       <section className="section-gap bg-sand/10">
         <div className="container-wide">
@@ -706,7 +734,7 @@ const normalizeCategorySlug = (category: string) =>
                 transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: index * 0.08 }}
                 className="rounded-[1.75rem] border border-bark/10 bg-white p-8 shadow-soft"
               >
-                <p className="text-sm uppercase tracking-[0.3em] text-bark/60">{stat.label}</p>
+                <p className="text-sm uppercase tracking-[0.3em] text-bark">{stat.label}</p>
                 <p className="mt-6 text-5xl font-semibold text-bark">{formatStat(stat.value)}</p>
               </motion.article>
             ))}
@@ -714,7 +742,8 @@ const normalizeCategorySlug = (category: string) =>
         </div>
       </section>
 
-      <CallToActionSection>
+      <Suspense fallback={null}>
+        <CallToActionSection>
         <div className="mx-auto max-w-3xl text-center">
           <SectionTitle
             eyebrow="Your space, elevated"

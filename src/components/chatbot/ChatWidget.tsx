@@ -13,7 +13,7 @@ import {
   submitSessionFeedbackProxy,
 } from '../../lib/liveChatProxyClient';
 import { uploadAttachments } from '../../lib/attachmentClient';
-import chatbotIcon from '../../assets/chatbot-icon.png';
+import chatbotIcon from '../../assets/chatbot-icon-mobile.webp';
 import type { LiveChatMessage } from '../../lib/liveChat';
 
 const MAX_CONVERSATION_MESSAGES = 12;
@@ -813,7 +813,15 @@ export function ChatWidget() {
                   <div className="flex items-center justify-between gap-4 border-b border-bark/10 bg-sand px-4 py-3">
                     <div className="flex items-center gap-3">
                       {chatbotIcon ? (
-                        <img src={chatbotIcon} alt="Oak Cherry Kraft" className="h-10 w-10 rounded-lg object-contain" />
+                        <img
+                          src={chatbotIcon}
+                          alt="Oak Cherry Kraft"
+                          className="h-10 w-10 rounded-lg object-contain"
+                          width={40}
+                          height={40}
+                          loading="lazy"
+                          decoding="async"
+                        />
                       ) : (
                         <div className="flex h-10 w-10 items-center justify-center rounded-[1.25rem] bg-oak-100 text-oak-700 text-lg font-semibold">OC</div>
                       )}
@@ -880,7 +888,15 @@ export function ChatWidget() {
                   title="Restore chat"
                   className="inline-flex items-center gap-3 min-w-[220px] max-w-[360px] rounded-full bg-white/95 border border-bark/10 px-4 py-2 shadow-md hover:shadow-lg focus:outline-none focus-visible:ring-4 focus-visible:ring-bark/20"
                 >
-                  <img src={chatbotIcon} alt="Oak Cherry Kraft" className="h-10 w-10 rounded-md object-contain" />
+                  <img
+                    src={chatbotIcon}
+                    alt="Oak Cherry Kraft"
+                    className="h-10 w-10 rounded-md object-contain"
+                    width={40}
+                    height={40}
+                    loading="lazy"
+                    decoding="async"
+                  />
                   <div className="flex-1 text-left">
                     <div className="text-sm font-semibold text-bark">OAKIES</div>
                     <div className="text-xs text-bark/60">You may have new messages</div>
@@ -906,7 +922,10 @@ export function ChatWidget() {
                     src={chatbotIcon}
                     alt="Oak Cherry Kraft chat assistant"
                     className="relative h-[100px] w-[100px] object-contain sm:h-[108px] sm:w-[108px] md:h-[116px] md:w-[116px] lg:h-[120px] lg:w-[120px] xl:h-[124px] xl:w-[124px]"
-                    loading="eager"
+                    width={124}
+                    height={124}
+                    loading="lazy"
+                    decoding="async"
                   />
                   <span className="pointer-events-none absolute -right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#d7b38d] text-[#2e1d11] shadow-[0_0_0_2px_rgba(255,255,255,0.18)]">
                     <MessageCircle className="h-3 w-3" strokeWidth={2} />

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { type ReactNode } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '../base/Button';
@@ -9,19 +9,27 @@ interface HeroSectionProps {
 }
 
 const easing: [number, number, number, number] = [0.22, 1, 0.36, 1];
-const containerVariants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.18, delayChildren: 0.14 } },
-};
+
+// Static variants - no animation for initial paint
 const item = {
-  hidden: { opacity: 0, y: 18 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: easing } },
+  hidden: { opacity: 1, y: 0 },
+  visible: { opacity: 1, y: 0 },
 };
 
 export function HeroSection({ children: _children }: HeroSectionProps) {
+  const [animationReady, setAnimationReady] = useState(false);
+
+  // Defer animations until after hero is painted
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      setAnimationReady(true);
+    });
+    return () => cancelAnimationFrame(id);
+  }, []);
+
   return (
     <section
-      className="relative overflow-hidden text-[#2E241C] w-full px-0 md:px-[60px] min-h-[90vh] md:min-h-[95vh] lg:min-h-[100vh] bg-[url('/assets/hero/GENERATED.webp')] bg-cover bg-center bg-no-repeat bg-[length:120%] lg:bg-[length:140%] lg:bg-[position:100%_50%]"
+      className="relative overflow-hidden text-[#2E241C] w-full px-3 sm:px-0 md:px-[60px] min-h-[90vh] md:min-h-[95vh] lg:min-h-[100vh] bg-[url('/assets/hero/GENERATED.webp')] bg-cover bg-center bg-no-repeat bg-[length:120%] lg:bg-[length:140%] lg:bg-[position:100%_50%]"
       style={{ backgroundColor: '#F8F4EE' }}
     >
       {/* Absolute image for precise large-screen placement (keeps bg as fallback on smaller screens) */}
@@ -31,12 +39,17 @@ export function HeroSection({ children: _children }: HeroSectionProps) {
         aria-hidden="true"
         className="pointer-events-none hidden lg:block absolute top-0 bottom-0 right-[-300px] w-[150%] object-cover -z-20"
         style={{ transform: 'scale(0.92) scaleX(-1)' }}
+        width={1536}
+        height={1024}
+        loading="eager"
+        fetchPriority="high"
+        decoding="async"
       />
       <motion.div
         className="pointer-events-none absolute inset-y-0 z-0 h-full hero-bg"
         initial={{ opacity: 0, x: 0 }}
-        animate={{ opacity: 1, x: [0, 10, 0] }}
-        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+        animate={animationReady ? { opacity: 1, x: [0, 10, 0] } : { opacity: 1, x: 0 }}
+        transition={animationReady ? { duration: 8, repeat: Infinity, ease: 'easeInOut' } : {}}
         style={{
           left: '0%',
           right: '0%',
@@ -49,7 +62,6 @@ export function HeroSection({ children: _children }: HeroSectionProps) {
           backgroundRepeat: 'no-repeat',
           maskImage: 'linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.12) 10%, rgba(0,0,0,0.7) 38%, rgba(0,0,0,1) 100%)',
           WebkitMaskImage: 'linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.12) 10%, rgba(0,0,0,0.7) 38%, rgba(0,0,0,1) 100%)',
-          filter: 'drop-shadow(0 32px 88px rgba(0,0,0,0.18))',
         }}
       />
 
@@ -61,11 +73,7 @@ export function HeroSection({ children: _children }: HeroSectionProps) {
         <div className="w-full mx-auto px-0 lg:max-w-[960px]">
         {/* Desktop: centered hero card with equal left/right margins */}
         <div className="mx-auto w-full px-0 sm:px-0 lg:max-w-[960px]">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={containerVariants}
+          <div
             className="relative z-10 mx-auto w-full max-w-[min(92%,420px)] rounded-[20px] bg-[rgba(248,244,238,0.65)] p-6 backdrop-blur-sm sm:max-w-[740px] sm:p-10 md:p-12 lg:-mt-14 lg:max-w-[820px] lg:rounded-[28px] lg:border lg:border-white/40 lg:bg-[rgba(248,244,238,0.65)] lg:backdrop-blur-[16px] lg:shadow-[0_24px_80px_rgba(0,0,0,0.12)] lg:p-12"
           >
             <motion.div variants={item} className="inline-flex items-center gap-4">
@@ -89,7 +97,7 @@ export function HeroSection({ children: _children }: HeroSectionProps) {
             <motion.div variants={item} className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center lg:mt-14 lg:justify-start lg:gap-6">
               <motion.div whileHover={{ y: -2 }} className="w-full sm:w-auto">
                 <Button asChild className="w-full sm:w-auto rounded-full bg-[#2E241C] px-8 py-4 text-sm font-semibold text-[#F8F4EE] shadow-lg shadow-[#00000014] transition duration-300 hover:-translate-y-1 hover:shadow-2xl">
-                  <Link to="/request-quote" className="inline-flex items-center gap-3">
+                  <Link to="/configuration-selector" className="inline-flex items-center gap-3">
                     Design Your Furniture
                     <ArrowRight className="h-4 w-4" />
                   </Link>
@@ -102,7 +110,7 @@ export function HeroSection({ children: _children }: HeroSectionProps) {
                 </Button>
               </motion.div>
             </motion.div>
-          </motion.div>
+          </div>
 
           {/* Right column: reserved for artwork (leave empty) */}
           <div className="hidden lg:block relative px-4 sm:px-0 mt-6">
@@ -116,8 +124,7 @@ export function HeroSection({ children: _children }: HeroSectionProps) {
     </div>
 
       {/* Feature cards: one full-width row on desktop, two-by-two on tablet, stacked on mobile */}
-      <motion.div
-        variants={item}
+      <div
         className="relative z-10 -mt-8 mx-auto flex w-full max-w-[1800px] flex-col gap-4 px-4 sm:px-[60px] md:grid md:grid-cols-2 md:gap-5 lg:flex lg:flex-row lg:gap-5 lg:justify-center lg:px-0 xl:w-[min(92%,1320px)]"
       >
           {[
@@ -139,7 +146,7 @@ export function HeroSection({ children: _children }: HeroSectionProps) {
             </div>
           </div>
         ))}
-      </motion.div>
+      </div>
 
     </section>
   );

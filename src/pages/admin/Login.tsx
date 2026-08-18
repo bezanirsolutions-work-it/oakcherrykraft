@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Button } from '../../components/ui/Button';
@@ -9,6 +10,7 @@ const getAdminRole = async (userId: string) => getProfileRole(userId);
 export function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -86,14 +88,25 @@ export function Login() {
             </div>
             <div>
               <label htmlFor="admin-password" className="block text-sm font-medium text-bark">Password</label>
-              <input
-                id="admin-password"
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                required
-                className="mt-3 w-full rounded-[1.5rem] border border-bark/10 bg-sand px-4 py-3 text-base text-bark outline-none transition focus:border-oak-500 focus:ring-4 focus:ring-oak-100"
-              />
+              <div className="relative mt-3">
+                <input
+                  id="admin-password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  required
+                  className="w-full rounded-[1.5rem] border border-bark/10 bg-sand px-4 py-3 pr-12 text-base text-bark outline-none transition focus:border-oak-500 focus:ring-4 focus:ring-oak-100"
+                />
+                <button
+                  type="button"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-pressed={showPassword}
+                  onClick={() => setShowPassword((current) => !current)}
+                  className="absolute inset-y-0 right-3 flex items-center justify-center rounded-full border border-transparent bg-transparent p-1 text-bark/60 transition hover:text-bark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-oak-200"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" aria-hidden="true" /> : <Eye className="h-5 w-5" aria-hidden="true" />}
+                </button>
+              </div>
             </div>
 
             {error ? <p className="text-sm text-red-600">{error}</p> : null}

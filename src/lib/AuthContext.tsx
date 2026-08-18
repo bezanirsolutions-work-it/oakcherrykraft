@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { supabase } from './supabase';
-import { getProfileRole } from './profile';
 
 interface AuthContextType {
   isAdmin: boolean;
@@ -63,7 +62,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
+        // Dynamically import getProfileRole only when needed
         try {
+          const { getProfileRole } = await import('./profile');
           const role = await getProfileRole(userData.user.id);
           const resolvedRole = role ?? (userData.user as { user_metadata?: { role?: string }; app_metadata?: { role?: string }; email?: string | null }).user_metadata?.role ?? (userData.user as { user_metadata?: { role?: string }; app_metadata?: { role?: string }; email?: string | null }).app_metadata?.role;
           const userEmail = (userData.user as { email?: string | null }).email ?? null;
