@@ -5,11 +5,8 @@ import { Link } from 'react-router-dom';
 import {
   ArrowUpRight,
   ChevronRight,
-  Leaf,
   MapPin,
   Ruler,
-  ShieldCheck,
-  Sparkles,
   Truck,
   Hammer,
   CheckCircle2,
@@ -47,12 +44,12 @@ const MotionLink = motion(Link);
 const founderPortrait = new URL('../../ADE\'s.jpeg', import.meta.url).href;
 
 const categoryCards = [
-  { title: 'Dining Furniture', description: 'Sculptural centrepieces made for long conversations and memorable gatherings.', image: '/assets/hero/intro-picture.webp', pathValue: 'dining' },
-  { title: 'Living Room Furniture', description: 'Warm, considered forms that bring depth and ease to everyday living.', image: '/assets/living-room-cover.webp', pathValue: 'living-room' },
-  { title: 'Bedroom Furniture', description: 'Quietly luxurious pieces designed around rest, ritual, and lasting comfort.', image: '/assets/bedroom-furniture-cover.webp', pathValue: 'bedroom' },
-  { title: 'Office Furniture', description: 'Confident executive desks and storage that make focused work feel elevated.', image: '/assets/office-furniture-cover.webp', pathValue: 'office' },
-  { title: 'Kitchen Furniture', description: 'Tailored cabinetry and fitted storage with practical intelligence and a beautiful material presence.', image: '/assets/19.webp', pathValue: 'kitchen' },
-  { title: 'Outdoor Furniture', description: 'Durable outdoor forms for slow mornings, open-air dinners, and generous hosting.', image: '/assets/outdoor-furniture.webp', pathValue: 'outdoor' },
+  { title: 'Dining Furniture', description: 'Made for gathering.', image: '/assets/hero/intro-picture.webp', pathValue: 'dining' },
+  { title: 'Living Room Furniture', description: 'Designed for everyday comfort.', image: '/assets/living-room-cover.webp', pathValue: 'living-room' },
+  { title: 'Bedroom Furniture', description: 'Crafted for rest and retreat.', image: '/assets/bedroom-furniture-cover.webp', pathValue: 'bedroom' },
+  { title: 'Office Furniture', description: 'Designed for focused work.', image: '/assets/office-furniture-cover.webp', pathValue: 'office' },
+  { title: 'Kitchen Furniture', description: 'Beautifully practical storage and cabinetry.', image: '/assets/19.webp', pathValue: 'kitchen' },
+  { title: 'Outdoor Furniture', description: 'Made for open-air living.', image: '/assets/outdoor-furniture.webp', pathValue: 'outdoor' },
 ];
 
 const defaultFeaturedProducts = normalizeProducts(products).slice(0, 3);
@@ -79,68 +76,28 @@ const defaultProjectOfMonth: Project = {
   updated_at: '',
 };
 
-const materialSwatches = [
-  { name: 'Mahogany', description: 'Rich, warm undertones with deep luxury.', color: '#5b2b1e', previewImage: '/assets/19.webp' },
-  { name: 'Walnut', description: 'Soft brown depth with velvety grain.', color: '#4a2b1d', previewImage: '/assets/living-room-cover.webp' },
-  { name: 'Oak', description: 'Timeless golden warmth with crisp character.', color: '#aa7f57', previewImage: '/assets/hero/intro-picture.webp' },
-  { name: 'Teak', description: 'Warm amber glow with durable appeal.', color: '#8f6236', previewImage: '/assets/outdoor-furniture.webp' },
-  { name: 'Ebony', description: 'Bold dark finish with dramatic presence.', color: '#18120e' },
-  { name: 'White Ash', description: 'Creamy neutral tone with subtle texture.', color: '#d9c9b1' },
-  { name: 'Beeswax', description: 'Soft sheen and gentle honey warmth.', color: '#c79c50' },
-  { name: 'Natural Oil', description: 'Matte richness that reveals grain beautifully.', color: '#b89a72' },
-  { name: 'Resin Finish', description: 'Smooth polished surface with glass-like depth.', color: '#8e6a52' },
-  { name: 'Rough Wood Finish', description: 'Textured surface with tactile natural character.', color: '#b9a083' },
-];
-
 const projectTimeline = [
   {
-    title: 'Measurements',
-    description: 'Detailed site dimensions ensure a precise fit.',
+    title: 'Understand',
+    description: 'We listen to your requirements, space, and vision.',
     Icon: Ruler,
   },
   {
-    title: 'Design Approval',
-    description: 'Review drawings and confirm the final direction.',
+    title: 'Design',
+    description: 'We develop the design, dimensions, and material direction.',
     Icon: CheckCircle2,
   },
   {
-    title: 'Material Selection',
-    description: 'Choose premium timbers, finishes, and detailing.',
-    Icon: Leaf,
-  },
-  {
-    title: 'Craftsmanship',
-    description: 'Skilled joinery and finishing brings the design to life.',
+    title: 'Craft',
+    description: 'Our craftsmen bring the approved design to life.',
     Icon: Hammer,
   },
   {
-    title: 'Quality Inspection',
-    description: 'Final checks ensure every detail meets our standards.',
-    Icon: ShieldCheck,
-  },
-  {
-    title: 'Delivery & Installation',
-    description: 'Careful delivery and final installation at your site.',
+    title: 'Deliver',
+    description: 'We inspect, deliver, and install the finished piece.',
     Icon: Truck,
   },
 ];
-
-const initialStatistics = [
-  { label: 'Projects Completed', value: 100 },
-  { label: 'Happy Clients', value: 100 },
-  { label: 'Years Experience', value: 3 },
-  { label: 'States Served', value: 11 },
-];
-
-const founderValues = [
-  { title: 'Craftsmanship', Icon: Sparkles },
-  { title: 'Quality Assurance', Icon: ShieldCheck },
-  { title: 'Thoughtful Design', Icon: Leaf },
-];
-
-function formatStat(value: number) {
-  return `${value}+`;
-}
 
 const deferAfterHeroPaint = (callback: () => void) => {
   const run = () => {
@@ -253,7 +210,7 @@ export function Home() {
 
         if (!mounted) return;
 
-        const featuredItems = activeProducts.slice(0, 4);
+        const featuredItems = activeProducts.slice(0, 3);
         setFeaturedProducts(featuredItems);
       } catch (error) {
         if (!mounted) return;
@@ -308,45 +265,6 @@ export function Home() {
       mounted = false;
     };
   }, []);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const loadTrustMetrics = async () => {
-      try {
-        const projectCount = await supabase.from('projects').select('id', { count: 'exact', head: true });
-
-        if (!mounted) {
-          return;
-        }
-
-        // Use actual count from database if query succeeds, otherwise use fallback
-        const actualCount = !projectCount.error && projectCount.count != null ? projectCount.count : initialStatistics[0].value;
-
-        setTrustMetrics([
-          { label: 'Projects Completed', value: actualCount },
-          { label: 'Happy Clients', value: initialStatistics[1].value },
-          { label: 'Years Experience', value: initialStatistics[2].value },
-          { label: 'States Served', value: initialStatistics[3].value },
-        ]);
-      } catch {
-        // keep fallback values
-      }
-    };
-
-    deferAfterHeroPaint(() => {
-      if (!mounted) return;
-      void loadTrustMetrics();
-    });
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  const [selectedSwatch, setSelectedSwatch] = useState(materialSwatches[0]);
-  const [trustMetrics, setTrustMetrics] = useState(initialStatistics);
-  const previewImage = useMemo(() => selectedSwatch.previewImage ?? projectOfMonth?.cover_image ?? defaultProjectOfMonth.cover_image ?? '', [selectedSwatch, projectOfMonth?.cover_image]);
 
 const normalizeCategorySlug = (category: string) =>
   category
@@ -497,58 +415,7 @@ const normalizeCategorySlug = (category: string) =>
         </section>
       ) : null}
 
-      <section className="section-gap">
-        <div className="container-wide">
-          <div className="grid gap-10 xl:grid-cols-[0.9fr_1.1fr] xl:items-start">
-            <div className="space-y-6">
-              <SectionHeader
-                eyebrow="Choose your finish"
-                title="Material Swatches"
-                description="Explore premium timber and finish options with subtle texture inspiration for your bespoke furniture project."
-                className="max-w-3xl"
-              />
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-                {materialSwatches.map((swatch) => (
-                  <button
-                    key={swatch.name}
-                    type="button"
-                    onMouseEnter={() => setSelectedSwatch(swatch)}
-                    onFocus={() => setSelectedSwatch(swatch)}
-                    className="group rounded-[1.75rem] border border-bark/10 bg-white p-4 text-left shadow-soft transition duration-300 hover:-translate-y-1 hover:border-oak-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-oak-200"
-                  >
-                    <div
-                      aria-hidden="true"
-                      className="h-20 w-20 rounded-full shadow-inner"
-                      style={{ backgroundColor: swatch.color }}
-                    />
-                    <p className="mt-4 font-semibold text-bark">{swatch.name}</p>
-                    <p className="mt-2 text-sm leading-6 text-bark/70">{swatch.description}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
-            <motion.div
-              initial={{ opacity: 0, y: 22 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
-              className="relative overflow-hidden rounded-[2rem] border border-bark/10 bg-sand shadow-soft"
-            >
-              <img
-                src={previewImage}
-                alt={`${selectedSwatch.name} finish preview`}
-                loading="lazy"
-                decoding="async"
-                className="h-full w-full object-cover transition duration-700 ease-brand hover:scale-105"
-              />
-              <div className="absolute inset-x-0 bottom-0 rounded-b-[2rem] bg-gradient-to-t from-bark/90 to-transparent p-6 text-sand">
-                <p className="text-sm uppercase tracking-[0.35em] text-sand/80">Selected finish</p>
-                <p className="mt-2 text-2xl font-semibold">{selectedSwatch.name}</p>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
+
 
       <Suspense fallback={null}>
         <WhyChooseSection>
@@ -608,14 +475,14 @@ const normalizeCategorySlug = (category: string) =>
             >
               <SectionHeader
                 eyebrow="Meet the Founder"
-                title="Crafting Timeless Furniture with Purpose"
-                description="At Oak Cherry Kraft, every piece of furniture is designed with the belief that great craftsmanship creates lasting value. Under the leadership of Adeyemo Rhodes-Vivour, the company is committed to producing bespoke furniture that combines elegance, durability, and functionality."
+                title="Adeyemo Rhodes-Vivour"
+                description="Founder, Oak Cherry Kraft"
                 className="max-w-3xl"
               />
 
               <div className="space-y-4 text-base leading-8 text-bark/75">
-                <p>Every project begins with understanding the client&apos;s vision. From handcrafted dining tables and wardrobes to custom office furniture and complete interior solutions, each piece is thoughtfully designed and carefully crafted to suit the space and lifestyle of its owner.</p>
-                <p>Rather than producing furniture in volume, Oak Cherry Kraft focuses on quality, attention to detail, and personalised service. Every design reflects a commitment to premium materials, expert workmanship, and timeless aesthetics.</p>
+                <p>At Oak Cherry Kraft, we believe great furniture creates lasting value. Led by Adeyemo Rhodes-Vivour, our studio creates bespoke furniture that balances elegance, durability, and functionality.</p>
+                <p>Every project begins with understanding the client&apos;s vision and ends with carefully crafted furniture made specifically for its space.</p>
               </div>
 
               <Card className="h-auto rounded-[1.75rem] border border-bark/10 bg-sand/80 p-6 shadow-soft">
@@ -626,17 +493,6 @@ const normalizeCategorySlug = (category: string) =>
                   <p>Founder, Oak Cherry Kraft</p>
                 </div>
               </Card>
-
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {founderValues.map((value) => (
-                  <Card key={value.title} className="rounded-[1.75rem] border border-bark/10 bg-white p-5 shadow-sm">
-                    <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-oak-100 text-oak-700">
-                      <value.Icon size={20} aria-hidden="true" />
-                    </div>
-                    <p className="mt-3 text-sm font-semibold text-bark">{value.title}</p>
-                  </Card>
-                ))}
-              </div>
             </motion.div>
       </TestimonialsSection>
 
@@ -716,31 +572,7 @@ const normalizeCategorySlug = (category: string) =>
         <TestimonialsSection />
                 </Suspense>
 
-      <section className="section-gap bg-sand/10">
-        <div className="container-wide">
-          <SectionHeader
-            eyebrow="Established excellence"
-            title="Craftsmanship backed by meaningful metrics"
-            description="Subtle, animated statistics that reflect our dedication to quality workmanship, client satisfaction, and long-lasting luxury."
-            className="mb-8 max-w-3xl"
-          />
-          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-            {trustMetrics.map((stat, index) => (
-              <motion.article
-                key={stat.label}
-                initial={{ opacity: 0, y: 22 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.35 }}
-                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: index * 0.08 }}
-                className="rounded-[1.75rem] border border-bark/10 bg-white p-8 shadow-soft"
-              >
-                <p className="text-sm uppercase tracking-[0.3em] text-bark">{stat.label}</p>
-                <p className="mt-6 text-5xl font-semibold text-bark">{formatStat(stat.value)}</p>
-              </motion.article>
-            ))}
-          </div>
-        </div>
-      </section>
+
 
       <Suspense fallback={null}>
         <CallToActionSection>
@@ -757,7 +589,7 @@ const normalizeCategorySlug = (category: string) =>
               <Link to="/request-quote">Get free consultation</Link>
             </Button>
             <Button variant="secondary" size="lg" asChild icon={<ArrowUpRight size={17} aria-hidden="true" />}>
-              <a href="https://wa.me/2340000000000">WhatsApp us</a>
+              <a href="https://wa.me/2348034291245">WhatsApp us</a>
             </Button>
           </div>
         </div>

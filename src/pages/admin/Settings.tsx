@@ -241,7 +241,7 @@ export function Settings() {
       <section className="rounded-[2rem] border border-bark/10 bg-white p-8 shadow-soft">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.35em] text-bark/60">Admin settings</p>
+            <p className="text-sm uppercase tracking-[0.35em] text-bark/70">Admin settings</p>
             <h1 className="mt-3 text-4xl font-semibold tracking-tight text-bark">Studio settings</h1>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-bark/70">
               Update site copy, social links, branding assets, quote defaults, SEO metadata, and maintenance actions.

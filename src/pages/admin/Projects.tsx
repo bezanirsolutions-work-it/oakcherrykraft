@@ -325,7 +325,7 @@ export function Projects() {
       <div className="rounded-[2rem] border border-bark/10 bg-white p-6 shadow-soft">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Projects</p>
+            <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Projects</p>
             <h1 className="mt-2 text-3xl font-semibold text-bark">Project Management</h1>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-bark/70">
               Create, edit, and manage studio projects with gallery, status, and homepage feature controls.
@@ -369,7 +369,7 @@ export function Projects() {
           <div className="rounded-[2rem] border border-bark/10 bg-white p-6 shadow-soft">
             <div className="mb-6 flex items-center justify-between gap-4">
               <div>
-                <p className="text-sm uppercase tracking-[0.35em] text-bark/60">Project list</p>
+                <p className="text-sm uppercase tracking-[0.35em] text-bark/70">Project list</p>
                 <h2 className="mt-2 text-xl font-semibold text-bark">All projects</h2>
               </div>
               <div className="text-sm text-bark/70">{isLoading ? 'Loading…' : `${projects.length} total`}</div>
@@ -398,7 +398,7 @@ export function Projects() {
             <div className="rounded-[2rem] border border-bark/10 bg-white p-6 shadow-soft">
               <div className="mb-6 flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-sm uppercase tracking-[0.35em] text-bark/60">{isEditing ? 'Edit project' : 'New project'}</p>
+                  <p className="text-sm uppercase tracking-[0.35em] text-bark/70">{isEditing ? 'Edit project' : 'New project'}</p>
                   <h2 className="mt-2 text-xl font-semibold text-bark">{isEditing ? selectedProject?.title || 'Editing project' : 'Create a project'}</h2>
                 </div>
                 <div className="text-sm text-bark/70">Last updated {formatDate(selectedProject?.updated_at)}</div>

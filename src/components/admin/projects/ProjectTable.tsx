@@ -32,13 +32,13 @@ export function ProjectTable({ projects, onEdit, onDelete, onView, isLoading }: 
         <table className="min-w-full border-collapse text-left text-sm text-bark">
           <thead className="bg-sand text-xs uppercase tracking-[0.3em] text-bark/70">
             <tr>
-              <th className="px-5 py-4">Cover</th>
-              <th className="px-5 py-4">Project</th>
-              <th className="px-5 py-4">Category</th>
-              <th className="px-5 py-4">Status</th>
-              <th className="px-5 py-4">Featured</th>
-              <th className="px-5 py-4">Updated</th>
-              <th className="px-5 py-4">Actions</th>
+                <th scope="col" className="px-5 py-4">Cover</th>
+                <th scope="col" className="px-5 py-4">Project</th>
+                <th scope="col" className="px-5 py-4">Category</th>
+                <th scope="col" className="px-5 py-4">Status</th>
+                <th scope="col" className="px-5 py-4">Featured</th>
+                <th scope="col" className="px-5 py-4">Updated</th>
+                <th scope="col" className="px-5 py-4">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -56,13 +56,13 @@ export function ProjectTable({ projects, onEdit, onDelete, onView, isLoading }: 
                       {project.cover_image ? (
                         <img src={project.cover_image} alt={project.title} loading="lazy" decoding="async" width="112" height="80" className="h-full w-full object-cover" />
                       ) : (
-                        <div className="flex h-full items-center justify-center text-xs text-bark/50">No cover</div>
+                        <div className="flex h-full items-center justify-center text-xs text-bark/70">No cover</div>
                       )}
                     </div>
                   </td>
                   <td className="px-5 py-4 align-top">
                     <p className="font-semibold text-bark">{project.title}</p>
-                    <p className="text-sm text-bark/60">{project.description}</p>
+                    <p className="text-sm text-bark/70">{project.description}</p>
                   </td>
                   <td className="px-5 py-4 align-top">{project.category}</td>
                   <td className="px-5 py-4 align-top">

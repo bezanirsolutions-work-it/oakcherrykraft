@@ -43,7 +43,7 @@ export function ContactMessageRow({
       <td className="hidden px-4 py-4 text-sm text-bark/70 lg:table-cell">{message.phone || '—'}</td>
       <td className="px-4 py-4 text-sm text-bark/70">{message.subject || 'General'}</td>
       <td className="hidden px-4 py-4 text-sm text-bark/70 md:table-cell">{messagePreview}</td>
-      <td className="whitespace-nowrap px-4 py-4 text-xs text-bark/60">{formatDate(message.created_at)}</td>
+      <td className="whitespace-nowrap px-4 py-4 text-xs text-bark/70">{formatDate(message.created_at)}</td>
       <td className="whitespace-nowrap px-4 py-4">
         <div className="flex items-center gap-2">
           <button

@@ -6,8 +6,7 @@ import logoPath from '../../../public/assets/logo/LOGO-mobile.webp';
 const links = [
   { label: 'Home', path: '/' },
   { label: 'Products', path: '/products' },
-  { label: 'Design Your Furniture', path: '/configuration-selector' },
-  { label: 'Gallery', path: '/projects' },
+  { label: 'Projects', path: '/projects' },
   { label: 'About', path: '/about' },
   { label: 'Contact', path: '/contact' },
 ];
@@ -59,7 +58,7 @@ export function Navbar() {
             <span className="text-[0.71rem] font-semibold uppercase tracking-[0.25em] text-bark/90 sm:text-[0.78rem]">
               Oak Cherry Kraft
             </span>
-            <span className="hidden text-[0.68rem] uppercase tracking-[0.3em] text-bark/60 sm:block">
+            <span className="hidden text-[0.68rem] uppercase tracking-[0.3em] text-bark/70 sm:block">
               Artistry Limited
             </span>
           </div>
@@ -81,16 +80,19 @@ export function Navbar() {
           onClick={() => setOpen((current) => !current)}
           aria-label={open ? 'Close navigation' : 'Open navigation'}
           aria-expanded={open}
+          aria-controls="mobile-navigation"
         >
           {open ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>
 
       <div
+        id="mobile-navigation"
         className={`overflow-hidden border-t border-bark/10 bg-sand px-4 transition-all duration-300 ease-brand md:hidden ${
           open ? 'max-h-96 opacity-100 pb-6 sm:px-8' : 'max-h-0 opacity-0 sm:px-8'
         }`}
         aria-hidden={!open}
+        inert={!open}
       >
         <div className="flex flex-col gap-4">{navItems}</div>
         <Link

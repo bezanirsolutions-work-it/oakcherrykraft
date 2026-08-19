@@ -1,8 +1,9 @@
 import { Copy, Mail, Phone, X } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useId } from 'react';
 import { type ContactMessage } from '../../hooks/useContactMessages';
 import { ContactStatusBadge } from './ContactStatusBadge';
 import { Button } from '../ui/Button';
+import { useDialogFocus } from './useDialogFocus';
 
 interface ContactMessageDetailProps {
   message: ContactMessage;
@@ -22,6 +23,8 @@ export function ContactMessageDetail({
   onDelete,
 }: ContactMessageDetailProps) {
   const [_copiedField, setCopiedField] = useState<string | null>(null);
+  const titleId = useId();
+  const { dialogRef } = useDialogFocus(true, onClose);
 
   const copyToClipboard = async (text: string, field: string) => {
     try {
@@ -46,17 +49,24 @@ export function ContactMessageDetail({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[2rem] border border-bark/10 bg-white shadow-lg">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[2rem] border border-bark/10 bg-white shadow-lg"
+      >
         {/* Header */}
         <div className="sticky top-0 flex items-center justify-between border-b border-bark/10 bg-sand px-6 py-4">
           <div>
-            <h2 className="text-xl font-semibold text-bark">Message Details</h2>
+            <h2 id={titleId} className="text-xl font-semibold text-bark">Message Details</h2>
             <p className="mt-1 text-sm text-bark/70">From {message.name}</p>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close message details"
+            data-dialog-initial-focus
             className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-bark/10 transition hover:bg-bark/5 focus:outline-none focus-visible:ring-4 focus-visible:ring-oak-200"
           >
             <X className="h-5 w-5 text-bark" />
@@ -68,13 +78,13 @@ export function ContactMessageDetail({
           {/* Status and Meta */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-bark/60">Status</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-bark/70">Status</p>
               <div className="mt-2">
                 <ContactStatusBadge status={message.status} />
               </div>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-bark/60">Received</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-bark/70">Received</p>
               <p className="mt-2 text-sm text-bark">{formatDate(message.created_at)}</p>
             </div>
           </div>
@@ -86,7 +96,7 @@ export function ContactMessageDetail({
             <div className="grid gap-4 sm:grid-cols-2">
               {/* Name */}
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-bark/60">Name</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-bark/70">Name</p>
                 <div className="mt-2 flex items-center gap-2">
                   <p className="text-sm text-bark">{message.name}</p>
                   <button
@@ -102,7 +112,7 @@ export function ContactMessageDetail({
 
               {/* Email */}
               <div>
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-bark/60">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-bark/70">
                   <Mail className="h-3 w-3" aria-hidden="true" />
                   <span>Email</span>
                 </div>
@@ -124,7 +134,7 @@ export function ContactMessageDetail({
               {/* Phone */}
               {message.phone && (
                 <div>
-                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-bark/60">
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-bark/70">
                     <Phone className="h-3 w-3" aria-hidden="true" />
                     <span>Phone</span>
                   </div>
@@ -147,7 +157,7 @@ export function ContactMessageDetail({
               {/* Subject */}
               {message.subject && (
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.1em] text-bark/60">Subject</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.1em] text-bark/70">Subject</p>
                   <p className="mt-2 text-sm text-bark">{message.subject}</p>
                 </div>
               )}

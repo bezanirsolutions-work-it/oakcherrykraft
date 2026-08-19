@@ -5,7 +5,7 @@ import { Link, useParams } from 'react-router-dom';
 import { PageHeader } from '../components/layout/PageHeader';
 import { getCachedData } from '../lib/cache';
 import { PageContainer } from '../components/layout/PageContainer';
-import { Button, EmptyState, LoadingState, SectionHeader } from '../components/ui';
+import { Button, EmptyState, LoadingState, SectionHeader, ProductSkeleton } from '../components/ui';
 import { getProductImage, normalizeProducts, productSelectColumns, type Product } from '../lib/products';
 import { supabase } from '../lib/supabase';
 import {
@@ -138,14 +138,6 @@ export function Products() {
 
   const shouldShowCategoryNotFound = !loading && Boolean(activeCategoryFilter) && !selectedCategory;
 
-  if (loading) {
-    return (
-      <PageContainer className="space-y-14 pb-16 sm:space-y-20 sm:pb-20">
-        <LoadingState />
-      </PageContainer>
-    );
-  }
-
   if (error) {
     return (
       <PageContainer className="space-y-14 pb-16 sm:space-y-20 sm:pb-20">
@@ -243,7 +235,9 @@ export function Products() {
           </div>
         </div>
 
-        {filteredProducts.length === 0 ? (
+        {loading ? (
+          <ProductSkeleton count={12} />
+        ) : filteredProducts.length === 0 ? (
           <EmptyState
             title={searchQuery ? 'No products match your search' : 'No products found'}
             description={

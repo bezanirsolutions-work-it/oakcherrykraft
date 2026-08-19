@@ -9,6 +9,7 @@ export * from './IconBox';
 export * from './ImageCarousel';
 export * from './LoadingState';
 export * from './EmptyState';
+export * from './ProductSkeleton';
 export * from './Quote';
 export * from './QuoteForm';
 export * from './SectionContainer';

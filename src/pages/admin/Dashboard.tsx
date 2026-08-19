@@ -173,16 +173,16 @@ export function Dashboard() {
       <section className="rounded-[2rem] border border-bark/10 bg-white p-8 shadow-soft">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.35em] text-bark/60">Hi Ade👋</p>
+            <p className="text-sm uppercase tracking-[0.35em] text-bark/90">Hi Ade👋</p>
             <h1 className="mt-3 text-3xl font-bold tracking-tight text-bark">Hi Ade👋</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-bark/70">
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-bark/90">
               Here&apos;s what&apos;s happening at Oak Cherry Kraft today.
             </p>
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="rounded-[1.5rem] border border-bark/10 bg-sand px-4 py-3 text-sm text-bark">
-              <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Last updated</p>
+              <p className="text-xs uppercase tracking-[0.35em] text-bark/90">Last updated</p>
               <p className="mt-2 font-semibold">{getLastUpdatedText()}</p>
             </div>
             <button
@@ -246,7 +246,7 @@ export function Dashboard() {
               : 'border-bark/10 bg-white'
           }`}
         >
-          <p className="text-sm uppercase tracking-[0.35em] text-bark/60">Live Chat</p>
+          <p className="text-sm uppercase tracking-[0.35em] text-bark/90">Live Chat</p>
           <p className="mt-4 text-lg font-semibold text-bark">Manage customer conversations in real-time.</p>
           <p className="mt-6 text-sm font-medium text-oak-500">Open →</p>
         </Link>
@@ -254,7 +254,7 @@ export function Dashboard() {
           to="/admin/quotes"
           className="rounded-[1.5rem] border border-bark/10 bg-white p-6 text-left transition hover:-translate-y-1 hover:shadow-medium"
         >
-          <p className="text-sm uppercase tracking-[0.35em] text-bark/60">Manage Quotes</p>
+          <p className="text-sm uppercase tracking-[0.35em] text-bark/90">Manage Quotes</p>
           <p className="mt-4 text-lg font-semibold text-bark">View and manage quote submissions.</p>
           <p className="mt-6 text-sm font-medium text-oak-500">Open →</p>
         </Link>
@@ -262,7 +262,7 @@ export function Dashboard() {
           to="/admin/configurator"
           className="rounded-[1.5rem] border border-bark/10 bg-white p-6 text-left transition hover:-translate-y-1 hover:shadow-medium"
         >
-          <p className="text-sm uppercase tracking-[0.35em] text-bark/60">Configurator Requests</p>
+          <p className="text-sm uppercase tracking-[0.35em] text-bark/90">Configurator Requests</p>
           <p className="mt-4 text-lg font-semibold text-bark">Review saved configurator request details.</p>
           <p className="mt-6 text-sm font-medium text-oak-500">Open →</p>
         </Link>
@@ -270,7 +270,7 @@ export function Dashboard() {
           to="/admin/contacts"
           className="rounded-[1.5rem] border border-bark/10 bg-white p-6 text-left transition hover:-translate-y-1 hover:shadow-medium"
         >
-          <p className="text-sm uppercase tracking-[0.35em] text-bark/60">Contact Messages</p>
+          <p className="text-sm uppercase tracking-[0.35em] text-bark/90">Contact Messages</p>
           <p className="mt-4 text-lg font-semibold text-bark">Read recent customer messages.</p>
           <p className="mt-6 text-sm font-medium text-oak-500">Open →</p>
         </Link>
@@ -278,7 +278,7 @@ export function Dashboard() {
           to="/admin/products"
           className="rounded-[1.5rem] border border-bark/10 bg-white p-6 text-left transition hover:-translate-y-1 hover:shadow-medium"
         >
-          <p className="text-sm uppercase tracking-[0.35em] text-bark/60">Products</p>
+          <p className="text-sm uppercase tracking-[0.35em] text-bark/90">Products</p>
           <p className="mt-4 text-lg font-semibold text-bark">Manage the product catalog.</p>
           <p className="mt-6 text-sm font-medium text-oak-500">Open →</p>
         </Link>
@@ -288,7 +288,7 @@ export function Dashboard() {
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <h2 className="text-xl font-semibold text-bark">Recent Activity</h2>
-            <p className="mt-2 text-sm leading-7 text-bark/70">
+            <p className="mt-2 text-sm leading-7 text-bark/90">
               Latest quotes and contact messages from the last five submissions.
             </p>
           </div>
@@ -327,23 +327,23 @@ export function Dashboard() {
             <div className="rounded-[1.75rem] border border-bark/10 bg-sand p-5">
               <div className="mb-5 flex items-center justify-between">
                 <div>
-                  <p className="text-sm uppercase tracking-[0.35em] text-bark/60">Latest quotes</p>
+                  <p className="text-sm uppercase tracking-[0.35em] text-bark/90">Latest quotes</p>
                   <p className="mt-2 text-lg font-semibold text-bark">{quoteRequests.length} items</p>
                 </div>
-                <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-bark/70">
+                <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-bark/90">
                   Quotes
                 </span>
               </div>
 
               {quoteRequests.length === 0 ? (
-                <div className="rounded-[1.5rem] border border-bark/10 bg-white p-6 text-sm text-bark/70">
+                <div className="rounded-[1.5rem] border border-bark/10 bg-white p-6 text-sm text-bark/90">
                   <div className="flex items-center gap-3">
                     <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-oak-100 text-oak-700">
                       <Inbox className="h-5 w-5" />
                     </div>
                     <div>
                       <p className="font-semibold text-bark">No quotes yet</p>
-                      <p className="mt-1 text-sm text-bark/70">You’ll see the latest quote requests here when a customer submits one.</p>
+                      <p className="mt-1 text-sm text-bark/90">You’ll see the latest quote requests here when a customer submits one.</p>
                     </div>
                   </div>
                 </div>
@@ -354,9 +354,9 @@ export function Dashboard() {
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                           <p className="text-base font-semibold text-bark">{request.full_name}</p>
-                          <p className="mt-1 text-sm text-bark/70">Type: {request.project_type ?? 'Not specified'}</p>
+                          <p className="mt-1 text-sm text-bark/90">Type: {request.project_type ?? 'Not specified'}</p>
                         </div>
-                        <p className="text-sm text-bark/60">{formatDate(request.created_at)}</p>
+                        <p className="text-sm text-bark/90">{formatDate(request.created_at)}</p>
                       </div>
                     </div>
                   ))}
@@ -367,23 +367,23 @@ export function Dashboard() {
             <div className="rounded-[1.75rem] border border-bark/10 bg-sand p-5">
               <div className="mb-5 flex items-center justify-between">
                 <div>
-                  <p className="text-sm uppercase tracking-[0.35em] text-bark/60">Latest messages</p>
+                  <p className="text-sm uppercase tracking-[0.35em] text-bark/90">Latest messages</p>
                   <p className="mt-2 text-lg font-semibold text-bark">{contactMessages.length} items</p>
                 </div>
-                <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-bark/70">
+                <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-bark/90">
                   Messages
                 </span>
               </div>
 
               {contactMessages.length === 0 ? (
-                <div className="rounded-[1.5rem] border border-bark/10 bg-white p-6 text-sm text-bark/70">
+                <div className="rounded-[1.5rem] border border-bark/10 bg-white p-6 text-sm text-bark/90">
                   <div className="flex items-center gap-3">
                     <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-oak-100 text-oak-700">
                       <MessageCircle className="h-5 w-5" />
                     </div>
                     <div>
                       <p className="font-semibold text-bark">No messages yet</p>
-                      <p className="mt-1 text-sm text-bark/70">Customer messages will appear here as soon as someone reaches out.</p>
+                      <p className="mt-1 text-sm text-bark/90">Customer messages will appear here as soon as someone reaches out.</p>
                     </div>
                   </div>
                 </div>
@@ -394,9 +394,9 @@ export function Dashboard() {
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                           <p className="text-base font-semibold text-bark">{message.name}</p>
-                          <p className="mt-1 text-sm text-bark/70">Type: {message.subject ?? 'Contact message'}</p>
+                          <p className="mt-1 text-sm text-bark/90">Type: {message.subject ?? 'Contact message'}</p>
                         </div>
-                        <p className="text-sm text-bark/60">{formatDate(message.created_at)}</p>
+                        <p className="text-sm text-bark/90">{formatDate(message.created_at)}</p>
                       </div>
                     </div>
                   ))}

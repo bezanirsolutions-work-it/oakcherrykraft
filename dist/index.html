@@ -6,21 +6,29 @@
     <meta name="description" content="Oak Cherry Kraft - Premium handcrafted furniture inspired by natural wood textures and organic design." />
     <meta name="theme-color" content="#6B4423" />
     <title>Oak Cherry Kraft</title>
-    <link rel="canonical" href="https://oakcherrykraft.com/" />
     <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32" />
     <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16" />
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="preload" as="image" href="/assets/hero/GENERATED.webp" fetchpriority="high" />
-    <script type="module" crossorigin src="/assets/index-BxRkSjEq.js"></script>
+    <script>
+      if (!window.location.pathname.startsWith('/admin')) {
+        const preload = document.createElement('link');
+        preload.rel = 'preload';
+        preload.as = 'image';
+        preload.href = '/assets/hero/GENERATED.webp';
+        preload.fetchPriority = 'high';
+        document.head.appendChild(preload);
+      }
+    </script>
+    <script type="module" crossorigin src="/assets/index-BuiAKXHT.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/vendor-DIOvTkqN.js">
     <link rel="modulepreload" crossorigin href="/assets/router-ZhI4HUar.js">
     <link rel="modulepreload" crossorigin href="/assets/supabase-e2ZQLaK7.js">
-    <link rel="modulepreload" crossorigin href="/assets/icons-FYuyelqw.js">
+    <link rel="modulepreload" crossorigin href="/assets/icons-CaPvLcOl.js">
     <link rel="modulepreload" crossorigin href="/assets/framer-motion-CZKn4aFX.js">
     <link rel="modulepreload" crossorigin href="/assets/helmet-CB8p8O_h.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-DgzzCuWD.css">
+    <link rel="stylesheet" crossorigin href="/assets/index-CCcx-o46.css">
   </head>
   <body>
     <div id="root"></div>

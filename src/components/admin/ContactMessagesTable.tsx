@@ -23,14 +23,14 @@ export function ContactMessagesTable({
       <table className="min-w-full divide-y divide-bark/10 text-left text-sm">
         <thead className="bg-sand">
           <tr>
-            <th className="px-4 py-4 font-semibold text-bark/80">Status</th>
-            <th className="px-4 py-4 font-semibold text-bark/80">Name</th>
-            <th className="hidden px-4 py-4 font-semibold text-bark/80 sm:table-cell">Email</th>
-            <th className="hidden px-4 py-4 font-semibold text-bark/80 lg:table-cell">Phone</th>
-            <th className="px-4 py-4 font-semibold text-bark/80">Subject</th>
-            <th className="hidden px-4 py-4 font-semibold text-bark/80 md:table-cell">Preview</th>
-            <th className="px-4 py-4 font-semibold text-bark/80">Date</th>
-            <th className="px-4 py-4 text-right font-semibold text-bark/80">Actions</th>
+            <th scope="col" className="px-4 py-4 font-semibold text-bark/80">Status</th>
+            <th scope="col" className="px-4 py-4 font-semibold text-bark/80">Name</th>
+            <th scope="col" className="hidden px-4 py-4 font-semibold text-bark/80 sm:table-cell">Email</th>
+            <th scope="col" className="hidden px-4 py-4 font-semibold text-bark/80 lg:table-cell">Phone</th>
+            <th scope="col" className="px-4 py-4 font-semibold text-bark/80">Subject</th>
+            <th scope="col" className="hidden px-4 py-4 font-semibold text-bark/80 md:table-cell">Preview</th>
+            <th scope="col" className="px-4 py-4 font-semibold text-bark/80">Date</th>
+            <th scope="col" className="px-4 py-4 text-right font-semibold text-bark/80">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-bark/10 bg-white">

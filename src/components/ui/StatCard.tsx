@@ -31,11 +31,11 @@ export function StatCard({
           {icon}
         </span>
         <div>
-          <p className="text-xs uppercase tracking-[0.35em] text-bark/60">{label}</p>
+          <p className="text-xs uppercase tracking-[0.35em] text-bark/90">{label}</p>
           <p className="mt-3 text-3xl font-semibold tracking-tight text-bark">{value}</p>
         </div>
       </div>
-      {description ? <p className="mt-4 text-sm leading-7 text-bark/70">{description}</p> : null}
+      {description ? <p className="mt-4 text-sm leading-7 text-bark/90">{description}</p> : null}
     </article>
   );
 }

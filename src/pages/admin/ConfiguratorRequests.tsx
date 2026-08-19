@@ -143,13 +143,13 @@ export function ConfiguratorRequests() {
             <table className="min-w-full divide-y divide-bark/10 text-left text-sm">
               <thead className="bg-sand">
                 <tr>
-                  <th className="px-4 py-4 font-semibold text-bark/80">Request ID</th>
-                  <th className="px-4 py-4 font-semibold text-bark/80">Customer</th>
-                  <th className="px-4 py-4 font-semibold text-bark/80">Material</th>
-                  <th className="px-4 py-4 font-semibold text-bark/80">Finish</th>
-                  <th className="px-4 py-4 font-semibold text-bark/80">Colour</th>
-                  <th className="px-4 py-4 font-semibold text-bark/80">Price estimate</th>
-                  <th className="px-4 py-4 font-semibold text-bark/80">Created</th>
+                  <th scope="col" className="px-4 py-4 font-semibold text-bark/80">Request ID</th>
+                  <th scope="col" className="px-4 py-4 font-semibold text-bark/80">Customer</th>
+                  <th scope="col" className="px-4 py-4 font-semibold text-bark/80">Material</th>
+                  <th scope="col" className="px-4 py-4 font-semibold text-bark/80">Finish</th>
+                  <th scope="col" className="px-4 py-4 font-semibold text-bark/80">Colour</th>
+                  <th scope="col" className="px-4 py-4 font-semibold text-bark/80">Price estimate</th>
+                  <th scope="col" className="px-4 py-4 font-semibold text-bark/80">Created</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-bark/10 bg-white">
@@ -161,7 +161,7 @@ export function ConfiguratorRequests() {
                       <td className="px-4 py-4 font-medium text-bark">{request.quote_request_id ?? request.id}</td>
                       <td className="px-4 py-4 text-bark/75">
                         <div>{quote?.full_name ?? 'Unknown'}</div>
-                        <div className="text-xs text-bark/50">{quote?.email ?? 'No email'}</div>
+                        <div className="text-xs text-bark/70">{quote?.email ?? 'No email'}</div>
                       </td>
                       <td className="px-4 py-4 text-bark/75">{request.material ?? '—'}</td>
                       <td className="px-4 py-4 text-bark/75">{request.finish ?? '—'}</td>

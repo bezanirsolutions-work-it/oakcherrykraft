@@ -1,6 +1,7 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import { Search, RotateCcw, Eye, Download } from 'lucide-react';
 import { fetchAllLiveChatFeedback, LiveChatFeedbackWithSession } from '../../lib/liveChat';
+import { useDialogFocus } from './useDialogFocus';
 
 interface FeedbackPanelProps {
   onSelectSession?: (sessionId: string) => void;
@@ -16,6 +17,8 @@ export function LiveChatFeedbackPanel({ onSelectSession, loading: externalLoadin
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFeedback, setSelectedFeedback] = useState<LiveChatFeedbackWithSession | null>(null);
   const [dateFilterType, setDateFilterType] = useState<'all' | 'today' | '7days' | '30days'>('all');
+  const feedbackTitleId = useId();
+  const { dialogRef: feedbackDialogRef } = useDialogFocus(selectedFeedback !== null, () => setSelectedFeedback(null));
 
   const loadFeedback = async () => {
     setLoading(true);
@@ -198,19 +201,19 @@ export function LiveChatFeedbackPanel({ onSelectSession, loading: externalLoadin
         {/* Stats */}
         <div className="grid grid-cols-2 gap-2 mb-4">
           <div className="rounded-lg bg-sand/50 p-3">
-            <div className="text-xs text-bark/60">Total Responses</div>
+            <div className="text-xs text-bark/70">Total Responses</div>
             <div className="text-xl font-bold text-oak-700">{stats.totalResponses}</div>
           </div>
           <div className="rounded-lg bg-sand/50 p-3">
-            <div className="text-xs text-bark/60">Average Rating</div>
+            <div className="text-xs text-bark/70">Average Rating</div>
             <div className="text-xl font-bold text-oak-700">{stats.averageRating}/5</div>
           </div>
           <div className="rounded-lg bg-green-50 p-3">
-            <div className="text-xs text-bark/60">5-Star Ratings</div>
+            <div className="text-xs text-bark/70">5-Star Ratings</div>
             <div className="text-xl font-bold text-green-700">{stats.fiveStarCount}</div>
           </div>
           <div className="rounded-lg bg-yellow-50 p-3">
-            <div className="text-xs text-bark/60">Low Ratings (&lt;3)</div>
+            <div className="text-xs text-bark/70">Low Ratings (&lt;3)</div>
             <div className="text-xl font-bold text-yellow-700">{stats.lowRatingCount}</div>
           </div>
         </div>
@@ -219,8 +222,10 @@ export function LiveChatFeedbackPanel({ onSelectSession, loading: externalLoadin
         <div className="flex flex-col gap-3">
           {/* Search */}
           <div className="relative">
+            <label htmlFor="feedback-search" className="sr-only">Search feedback</label>
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-bark/40" />
             <input
+              id="feedback-search"
               type="text"
               placeholder="Search feedback, visitor, email..."
               value={searchQuery}
@@ -308,7 +313,7 @@ export function LiveChatFeedbackPanel({ onSelectSession, loading: externalLoadin
           <div className="flex items-center justify-center h-32 text-bark/40">
             <div className="text-center">
               <div className="text-sm mb-1">No feedback yet</div>
-              <div className="text-xs text-bark/50">Feedback will appear here after visitors complete the chat feedback form</div>
+              <div className="text-xs text-bark/70">Feedback will appear here after visitors complete the chat feedback form</div>
             </div>
           </div>
         ) : (
@@ -316,19 +321,18 @@ export function LiveChatFeedbackPanel({ onSelectSession, loading: externalLoadin
             {feedback.map((fb) => (
               <div
                 key={fb.id}
-                className="p-4 hover:bg-sand/50 cursor-pointer transition"
-                onClick={() => setSelectedFeedback(fb)}
+                className="p-4 hover:bg-sand/50 transition"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-sm font-medium text-oak-600">{getRatingStars(fb.rating)}</span>
-                      <span className="text-xs text-bark/60">{fb.rating}/5</span>
+                      <span className="text-xs text-bark/70">{fb.rating}/5</span>
                     </div>
                     <div className="text-sm text-bark truncate">
                       {fb.live_chat_sessions?.visitor_name || 'Guest'}
                     </div>
-                    <div className="text-xs text-bark/50">
+                    <div className="text-xs text-bark/70">
                       {fb.live_chat_sessions?.visitor_email || 'No email'}
                     </div>
                     {fb.comment && (
@@ -336,17 +340,19 @@ export function LiveChatFeedbackPanel({ onSelectSession, loading: externalLoadin
                         {fb.comment}
                       </div>
                     )}
-                    <div className="text-xs text-bark/50 mt-1">
+                    <div className="text-xs text-bark/70 mt-1">
                       {formatDate(fb.created_at)}
                     </div>
                   </div>
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedFeedback(fb);
                     }}
-                    className="p-2 text-bark/60 hover:text-bark transition flex-shrink-0"
+                    className="p-2 text-bark/70 hover:text-bark transition flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-oak-200"
                     title="View details"
+                    aria-label="View feedback details"
                   >
                     <Eye className="h-4 w-4" />
                   </button>
@@ -359,13 +365,21 @@ export function LiveChatFeedbackPanel({ onSelectSession, loading: externalLoadin
 
       {/* Detail Modal */}
       {selectedFeedback && (
-        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/50 p-4">
+        <div
+          ref={feedbackDialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={feedbackTitleId}
+          className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/50 p-4">
           <div className="bg-white rounded-[1.75rem] shadow-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 border-b border-bark/10 bg-white px-6 py-4 flex items-center justify-between rounded-t-[1.75rem]">
-              <h3 className="font-semibold text-bark">Feedback Details</h3>
+              <h3 id={feedbackTitleId} className="font-semibold text-bark">Feedback Details</h3>
               <button
+                type="button"
                 onClick={() => setSelectedFeedback(null)}
-                className="text-bark/60 hover:text-bark transition text-2xl leading-none"
+                data-dialog-initial-focus
+                aria-label="Close feedback details"
+                className="text-bark/70 hover:text-bark transition text-2xl leading-none focus:outline-none focus-visible:ring-2 focus-visible:ring-oak-200"
               >
                 ×
               </button>
@@ -374,7 +388,7 @@ export function LiveChatFeedbackPanel({ onSelectSession, loading: externalLoadin
             <div className="p-6 space-y-4">
               {/* Rating */}
               <div>
-                <div className="text-xs font-medium text-bark/60 mb-1">Rating</div>
+                <div className="text-xs font-medium text-bark/70 mb-1">Rating</div>
                 <div className="flex items-center gap-2">
                   <span className="text-lg font-medium text-oak-600">{getRatingStars(selectedFeedback.rating)}</span>
                   <span className="text-sm text-bark">
@@ -385,7 +399,7 @@ export function LiveChatFeedbackPanel({ onSelectSession, loading: externalLoadin
 
               {/* Visitor Info */}
               <div>
-                <div className="text-xs font-medium text-bark/60 mb-2">Visitor</div>
+                <div className="text-xs font-medium text-bark/70 mb-2">Visitor</div>
                 <div className="space-y-1 text-sm">
                   <div className="text-bark">
                     {selectedFeedback.live_chat_sessions?.visitor_name || 'Guest'}
@@ -401,9 +415,9 @@ export function LiveChatFeedbackPanel({ onSelectSession, loading: externalLoadin
 
               {/* Session Info */}
               <div>
-                <div className="text-xs font-medium text-bark/60 mb-2">Conversation</div>
+                <div className="text-xs font-medium text-bark/70 mb-2">Conversation</div>
                 <div className="space-y-1 text-sm">
-                  <div className="font-mono text-bark/60 text-xs break-all">
+                  <div className="font-mono text-bark/70 text-xs break-all">
                     {selectedFeedback.session_id}
                   </div>
                   <div className="text-bark/70">
@@ -418,7 +432,7 @@ export function LiveChatFeedbackPanel({ onSelectSession, loading: externalLoadin
               {/* Comment */}
               {selectedFeedback.comment && (
                 <div>
-                  <div className="text-xs font-medium text-bark/60 mb-2">Comment</div>
+                  <div className="text-xs font-medium text-bark/70 mb-2">Comment</div>
                   <div className="p-3 bg-sand/50 rounded-lg text-sm text-bark whitespace-pre-wrap break-words">
                     {selectedFeedback.comment}
                   </div>
@@ -427,7 +441,7 @@ export function LiveChatFeedbackPanel({ onSelectSession, loading: externalLoadin
 
               {/* Submission Date */}
               <div>
-                <div className="text-xs font-medium text-bark/60 mb-1">Submitted</div>
+                <div className="text-xs font-medium text-bark/70 mb-1">Submitted</div>
                 <div className="text-sm text-bark">
                   {formatDate(selectedFeedback.created_at)}
                 </div>

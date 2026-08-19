@@ -65,10 +65,10 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-sand text-bark antialiased">
+    <main className="min-h-screen bg-sand text-bark antialiased">
       <div className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center px-4 py-16 sm:px-6 lg:px-8">
         <div className="rounded-[2rem] border border-bark/10 bg-white p-10 shadow-soft">
-          <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Admin login</p>
+          <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Admin login</p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-bark">Sign in to your studio account</h1>
           <p className="mt-4 text-sm leading-7 text-bark/70">
             Enter your email and password to access the dashboard.
@@ -119,6 +119,6 @@ export function Login() {
           </form>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

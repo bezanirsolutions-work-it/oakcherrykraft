@@ -1,4 +1,4 @@
-import { ChangeEvent, DragEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ChangeEvent, DragEvent, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Archive, Check, Clock3, Eye, Pencil, Search, Trash2, X } from 'lucide-react';
@@ -6,6 +6,7 @@ import { Button, EmptyState, LoadingState, ImageCarousel } from '../../component
 import { supabase } from '../../lib/supabase';
 import type { Database } from '../../lib/database';
 import { normalizeImageUrl, normalizeProductImageFields } from '../../lib/imageUtils';
+import { useDialogFocus } from '../../components/admin/useDialogFocus';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -327,6 +328,10 @@ export function ProductsAdmin() {
   const [draggedPreviewIndex, setDraggedPreviewIndex] = useState<number | null>(null);
   const [draggedGalleryIndex, setDraggedGalleryIndex] = useState<number | null>(null);
   const [galleryOrder, setGalleryOrder] = useState<string[]>([]);
+  const drawerTitleId = useId();
+  const confirmationTitleId = useId();
+  const { dialogRef: drawerDialogRef } = useDialogFocus(drawerMode !== null, () => setDrawerMode(null));
+  const { dialogRef: confirmationDialogRef } = useDialogFocus(confirmation !== null, () => setConfirmation(null));
   const galleryOrderRef = useRef<string[]>([]);
   const bucket = (import.meta.env.VITE_SUPABASE_IMAGE_BUCKET || 'product-images').trim() || 'product-images';
   const maxImageSize = 8 * 1024 * 1024;
@@ -1523,7 +1528,7 @@ export function ProductsAdmin() {
     <>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
-          <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Name</span>
+          <span className="text-xs uppercase tracking-[0.35em] text-bark/70">Name</span>
           <input
             value={currentTextValue('name')}
             onChange={(event) => handleCurrentInputChange('name', event.target.value)}
@@ -1532,19 +1537,19 @@ export function ProductsAdmin() {
           {currentError('name') ? <p className="mt-2 text-sm text-red-700">{currentError('name')}</p> : null}
         </label>
         <label className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
-          <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Slug</span>
+          <span className="text-xs uppercase tracking-[0.35em] text-bark/70">Slug</span>
           <input
             value={currentTextValue('slug')}
             readOnly
             className={`${fieldInputClass('slug')} cursor-not-allowed bg-bark/5`}
             placeholder="auto-generated from name"
           />
-          <p className="mt-3 text-sm text-bark/60">
+          <p className="mt-3 text-sm text-bark/70">
             Automatically generated from the product name.
           </p>
         </label>
         <label className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
-          <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Category</span>
+          <span className="text-xs uppercase tracking-[0.35em] text-bark/70">Category</span>
           <select
             value={currentTextValue('category')}
             onChange={(event) => handleCurrentInputChange('category', event.target.value)}
@@ -1558,7 +1563,7 @@ export function ProductsAdmin() {
           {currentError('category') ? <p className="mt-2 text-sm text-red-700">{currentError('category')}</p> : null}
         </label>
         <label className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
-          <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Status</span>
+          <span className="text-xs uppercase tracking-[0.35em] text-bark/70">Status</span>
           <select
             value={currentTextValue('status')}
             onChange={(event) => handleCurrentInputChange('status', event.target.value)}
@@ -1572,7 +1577,7 @@ export function ProductsAdmin() {
           {currentError('status') ? <p className="mt-2 text-sm text-red-700">{currentError('status')}</p> : null}
         </label>
         <label className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
-          <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Price</span>
+          <span className="text-xs uppercase tracking-[0.35em] text-bark/70">Price</span>
           <input
             type="text"
             value={currentTextValue('price')}
@@ -1583,7 +1588,7 @@ export function ProductsAdmin() {
           {currentError('price') ? <p className="mt-2 text-sm text-red-700">{currentError('price')}</p> : null}
         </label>
         <label className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
-          <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Price label</span>
+          <span className="text-xs uppercase tracking-[0.35em] text-bark/70">Price label</span>
           <input
             type="text"
             value={currentTextValue('price_label')}
@@ -1591,10 +1596,10 @@ export function ProductsAdmin() {
             placeholder="e.g. Contact for Quote"
             className={fieldInputClass('price_label')}
           />
-          <p className="mt-3 text-sm text-bark/60">Optional label that will display instead of the numeric price.</p>
+          <p className="mt-3 text-sm text-bark/70">Optional label that will display instead of the numeric price.</p>
         </label>
         <label className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
-          <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Material</span>
+          <span className="text-xs uppercase tracking-[0.35em] text-bark/70">Material</span>
           <input
             list="product-materials"
             value={currentTextValue('material')}
@@ -1609,7 +1614,7 @@ export function ProductsAdmin() {
           </datalist>
         </label>
         <label className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
-          <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Wood species</span>
+          <span className="text-xs uppercase tracking-[0.35em] text-bark/70">Wood species</span>
           <input
             list="product-wood-species"
             value={currentTextValue('wood')}
@@ -1624,7 +1629,7 @@ export function ProductsAdmin() {
           </datalist>
         </label>
         <label className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
-          <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Finish</span>
+          <span className="text-xs uppercase tracking-[0.35em] text-bark/70">Finish</span>
           <input
             list="product-finishes"
             value={currentTextValue('finish')}
@@ -1639,7 +1644,7 @@ export function ProductsAdmin() {
           </datalist>
         </label>
         <label className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
-          <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Colour</span>
+          <span className="text-xs uppercase tracking-[0.35em] text-bark/70">Colour</span>
           <input
             value={currentTextValue('colour')}
             onChange={(event) => handleCurrentInputChange('colour', event.target.value)}
@@ -1651,7 +1656,7 @@ export function ProductsAdmin() {
 
       <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 sm:col-span-2 min-w-0">
         <label className="min-w-0 rounded-[1.5rem] border border-bark/10 bg-sand p-3">
-          <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Height</span>
+          <span className="text-xs uppercase tracking-[0.35em] text-bark/70">Height</span>
           <input
             value={currentTextValue('height')}
             onChange={(event) => handleCurrentInputChange('height', event.target.value)}
@@ -1660,7 +1665,7 @@ export function ProductsAdmin() {
           />
         </label>
         <label className="min-w-0 rounded-[1.5rem] border border-bark/10 bg-sand p-3">
-          <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Width</span>
+          <span className="text-xs uppercase tracking-[0.35em] text-bark/70">Width</span>
           <input
             value={currentTextValue('width')}
             onChange={(event) => handleCurrentInputChange('width', event.target.value)}
@@ -1669,7 +1674,7 @@ export function ProductsAdmin() {
           />
         </label>
         <label className="min-w-0 rounded-[1.5rem] border border-bark/10 bg-sand p-3">
-          <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Depth</span>
+          <span className="text-xs uppercase tracking-[0.35em] text-bark/70">Depth</span>
           <input
             value={currentTextValue('depth')}
             onChange={(event) => handleCurrentInputChange('depth', event.target.value)}
@@ -1678,7 +1683,7 @@ export function ProductsAdmin() {
           />
         </label>
         <label className="min-w-0 rounded-[1.5rem] border border-bark/10 bg-sand p-3">
-          <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Unit</span>
+          <span className="text-xs uppercase tracking-[0.35em] text-bark/70">Unit</span>
           <input
             list="dimension-units"
             value={currentTextValue('dimensionUnit')}
@@ -1696,7 +1701,7 @@ export function ProductsAdmin() {
 
       <div className="grid gap-4">
         <label className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
-          <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Description</span>
+          <span className="text-xs uppercase tracking-[0.35em] text-bark/70">Description</span>
           <textarea
             value={currentTextValue('description')}
             onChange={(event) => handleCurrentInputChange('description', event.target.value)}
@@ -1705,7 +1710,7 @@ export function ProductsAdmin() {
           />
         </label>
         <label className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
-          <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Features</span>
+          <span className="text-xs uppercase tracking-[0.35em] text-bark/70">Features</span>
           <textarea
             value={currentFeaturesText}
             onChange={(event) => {
@@ -1719,10 +1724,10 @@ export function ProductsAdmin() {
             placeholder="Enter features, one per line"
             className={fieldTextAreaClass('features')}
           />
-          <p className="mt-3 text-sm text-bark/60">Free-form text with one item per line.</p>
+          <p className="mt-3 text-sm text-bark/70">Free-form text with one item per line.</p>
         </label>
         <label className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
-          <span className="text-xs uppercase tracking-[0.35em] text-bark/60">Specifications</span>
+          <span className="text-xs uppercase tracking-[0.35em] text-bark/70">Specifications</span>
           <textarea
             value={currentSpecificationsText}
             onChange={(event) => {
@@ -1736,7 +1741,7 @@ export function ProductsAdmin() {
             placeholder="Enter specifications, one per line"
             className={fieldTextAreaClass('specifications')}
           />
-          <p className="mt-3 text-sm text-bark/60">Free-form text with one item per line.</p>
+          <p className="mt-3 text-sm text-bark/70">Free-form text with one item per line.</p>
         </label>
       </div>
     </>
@@ -1760,7 +1765,7 @@ export function ProductsAdmin() {
             onDrop={handleDropzoneDrop}
             className={`mt-3 rounded-[1.25rem] border border-bark/10 bg-sand px-4 py-8 text-center transition ${isDragActive ? 'border-oak-500 bg-oak-50' : ''}`}
           >
-            <p className="text-sm text-bark/60">Drag images here or use the file selector.</p>
+            <p className="text-sm text-bark/70">Drag images here or use the file selector.</p>
             <input
               type="file"
               multiple
@@ -1841,7 +1846,7 @@ export function ProductsAdmin() {
           <div className="rounded-[1.5rem] border border-bark/10 bg-white p-4 mt-4">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-bark">Existing images</p>
-              <span className="text-xs text-bark/60">{existingImages.length} image{existingImages.length === 1 ? '' : 's'}</span>
+              <span className="text-xs text-bark/70">{existingImages.length} image{existingImages.length === 1 ? '' : 's'}</span>
             </div>
             {existingImages.length > 0 ? (
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -2009,8 +2014,10 @@ export function ProductsAdmin() {
               )}
             </div>
             <div className="relative flex-1 min-w-[240px]">
+              <label htmlFor="admin-product-search" className="sr-only">Search products</label>
               <Search size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-bark/50" />
               <input
+                id="admin-product-search"
                 type="search"
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
@@ -2221,21 +2228,24 @@ export function ProductsAdmin() {
               onClick={() => setDrawerMode(null)}
             />
             <motion.aside
+              ref={drawerDialogRef}
               key="drawer-panel"
               initial="hidden"
               animate="visible"
               exit="hidden"
               variants={drawerVariants}
-              aria-label="Product drawer"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={drawerTitleId}
               className="fixed inset-y-0 right-0 z-50 w-full max-w-2xl overflow-y-auto bg-white shadow-2xl"
             >
               <div className="min-h-full space-y-6 p-6 sm:p-8">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.35em] text-bark/60">
+                    <p className="text-xs uppercase tracking-[0.35em] text-bark/70">
                       {drawerMode === 'create' ? 'New product' : drawerMode === 'view' ? 'Product details' : 'Product editor'}
                     </p>
-                    <h2 className="mt-2 text-2xl font-semibold text-bark">
+                    <h2 id={drawerTitleId} className="mt-2 text-2xl font-semibold text-bark">
                       {drawerMode === 'create' ? 'Create a product' : drawerMode === 'view' ? selectedProduct?.name : 'Edit selected product'}
                     </h2>
                   </div>
@@ -2246,6 +2256,7 @@ export function ProductsAdmin() {
                     type="button"
                     onClick={() => setDrawerMode(null)}
                     aria-label="Close product drawer"
+                    data-dialog-initial-focus
                     className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-bark/10 text-bark transition hover:bg-sand"
                   >
                     <X size={20} aria-hidden="true" />
@@ -2296,7 +2307,7 @@ export function ProductsAdmin() {
                         </div>
                       ) : (
                         <div>
-                          <div className="flex aspect-[4/3] items-center justify-center text-sm text-bark/60">No images available</div>
+                          <div className="flex aspect-[4/3] items-center justify-center text-sm text-bark/70">No images available</div>
                           <div className="p-5">
                             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oak-700">{selectedProduct.category}</p>
                             <p className="mt-2 text-sm leading-7 text-bark/70">{selectedProduct.summary ?? 'Not provided'}</p>
@@ -2315,7 +2326,7 @@ export function ProductsAdmin() {
                         ['Dimensions', selectedProduct.dimensions],
                       ].map(([label, value]) => (
                         <div key={label} className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
-                          <p className="text-xs uppercase tracking-[0.35em] text-bark/60">{label}</p>
+                          <p className="text-xs uppercase tracking-[0.35em] text-bark/70">{label}</p>
                           <p className="mt-2 text-base font-semibold text-bark">{detailValue(value)}</p>
                         </div>
                       ))}
@@ -2323,15 +2334,15 @@ export function ProductsAdmin() {
 
                     <div className="space-y-4 rounded-[1.5rem] border border-bark/10 bg-sand p-5">
                       <div>
-                        <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Description</p>
+                        <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Description</p>
                         <p className="mt-2 text-sm leading-7 text-bark/75">{detailValue(selectedProduct.description)}</p>
                       </div>
                       <div>
-                        <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Features</p>
+                        <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Features</p>
                         <p className="mt-2 text-sm leading-7 text-bark/75">{detailValue(selectedProduct.features)}</p>
                       </div>
                       <div>
-                        <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Specifications</p>
+                        <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Specifications</p>
                         <p className="mt-2 text-sm leading-7 text-bark/75">{detailValue(selectedProduct.specifications)}</p>
                       </div>
                     </div>
@@ -2357,11 +2368,11 @@ export function ProductsAdmin() {
 
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="rounded-[1.5rem] border border-bark/10 bg-white p-4">
-                        <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Created</p>
+                        <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Created</p>
                         <p className="mt-2 text-base font-semibold text-bark">{formatDate(selectedProduct.created_at)}</p>
                       </div>
                       <div className="rounded-[1.5rem] border border-bark/10 bg-white p-4">
-                        <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Updated</p>
+                        <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Updated</p>
                         <p className="mt-2 text-base font-semibold text-bark">{formatDate(selectedProduct.updated_at)}</p>
                       </div>
                     </div>
@@ -2447,10 +2458,16 @@ export function ProductsAdmin() {
                 if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') closeConfirmation();
               }}
             />
-            <div className="relative z-10 w-full max-w-lg rounded-[2rem] border border-bark/10 bg-white p-6 shadow-2xl">
+            <div
+              ref={confirmationDialogRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={confirmationTitleId}
+              className="relative z-10 w-full max-w-lg rounded-[2rem] border border-bark/10 bg-white p-6 shadow-2xl"
+            >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Confirm action</p>
+                  <p id={confirmationTitleId} className="text-xs uppercase tracking-[0.35em] text-bark/70">Confirm action</p>
                   <h3 className="mt-3 text-2xl font-semibold text-bark">{confirmation.title}</h3>
                 </div>
                 <button
@@ -2458,6 +2475,7 @@ export function ProductsAdmin() {
                   onClick={closeConfirmation}
                   className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-bark/10 text-bark transition hover:bg-sand"
                   aria-label="Close confirmation dialog"
+                  data-dialog-initial-focus
                 >
                   <X size={18} aria-hidden="true" />
                 </button>

@@ -165,7 +165,7 @@ export function Testimonials() {
       <section className="rounded-[2rem] border border-bark/10 bg-white p-8 shadow-soft">
         <div className="mb-8 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
           <div>
-            <p className="text-sm uppercase tracking-[0.35em] text-bark/60">Testimonials</p>
+            <p className="text-sm uppercase tracking-[0.35em] text-bark/70">Testimonials</p>
             <h1 className="mt-3 text-4xl font-semibold tracking-tight text-bark">Manage testimonials</h1>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-bark/70">
               Add, update, and order client stories that appear on the homepage and studio site.
@@ -173,8 +173,9 @@ export function Testimonials() {
           </div>
           <div className="space-y-3">
             <div className="rounded-[1.5rem] border border-bark/10 bg-sand p-5">
-              <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Quick search</p>
+              <label htmlFor="testimonial-search" className="text-xs uppercase tracking-[0.35em] text-bark/70">Quick search</label>
               <input
+                id="testimonial-search"
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Search testimonials"
@@ -287,7 +288,7 @@ export function Testimonials() {
                 <Button type="submit" loading={isSaving}>
                   {selectedTestimonial ? 'Save changes' : 'Create testimonial'}
                 </Button>
-                <Button variant="secondary" onClick={resetForm} disabled={isSaving}>
+                <Button type="button" variant="secondary" onClick={resetForm} disabled={isSaving}>
                   Reset
                 </Button>
               </div>
@@ -324,7 +325,7 @@ export function Testimonials() {
                     </div>
                     <p className="mt-3 text-sm leading-7 text-bark/75">{testimonial.testimonial}</p>
                     <div className="mt-4 flex items-center justify-between gap-3">
-                      <div className="inline-flex items-center gap-1 text-sm text-bark/60">
+                      <div className="inline-flex items-center gap-1 text-sm text-bark/70">
                         <Star size={14} />
                         {testimonial.rating ?? 0}/5
                       </div>

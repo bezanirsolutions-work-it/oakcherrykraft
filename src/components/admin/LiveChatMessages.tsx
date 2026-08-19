@@ -79,7 +79,7 @@ function AttachmentPreview({ attachment }: { attachment: { name: string; type: s
   }, [attachment.path]);
 
   if (loading) {
-    return <div className="text-xs text-bark/60">Loading attachment...</div>;
+    return <div className="text-xs text-bark/70">Loading attachment...</div>;
   }
 
   if (error || !signedUrl) {
@@ -107,7 +107,7 @@ function AttachmentPreview({ attachment }: { attachment: { name: string; type: s
       <span className="text-lg leading-none">{getFileIcon(attachment.type)}</span>
       <span className="min-w-0 flex-1">
         <span className="block truncate font-medium">{attachment.name}</span>
-        <span className="block text-[11px] text-bark/60">{formatFileSize(attachment.size)}</span>
+        <span className="block text-[11px] text-bark/70">{formatFileSize(attachment.size)}</span>
       </span>
     </a>
   );
@@ -169,7 +169,7 @@ export function LiveChatMessages({
   if (!session) {
     return (
       <div className="flex w-full h-full flex-col items-center justify-center bg-white p-8 text-center">
-        <div className="text-sm text-bark/60">Select a conversation to start responding</div>
+        <div className="text-sm text-bark/70">Select a conversation to start responding</div>
       </div>
     );
   }
@@ -183,7 +183,7 @@ export function LiveChatMessages({
             <h3 className="text-base font-semibold text-bark">
               {session.visitor_name ?? 'Guest'}
             </h3>
-            <p className="text-xs text-bark/60 mt-1">
+            <p className="text-xs text-bark/70 mt-1">
               Status: <span className="font-medium capitalize">{session.status}</span>
             </p>
           </div>
@@ -216,7 +216,7 @@ export function LiveChatMessages({
         <div className="space-y-4">
           {messages.length === 0 ? (
             <div className="flex h-full items-center justify-center text-center">
-              <p className="text-sm text-bark/60">No messages yet</p>
+              <p className="text-sm text-bark/70">No messages yet</p>
             </div>
           ) : (
             messages.map((msg) => {
@@ -247,7 +247,7 @@ export function LiveChatMessages({
                     <p className={`text-xs mt-1 ${
                       msg.author === 'agent'
                         ? 'text-oak-700/60'
-                        : 'text-bark/60'
+                        : 'text-bark/70'
                     }`}>
                       {formatMessageTime(msg.created_at)}
                     </p>
@@ -282,7 +282,9 @@ export function LiveChatMessages({
       {/* Composer */}
       <div className="border-t border-bark/10 px-6 py-4 flex-shrink-0">
         <div className="flex gap-3">
+          <label htmlFor="chat-composer" className="sr-only">Type a message</label>
           <textarea
+            id="chat-composer"
             value={composer}
             onChange={(e) => onComposerChange(e.target.value)}
             onKeyDown={handleKeyDown}

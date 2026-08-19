@@ -178,9 +178,9 @@ export function ProjectForm({
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-4 rounded-[1.5rem] border border-bark/10 bg-white p-6 shadow-soft">
           <div>
-            <label htmlFor="wood_species" className="mb-2 block text-sm font-semibold text-bark">Wood Species</label>
+            <label htmlFor="wood_species_secondary" className="mb-2 block text-sm font-semibold text-bark">Wood Species</label>
             <input
-              id="wood_species"
+              id="wood_species_secondary"
               type="text"
               value={values.wood_species ?? ''}
               onChange={(event) => onChange('wood_species', event.target.value)}
@@ -188,9 +188,9 @@ export function ProjectForm({
             />
           </div>
           <div>
-            <label htmlFor="budget_range" className="mb-2 block text-sm font-semibold text-bark">Budget Range</label>
+            <label htmlFor="budget_range_secondary" className="mb-2 block text-sm font-semibold text-bark">Budget Range</label>
             <input
-              id="budget_range"
+              id="budget_range_secondary"
               type="text"
               value={values.budget_range ?? ''}
               onChange={(event) => onChange('budget_range', event.target.value)}
@@ -199,9 +199,9 @@ export function ProjectForm({
             />
           </div>
           <div>
-            <label htmlFor="duration" className="mb-2 block text-sm font-semibold text-bark">Duration</label>
+            <label htmlFor="duration_secondary" className="mb-2 block text-sm font-semibold text-bark">Duration</label>
             <input
-              id="duration"
+              id="duration_secondary"
               type="text"
               value={values.duration ?? ''}
               onChange={(event) => onChange('duration', event.target.value)}
@@ -269,11 +269,12 @@ export function ProjectForm({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-bark">Gallery Images</p>
-                <p className="text-sm text-bark/70">Upload multiple images for the gallery.</p>
+                <label htmlFor="gallery-images" className="text-sm text-bark/70">Upload multiple images for the gallery.</label>
               </div>
               <Upload size={18} aria-hidden="true" />
             </div>
             <input
+              id="gallery-images"
               type="file"
               multiple
               accept="image/*"
@@ -295,7 +296,7 @@ export function ProjectForm({
                 ))}
               </div>
             ) : (
-              <div className="rounded-2xl border border-dashed border-bark/10 bg-white px-4 py-6 text-center text-sm text-bark/60">
+              <div className="rounded-2xl border border-dashed border-bark/10 bg-white px-4 py-6 text-center text-sm text-bark/70">
                 <p className="inline-flex items-center gap-2"><Image size={16} aria-hidden="true" /> No gallery images yet</p>
               </div>
             )}

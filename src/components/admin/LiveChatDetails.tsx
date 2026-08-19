@@ -44,7 +44,7 @@ export function LiveChatDetails({
   if (!session) {
     return (
       <div className="flex w-full flex-col items-center justify-center px-6 py-8 text-center">
-        <p className="text-sm text-bark/60">Select a conversation to view details</p>
+        <p className="text-sm text-bark/70">Select a conversation to view details</p>
       </div>
     );
   }
@@ -64,7 +64,7 @@ export function LiveChatDetails({
         <div className="space-y-5">
           {/* Visitor Name */}
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-bark/60 mb-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-bark/70 mb-2">
               Visitor Name
             </p>
             <p className="text-sm text-bark">{session.visitor_name ?? 'Website Visitor'}</p>
@@ -73,7 +73,7 @@ export function LiveChatDetails({
           {/* Email */}
           {session.visitor_email ? (
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-bark/60 mb-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-bark/70 mb-2">
                 Email
               </p>
               <p className="text-sm text-bark break-all">
@@ -90,7 +90,7 @@ export function LiveChatDetails({
           {/* Phone */}
           {session.visitor_phone ? (
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-bark/60 mb-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-bark/70 mb-2">
                 Phone
               </p>
               <p className="text-sm text-bark">
@@ -106,7 +106,7 @@ export function LiveChatDetails({
 
           {/* Status */}
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-bark/60 mb-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-bark/70 mb-2">
               Status
             </p>
             <div className="inline-flex rounded-full px-3 py-1 text-xs font-medium bg-sand text-bark">
@@ -122,7 +122,7 @@ export function LiveChatDetails({
           {/* Session Started */}
           {session.created_at ? (
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-bark/60 mb-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-bark/70 mb-2">
                 Started
               </p>
               <p className="text-sm text-bark">{formatDateTime(session.created_at)}</p>
@@ -132,7 +132,7 @@ export function LiveChatDetails({
           {/* Last Activity */}
           {session.last_activity_at ? (
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-bark/60 mb-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-bark/70 mb-2">
                 Last Activity
               </p>
               <p className="text-sm text-bark">{formatDateTime(session.last_activity_at)}</p>
@@ -141,7 +141,7 @@ export function LiveChatDetails({
 
           {/* Session ID */}
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-bark/60 mb-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-bark/70 mb-2">
               Session ID
             </p>
             <p className="truncate font-mono text-xs text-bark/70">{session.id}</p>

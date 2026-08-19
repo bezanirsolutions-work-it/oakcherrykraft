@@ -23,6 +23,7 @@ interface ConversationListProps {
   connectionState?: 'connected' | 'reconnecting' | 'disconnected';
   onDeleteAllClosed?: () => void;
   deleteAllLoading?: boolean;
+  searchId?: string;
 }
 
 function formatTime(dateString: string | null): string {
@@ -65,6 +66,7 @@ export function LiveChatConversationList({
   connectionState = 'connected',
   onDeleteAllClosed,
   deleteAllLoading = false,
+  searchId = 'conversation-search',
 }: ConversationListProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -79,7 +81,7 @@ export function LiveChatConversationList({
       {/* Header */}
       <div className="border-b border-bark/10 px-4 py-4 flex-shrink-0 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-bark">Live Chat</h2>
-        <div className="text-xs flex items-center gap-2 text-bark/60">
+        <div className="text-xs flex items-center gap-2 text-bark/70">
           <span
             aria-hidden
             className={`inline-block h-2 w-2 rounded-full ${
@@ -93,8 +95,10 @@ export function LiveChatConversationList({
       {/* Search */}
       <div className="border-b border-bark/10 px-4 py-3 flex-shrink-0">
         <div className="relative">
+          <label htmlFor={searchId} className="sr-only">Search conversations</label>
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-bark/40" />
           <input
+            id={searchId}
             type="text"
             placeholder="Search conversations..."
             value={searchQuery}
@@ -136,11 +140,11 @@ export function LiveChatConversationList({
       <div className="flex-1 overflow-y-auto min-w-0">
         {loading ? (
           <div className="flex h-full items-center justify-center">
-            <div className="text-sm text-bark/60">Loading...</div>
+            <div className="text-sm text-bark/70">Loading...</div>
           </div>
         ) : filteredSessions.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center px-4 py-8 text-center">
-            <div className="text-sm text-bark/60">
+            <div className="text-sm text-bark/70">
               {searchQuery ? 'No matching conversations' : 'No conversations yet'}
             </div>
           </div>
@@ -167,12 +171,12 @@ export function LiveChatConversationList({
                       ) : null}
                     </div>
                     {session.visitor_phone && (
-                      <p className="truncate text-xs text-bark/60 mt-1">
+                      <p className="truncate text-xs text-bark/70 mt-1">
                         {session.visitor_phone}
                       </p>
                     )}
                     {!session.visitor_phone && (
-                      <p className="truncate text-xs text-bark/60 mt-1">
+                      <p className="truncate text-xs text-bark/70 mt-1">
                         {formatTime(session.last_activity_at)}
                       </p>
                     )}

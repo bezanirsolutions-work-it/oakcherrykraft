@@ -649,7 +649,9 @@ export default function LiveChatAdminPage() {
         {/* Tab Navigation */}
         <div className="flex gap-2 border-b border-bark/10">
           <button
+            type="button"
             onClick={() => setActiveTab('conversations')}
+            aria-pressed={activeTab === 'conversations'}
             className={`px-4 py-3 font-medium text-sm transition border-b-2 ${
               activeTab === 'conversations'
                 ? 'border-oak-600 text-oak-600'
@@ -659,7 +661,9 @@ export default function LiveChatAdminPage() {
             Conversations
           </button>
           <button
+            type="button"
             onClick={() => setActiveTab('feedback')}
+            aria-pressed={activeTab === 'feedback'}
             className={`px-4 py-3 font-medium text-sm transition border-b-2 ${
               activeTab === 'feedback'
                 ? 'border-oak-600 text-oak-600'
@@ -686,6 +690,7 @@ export default function LiveChatAdminPage() {
               connectionState={connectionState}
               onDeleteAllClosed={handleDeleteAllClosed}
               deleteAllLoading={deleteAllLoading}
+              searchId="conversation-search-mobile"
             />
           </div>
         </div>
@@ -743,6 +748,7 @@ export default function LiveChatAdminPage() {
               connectionState={connectionState}
               onDeleteAllClosed={handleDeleteAllClosed}
               deleteAllLoading={deleteAllLoading}
+              searchId="conversation-search-desktop"
             />
           </div>
 

@@ -176,7 +176,7 @@ export function Contacts() {
             </div>
 
             <div>
-              <label htmlFor="sort-messages" className="mb-2 block text-xs font-semibold uppercase tracking-[0.35em] text-bark/60">
+              <label htmlFor="sort-messages" className="mb-2 block text-xs font-semibold uppercase tracking-[0.35em] text-bark/70">
                 Sort by
               </label>
               <select

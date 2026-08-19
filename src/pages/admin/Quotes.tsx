@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import { AlertCircle, Inbox, Search } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import type { Json } from '../../lib/database';
+import { useDialogFocus } from '../../components/admin/useDialogFocus';
 
 interface QuoteRequestRow {
   id: string;
@@ -53,6 +54,8 @@ export function Quotes() {
   const ITEMS_PER_PAGE = 10;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const quoteDialogTitleId = useId();
+  const { dialogRef: quoteDialogRef } = useDialogFocus(selectedQuote !== null, () => setSelectedQuote(null));
 
   useEffect(() => {
     const loadQuotes = async () => {
@@ -273,7 +276,7 @@ export function Quotes() {
             </div>
 
             <div>
-              <label htmlFor="status-filter" className="mb-2 block text-xs font-semibold uppercase tracking-[0.35em] text-bark/60">
+              <label htmlFor="status-filter" className="mb-2 block text-xs font-semibold uppercase tracking-[0.35em] text-bark/70">
                 Status
               </label>
               <select
@@ -292,7 +295,7 @@ export function Quotes() {
             </div>
 
             <div>
-              <label htmlFor="type-filter" className="mb-2 block text-xs font-semibold uppercase tracking-[0.35em] text-bark/60">
+              <label htmlFor="type-filter" className="mb-2 block text-xs font-semibold uppercase tracking-[0.35em] text-bark/70">
                 Project type
               </label>
               <select
@@ -311,7 +314,7 @@ export function Quotes() {
             </div>
 
             <div>
-              <label htmlFor="sort-by" className="mb-2 block text-xs font-semibold uppercase tracking-[0.35em] text-bark/60">
+              <label htmlFor="sort-by" className="mb-2 block text-xs font-semibold uppercase tracking-[0.35em] text-bark/70">
                 Sort by
               </label>
               <select
@@ -384,13 +387,13 @@ export function Quotes() {
               <table className="min-w-full divide-y divide-bark/10 text-left text-sm">
                 <thead className="bg-sand">
                   <tr>
-                    <th className="px-4 py-4 font-semibold text-bark/80">Full Name</th>
-                    <th className="px-4 py-4 font-semibold text-bark/80">Email</th>
-                    <th className="px-4 py-4 font-semibold text-bark/80">Phone</th>
-                    <th className="px-4 py-4 font-semibold text-bark/80">Project Type</th>
-                    <th className="px-4 py-4 font-semibold text-bark/80">Status</th>
-                    <th className="px-4 py-4 font-semibold text-bark/80">Created Date</th>
-                    <th className="px-4 py-4 font-semibold text-bark/80">Action</th>
+                    <th scope="col" className="px-4 py-4 font-semibold text-bark/80">Full Name</th>
+                    <th scope="col" className="px-4 py-4 font-semibold text-bark/80">Email</th>
+                    <th scope="col" className="px-4 py-4 font-semibold text-bark/80">Phone</th>
+                    <th scope="col" className="px-4 py-4 font-semibold text-bark/80">Project Type</th>
+                    <th scope="col" className="px-4 py-4 font-semibold text-bark/80">Status</th>
+                    <th scope="col" className="px-4 py-4 font-semibold text-bark/80">Created Date</th>
+                    <th scope="col" className="px-4 py-4 font-semibold text-bark/80">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-bark/10 bg-white">
@@ -415,7 +418,7 @@ export function Quotes() {
                             ))}
                           </select>
                           {rowStatusSaving[request.id] ? (
-                            <p className="text-xs text-bark/60">Saving...</p>
+                            <p className="text-xs text-bark/70">Saving...</p>
                           ) : rowStatusErrors[request.id] ? (
                             <p className="text-xs text-red-700">{rowStatusErrors[request.id]}</p>
                           ) : null}
@@ -468,10 +471,16 @@ export function Quotes() {
 
       {selectedQuote ? (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 px-4 py-10 sm:px-6">
-          <div className="mx-auto max-w-4xl rounded-[2rem] border border-bark/10 bg-white p-6 shadow-soft">
+          <div
+            ref={quoteDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={quoteDialogTitleId}
+            className="mx-auto max-w-4xl rounded-[2rem] border border-bark/10 bg-white p-6 shadow-soft"
+          >
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <h2 className="text-2xl font-semibold text-bark">Quote details</h2>
+                <h2 id={quoteDialogTitleId} className="text-2xl font-semibold text-bark">Quote details</h2>
                 <p className="mt-2 text-sm leading-7 text-bark/70">
                   View the selected quote request details.
                 </p>
@@ -479,6 +488,7 @@ export function Quotes() {
               <button
                 type="button"
                 onClick={() => setSelectedQuote(null)}
+                data-dialog-initial-focus
                 className="inline-flex h-11 items-center justify-center rounded-full border border-bark/10 bg-sand px-4 py-2 text-sm font-semibold text-bark transition hover:bg-bark/5"
               >
                 Close
@@ -488,48 +498,48 @@ export function Quotes() {
             <div className="mt-6 space-y-6">
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
-                  <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Full name</p>
+                  <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Full name</p>
                   <p className="mt-2 text-base font-semibold text-bark">{selectedQuote.full_name}</p>
                 </div>
                 <div className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
-                  <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Email</p>
+                  <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Email</p>
                   <p className="mt-2 text-base font-semibold text-bark">{selectedQuote.email}</p>
                 </div>
                 <div className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
-                  <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Phone</p>
+                  <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Phone</p>
                   <p className="mt-2 text-base font-semibold text-bark">{selectedQuote.phone}</p>
                 </div>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
-                  <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Project type</p>
+                  <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Project type</p>
                   <p className="mt-2 text-base font-semibold text-bark">{selectedQuote.project_type ?? 'N/A'}</p>
                 </div>
                 <div className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
-                  <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Room</p>
+                  <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Room</p>
                   <p className="mt-2 text-base font-semibold text-bark">{selectedQuote.room_type ?? 'N/A'}</p>
                 </div>
                 <div className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
-                  <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Dimensions</p>
+                  <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Dimensions</p>
                   <p className="mt-2 text-base font-semibold text-bark">{selectedQuote.dimensions ?? 'N/A'}</p>
                 </div>
               </div>
 
               <div className="space-y-6">
                 <div className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
-                  <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Customer</p>
+                  <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Customer</p>
                   <div className="mt-4 grid gap-4 sm:grid-cols-3">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Full name</p>
+                      <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Full name</p>
                       <p className="mt-2 text-base font-semibold text-bark">{formatValue(selectedQuote.full_name)}</p>
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Email</p>
+                      <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Email</p>
                       <p className="mt-2 text-base font-semibold text-bark">{formatValue(selectedQuote.email)}</p>
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Phone</p>
+                      <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Phone</p>
                       <p className="mt-2 text-base font-semibold text-bark">{formatValue(selectedQuote.phone)}</p>
                     </div>
                   </div>
@@ -589,26 +599,26 @@ export function Quotes() {
                 </div>
 
                 <div className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
-                  <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Project</p>
+                  <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Project</p>
                   <div className="mt-4 grid gap-4 sm:grid-cols-3">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Project type</p>
+                      <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Project type</p>
                       <p className="mt-2 text-base font-semibold text-bark">{formatValue(selectedQuote.project_type)}</p>
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Room</p>
+                      <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Room</p>
                       <p className="mt-2 text-base font-semibold text-bark">{formatValue(selectedQuote.room_type)}</p>
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Dimensions</p>
+                      <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Dimensions</p>
                       <p className="mt-2 text-base font-semibold text-bark">{formatValue(selectedQuote.dimensions)}</p>
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Budget</p>
+                      <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Budget</p>
                       <p className="mt-2 text-base font-semibold text-bark">{formatValue(selectedQuote.budget)}</p>
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Status</p>
+                      <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Status</p>
                       <span className={`mt-2 inline-flex rounded-full px-3 py-2 text-sm font-semibold ${getStatusBadgeClass(selectedQuote.status)}`}>
                         {selectedQuote.status ?? 'Not provided'}
                       </span>
@@ -617,31 +627,31 @@ export function Quotes() {
                 </div>
 
                 <div className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
-                  <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Configuration</p>
+                  <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Configuration</p>
                   {selectedQuote.configurator_selections.length === 0 ? (
                     <p className="mt-4 text-base font-semibold text-bark">Not provided</p>
                   ) : (
                     <div className="mt-4 grid gap-4 sm:grid-cols-2">
                       <div>
-                        <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Material</p>
+                        <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Material</p>
                         <p className="mt-2 text-base font-semibold text-bark">{formatValue(selectedQuote.configurator_selections[0].material)}</p>
                       </div>
                       <div>
-                        <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Finish</p>
+                        <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Finish</p>
                         <p className="mt-2 text-base font-semibold text-bark">{formatValue(selectedQuote.configurator_selections[0].finish)}</p>
                       </div>
                       <div>
-                        <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Colour</p>
+                        <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Colour</p>
                         <p className="mt-2 text-base font-semibold text-bark">{formatValue(selectedQuote.configurator_selections[0].colour)}</p>
                       </div>
                       <div>
-                        <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Estimated price</p>
+                        <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Estimated price</p>
                         <p className="mt-2 text-base font-semibold text-bark">
                           {selectedQuote.configurator_selections[0].estimated_price ?? 'Not provided'}
                         </p>
                       </div>
                       <div className="sm:col-span-2">
-                        <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Accessories</p>
+                        <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Accessories</p>
                         <p className="mt-2 text-base font-semibold text-bark">
                           {selectedQuote.configurator_selections[0].accessories
                             ? JSON.stringify(selectedQuote.configurator_selections[0].accessories)
@@ -653,25 +663,25 @@ export function Quotes() {
                 </div>
 
                 <div className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
-                  <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Notes</p>
+                  <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Notes</p>
                   <p className="mt-3 text-base text-bark/70">{formatValue(selectedQuote.notes)}</p>
                 </div>
 
                 <div className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
-                  <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Metadata</p>
+                  <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Metadata</p>
                   <div className="mt-4 grid gap-4 sm:grid-cols-3">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Quote ID</p>
+                      <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Quote ID</p>
                       <p className="mt-2 text-base font-semibold text-bark">{formatValue(selectedQuote.id)}</p>
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Created date</p>
+                      <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Created date</p>
                       <p className="mt-2 text-base font-semibold text-bark">
                         {selectedQuote.created_at ? formatDate(selectedQuote.created_at) : '-'}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Last updated</p>
+                      <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Last updated</p>
                       <p className="mt-2 text-base font-semibold text-bark">
                         {selectedQuote.updated_at ? formatDate(selectedQuote.updated_at) : selectedQuote.created_at ? formatDate(selectedQuote.created_at) : '-'}
                       </p>
@@ -681,7 +691,7 @@ export function Quotes() {
               </div>
 
               <div className="rounded-[1.5rem] border border-bark/10 bg-sand p-4">
-                <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Configurator selections</p>
+                <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Configurator selections</p>
                 {selectedQuote.configurator_selections.length === 0 ? (
                   <p className="mt-3 text-sm text-bark/70">No configurator data.</p>
                 ) : (
@@ -690,24 +700,24 @@ export function Quotes() {
                       <div key={index} className="rounded-[1.5rem] border border-bark/10 bg-white p-4">
                         <div className="grid gap-4 sm:grid-cols-2">
                           <div>
-                            <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Material</p>
+                            <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Material</p>
                             <p className="mt-2 text-base font-semibold text-bark">{selection.material ?? 'N/A'}</p>
                           </div>
                           <div>
-                            <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Finish</p>
+                            <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Finish</p>
                             <p className="mt-2 text-base font-semibold text-bark">{selection.finish ?? 'N/A'}</p>
                           </div>
                           <div>
-                            <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Colour</p>
+                            <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Colour</p>
                             <p className="mt-2 text-base font-semibold text-bark">{selection.colour ?? 'N/A'}</p>
                           </div>
                           <div>
-                            <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Estimated price</p>
+                            <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Estimated price</p>
                             <p className="mt-2 text-base font-semibold text-bark">{selection.estimated_price ?? 'N/A'}</p>
                           </div>
                         </div>
                         <div className="mt-4 rounded-[1.5rem] border border-bark/10 bg-sand p-4">
-                          <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Accessories</p>
+                          <p className="text-xs uppercase tracking-[0.35em] text-bark/70">Accessories</p>
                           <pre className="mt-2 overflow-auto text-sm text-bark/70">
                             {JSON.stringify(selection.accessories ?? {}, null, 2)}
                           </pre>
