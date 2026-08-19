@@ -128,7 +128,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayout
               </div>
               {!isCollapsed && (
                 <div className="hidden lg:block">
-                  <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Studio admin</p>
+                  <p className="text-xs uppercase tracking-[0.35em] text-bark/90">Studio admin</p>
                   <h1 className="mt-2 text-2xl font-semibold text-bark">Oak Cherry</h1>
                 </div>
               )}
@@ -201,15 +201,19 @@ export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayout
                 <Menu size={20} />
               </button>
 
-              <p className="text-sm font-semibold uppercase tracking-[0.35em] text-bark/60">Admin menu</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.35em] text-bark/90">Admin menu</p>
             </div>
 
             <header className="mb-8 rounded-[2rem] border border-bark/10 bg-white p-6 shadow-soft">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.35em] text-bark/60">{pageTitle}</p>
-                  <h2 className="mt-3 text-3xl font-semibold tracking-tight text-bark">{pageTitle}</h2>
-                  <p className="mt-3 max-w-2xl text-sm leading-7 text-bark/70">
+                  <p className="text-xs uppercase tracking-[0.35em] text-bark/90">
+                    {pageTitle}
+                  </p>
+                  <h2 className="mt-3 text-3xl font-semibold tracking-tight text-bark">
+                    {pageTitle}
+                  </h2>
+                  <p className="mt-3 max-w-2xl text-sm leading-7 text-bark/90">
                     Manage quote requests, configurator selections, messages, and studio operations from the admin dashboard.
                   </p>
                 </div>
@@ -229,12 +233,12 @@ export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayout
                   </Button>
 
                   <div className="rounded-[1.5rem] border border-bark/10 bg-sand px-4 py-3 text-sm text-bark">
-                    <p className="text-xs uppercase tracking-[0.35em] text-bark/60">{adminName}</p>
+                    <p className="text-xs uppercase tracking-[0.35em] text-bark/90">{adminName}</p>
                     <p className="mt-2 font-semibold">Studio admin</p>
                   </div>
 
                   <div className="rounded-[1.5rem] border border-bark/10 bg-sand px-4 py-3 text-sm text-bark">
-                    <p className="text-xs uppercase tracking-[0.35em] text-bark/60">Today</p>
+                    <p className="text-xs uppercase tracking-[0.35em] text-bark/90">Today</p>
                     <p className="mt-2 font-semibold">{currentDate}</p>
                   </div>
                 </div>

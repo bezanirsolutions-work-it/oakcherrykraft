@@ -60,17 +60,17 @@ export default function App() {
               <Route
                 path="products"
                 element={
-                  <motion.div {...pageTransition} className="w-full">
+                  <div className="w-full">
                     <Products />
-                  </motion.div>
+                  </div>
                 }
               />
               <Route
                 path="products/:category"
                 element={
-                  <motion.div {...pageTransition} className="w-full">
+                  <div className="w-full">
                     <Products />
-                  </motion.div>
+                  </div>
                 }
               />
               <Route
