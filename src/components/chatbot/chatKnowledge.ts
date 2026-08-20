@@ -25,6 +25,9 @@ const WHATSAPP_MESSAGE = encodeURIComponent(
 const WHATSAPP_URL = `https://wa.me/2348034291245?text=${WHATSAPP_MESSAGE}`;
 const PHONE_1 = '07035000174';
 const PHONE_2 = '08034291245';
+const BUSINESS_LOCATIONS_MESSAGE = `Oak Cherry Kraft has two locations:
+FHA Guzape, Abuja, Federal Capital Territory, Nigeria
+Shonibare Estate, Lagos State, Nigeria`;
 
 const normalize = (text: string) =>
   text
@@ -231,9 +234,6 @@ export function getChatResponse(
     'do you ship internationally',
     'ship internationally',
     'shipping internationally',
-    'nigeria',
-    'lagos',
-    'abuja',
     'internationally',
     'international delivery',
     'outside abuja',
@@ -264,28 +264,34 @@ export function getChatResponse(
     'setup',
   ];
 
-  const studioPatterns = [
-    'studio',
-    'visit',
-    'located',
-    'where are you',
-    'parking',
-    'parking available',
-    'is parking available',
-    'appointment',
-    'can i visit',
-    'visit the studio',
-  ];
-
-  const hoursPatterns = [
-    'opening hours',
-    'hours',
-    'open on',
-    'open today',
-    'open saturday',
-    'open sunday',
-    'public holidays',
-    'are you open',
+  const physicalLocationPatterns = [
+    'where are you located',
+    'where is oak cherry kraft located',
+    'where are your locations',
+    'lagos location',
+    'abuja location',
+    'located in lagos',
+    'located in abuja',
+    'do you have a lagos location',
+    'do you have an abuja location',
+    'are you in lagos',
+    'are you in abuja',
+    'is oak cherry kraft in lagos',
+    'is oak cherry kraft in abuja',
+    'what is your address',
+    'what are your addresses',
+    'what is your lagos address',
+    'what is your abuja address',
+    'what is the lagos address',
+    'what is the abuja address',
+    'lagos address',
+    'abuja address',
+    'where can i visit oak cherry kraft',
+    'where can i visit you',
+    'where is your studio',
+    'where are your studios',
+    'where can i find oak cherry kraft',
+    'can i visit your studio',
   ];
 
   const commercialPatterns = [
@@ -658,9 +664,9 @@ export function getChatResponse(
     };
   }
 
-  if (hasAny(normalized, studioPatterns) || hasAny(normalized, hoursPatterns)) {
+  if (hasAny(normalized, physicalLocationPatterns)) {
     return {
-      message: `Oak Cherry Kraft is located in FHA Guzape, Abuja, Nigeria. Visits are by appointment, and customers should arrange an appointment before visiting. Parking is available. The studio is open Monday to Saturday from 8:00 AM to 6:00 PM. Sunday is closed. Public holidays are open, and appointments are recommended.`,
+      message: `${BUSINESS_LOCATIONS_MESSAGE}\n\nPlease contact the studio before visiting.`,
       actions: [
         { label: 'Visit Our Studio', href: ROUTES.contact },
         { label: 'Contact Studio', href: ROUTES.contact },
@@ -721,7 +727,7 @@ export function getChatResponse(
 
   if (hasAny(normalized, deliveryPatterns)) {
     return {
-      message: `Oak Cherry Kraft delivers across Nigeria. Delivery outside Nigeria requires specific confirmation and logistics. Delivery depends on location, size, quantity, weight, and accessibility.`,
+      message: `Oak Cherry Kraft serves customers all over Nigeria and outside Nigeria. Delivery outside Nigeria requires specific confirmation and logistics. Delivery depends on location, size, quantity, weight, and accessibility.`,
       actions: createHandoverActions(),
     };
   }
@@ -777,9 +783,9 @@ export function getChatResponse(
     };
   }
 
-  if (hasAny(normalized, studioPatterns) || hasAny(normalized, hoursPatterns)) {
+  if (hasAny(normalized, physicalLocationPatterns)) {
     return {
-      message: `Oak Cherry Kraft is located in FHA Guzape, Abuja, Nigeria. Visits are by appointment, and customers should arrange an appointment before visiting. Parking is available. The studio is open Monday to Saturday from 8:00 AM to 6:00 PM. Sunday is closed. Public holidays are open, and appointments are recommended.`,
+      message: `${BUSINESS_LOCATIONS_MESSAGE}\n\nPlease contact the studio before visiting.`,
       actions: [
         { label: 'Visit Our Studio', href: ROUTES.contact },
         { label: 'Contact Studio', href: ROUTES.contact },
@@ -839,7 +845,7 @@ export function getChatResponse(
 
   if (hasAny(normalized, aboutPatterns)) {
     return {
-      message: `Oak Cherry Kraft creates custom and bespoke furniture, plus interior pieces designed around each customer's space, style, functionality, and requirements. The studio is based in FHA Guzape, Abuja, Nigeria.`,
+      message: `Oak Cherry Kraft creates custom and bespoke furniture, plus interior pieces designed around each customer's space, style, functionality, and requirements. ${BUSINESS_LOCATIONS_MESSAGE}`,
       actions: [
         { label: 'Explore Products', href: ROUTES.products },
         { label: 'Design Custom Furniture', href: ROUTES.configurationSelector },

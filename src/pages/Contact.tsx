@@ -7,6 +7,7 @@ import { PageHeader } from '../components/layout/PageHeader';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Button, Card, SectionHeader } from '../components/ui';
 import { supabase } from '../lib/supabase';
+import { BUSINESS_LOCATIONS } from '../lib/locations';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 24 },
@@ -22,7 +23,6 @@ const contactItems = [
   { label: 'Call the studio', value: '07035000174 / 08034291245', href: 'tel:+2347035000174', Icon: Phone },
   { label: 'WhatsApp', value: '08034291245', href: 'https://wa.me/2348034291245', Icon: MessageCircle },
   { label: 'Email', value: 'oakcherrykraft@gmail.com', href: 'mailto:oakcherrykraft@gmail.com', Icon: Mail },
-  { label: 'Address', value: 'FHA Guzape, Abuja, Federal Capital Territory, Nigeria', href: 'https://www.google.com/maps/search/?api=1&query=FHA+Guzape,+Abuja,+Federal+Capital+Territory,+Nigeria', Icon: MapPin },
   { label: 'Instagram', value: '@oakcherrykraft', href: 'https://www.instagram.com/oakcherrykraft/?hl=en', Icon: Instagram },
 ];
 
@@ -162,13 +162,20 @@ export function Contact() {
         </motion.div>
       </motion.div>
 
-      <motion.section initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.18 }} variants={sectionStagger} className="grid gap-6 lg:grid-cols-[1fr_0.7fr]">
+      <motion.section id="locations" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.18 }} variants={sectionStagger} className="grid gap-6 lg:grid-cols-[1fr_0.7fr]">
         <motion.div variants={fadeIn} whileHover={{ y: -4 }} className="relative min-h-[260px] overflow-hidden rounded-[1.5rem] border border-bark/10 bg-sand p-7 shadow-card sm:p-10 transition-transform duration-300">
           <div className="absolute inset-0 opacity-50" style={{ backgroundImage: 'linear-gradient(rgba(123,79,42,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(123,79,42,0.12) 1px, transparent 1px)', backgroundSize: '42px 42px' }} aria-hidden="true" />
           <div className="relative">
             <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-bark text-sand" aria-hidden="true"><MapPin size={21} /></span>
-            <h2 className="mt-6 font-display text-3xl font-semibold text-bark">FHA Guzape, Abuja</h2>
-            <p className="mt-3 max-w-md text-base leading-8 text-bark/70">FHA Guzape, Abuja, Federal Capital Territory, Nigeria.</p>
+            <p className="mt-6 text-xs font-semibold uppercase tracking-[0.3em] text-oak-700">Our locations</p>
+            <div className="mt-4 space-y-5">
+              {BUSINESS_LOCATIONS.map((location) => (
+                <div key={location.name}>
+                  <h2 className="font-display text-3xl font-semibold text-bark">{location.name}</h2>
+                  <p className="mt-2 max-w-md text-base leading-8 text-bark/70">{location.address}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </motion.div>
         <motion.div variants={fadeIn} whileHover={{ y: -4 }} className="transition-transform duration-300">

@@ -2,6 +2,7 @@ import { ArrowUpRight, Facebook, Instagram, Linkedin, Mail, MapPin } from 'lucid
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { recordLayoutStateChange } from '../../lib/perfInstrumentation';
+import { BUSINESS_LOCATIONS } from '../../lib/locations';
 
 export function Footer() {
   const [newsletterStatus, setNewsletterStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -38,8 +39,15 @@ export function Footer() {
             <div className="mt-6 flex items-start gap-3 text-sm text-bark">
               <MapPin size={18} className="mt-1 text-oak-700" aria-hidden="true" />
               <div>
-                <p className="font-semibold text-bark">FHA Guzape</p>
-                <p>Abuja, Federal Capital Territory, Nigeria</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oak-700">Our locations</p>
+                <div className="mt-3 space-y-3">
+                  {BUSINESS_LOCATIONS.map((location) => (
+                    <div key={location.name}>
+                      <p className="font-semibold text-bark">{location.name}</p>
+                      <p>{location.address}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
             <div className="mt-6 flex items-center gap-3">

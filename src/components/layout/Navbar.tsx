@@ -6,6 +6,7 @@ import logoPath from '../../../public/assets/logo/LOGO-mobile.webp';
 const links = [
   { label: 'Home', path: '/' },
   { label: 'Products', path: '/products' },
+  { label: 'Design Your Furniture', path: '/configuration-selector' },
   { label: 'Projects', path: '/projects' },
   { label: 'About', path: '/about' },
   { label: 'Contact', path: '/contact' },

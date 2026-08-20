@@ -7,6 +7,8 @@ import { getCachedData } from '../lib/cache';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Button, EmptyState, LoadingState, SectionHeader, ProductSkeleton } from '../components/ui';
 import { getProductImage, normalizeProducts, productSelectColumns, type Product } from '../lib/products';
+import { products as fallbackProducts } from '../data/products';
+import { getCanonicalProductCategory, getProductCategoryFromSlug, normalizeProductCategorySlug, PRODUCT_CATEGORIES } from '../lib/productCategories';
 import { supabase } from '../lib/supabase';
 import {
   recordProductsFetchStart,
@@ -15,13 +17,6 @@ import {
   recordImagesStartLoading,
   recordImagesFinishedLoading,
 } from '../lib/perfInstrumentation';
-
-const normalizeCategorySlug = (category: string) =>
-  category
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '');
 
 const formatPriceValue = (value?: string | number | null) => {
   if (value == null) return '';
@@ -71,7 +66,13 @@ export function Products() {
             throw fetchError;
           }
 
-          return normalizeProducts(data);
+          const liveProducts = normalizeProducts(data);
+          const liveProductIds = new Set(liveProducts.map((product) => product.id));
+          const missingFallbackProducts = normalizeProducts(fallbackProducts).filter(
+            (product) => !liveProductIds.has(product.id)
+          );
+
+          return [...liveProducts, ...missingFallbackProducts];
         });
 
         recordProductsFetchEnd();
@@ -92,20 +93,14 @@ export function Products() {
   }, []);
 
   const categories = useMemo(() => {
-    const group = new Map<string, string>();
-    products.forEach((product) => {
-      const categoryLabel = product.category?.trim();
-      if (!categoryLabel) return;
-      const slug = normalizeCategorySlug(categoryLabel);
-      if (!group.has(slug)) {
-        group.set(slug, categoryLabel);
-      }
-    });
-    return Array.from(group.entries()).map(([slug, label]) => ({ slug, label }));
+    return PRODUCT_CATEGORIES.map((label) => ({
+      slug: normalizeProductCategorySlug(label),
+      label,
+    }));
   }, [products]);
 
   const selectedCategory = activeCategoryFilter
-    ? categories.find((item) => item.label === activeCategoryFilter || item.slug === normalizeCategorySlug(activeCategoryFilter))
+    ? categories.find((item) => item.slug === normalizeProductCategorySlug(activeCategoryFilter))
     : null;
 
   const selectedCategoryName = selectedCategory?.label ?? null;
@@ -119,7 +114,7 @@ export function Products() {
     const normalizedQuery = searchQuery.trim().toLowerCase();
 
     return products.filter((product) => {
-      if (activeCategoryFilter && normalizeCategorySlug(product.category ?? '') !== normalizeCategorySlug(activeCategoryFilter)) {
+      if (activeCategoryFilter && getCanonicalProductCategory(product.category) !== getProductCategoryFromSlug(activeCategoryFilter)) {
         return false;
       }
 
@@ -253,7 +248,9 @@ export function Products() {
             {filteredProducts.map((product, index) => {
               const displayImage = getProductImage(product);
               const productSlug = product.slug || product.id;
-              const categorySlug = normalizeCategorySlug(product.category || '');
+              const categorySlug = normalizeProductCategorySlug(
+                getCanonicalProductCategory(product.category) || product.category || ''
+              );
               return (
                 <article
                   key={product.id}

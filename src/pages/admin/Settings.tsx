@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Button } from '../../components/ui';
 import { supabase } from '../../lib/supabase';
+import { BUSINESS_LOCATIONS } from '../../lib/locations';
 
 interface SettingsValues {
   companyName: string;
@@ -40,7 +41,7 @@ const initialValues: SettingsValues = {
   tagline: '',
   founderName: '',
   founderBio: '',
-  address: 'FHA Guzape, Abuja, Federal Capital Territory, Nigeria.',
+  address: BUSINESS_LOCATIONS.map((location) => `${location.name}, ${location.address}`).join('\n'),
   phone: '',
   email: '',
   whatsapp: '',

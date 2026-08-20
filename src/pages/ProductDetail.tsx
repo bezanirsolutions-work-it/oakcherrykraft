@@ -26,19 +26,14 @@ import {
   saveRecentlyViewedProductSlug,
   type Product,
 } from '../lib/products';
+import { getCanonicalProductCategory, normalizeProductCategorySlug } from '../lib/productCategories';
 import { supabase } from '../lib/supabase';
+import { products as fallbackProducts } from '../data/products';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 24 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as const } },
 };
-
-const normalizeCategorySlug = (category: string) =>
-  category
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '');
 
 const formatPriceValue = (value?: string | number | null) => {
   if (value == null) return '';
@@ -98,14 +93,13 @@ export function ProductDetail() {
             .eq('is_active', true)
             .single();
 
-          if (fetchError) {
-            if (fetchError.code === 'PGRST116') {
-              throw new Error('Product not found');
-            }
+          if (fetchError && fetchError.code !== 'PGRST116') {
             throw fetchError;
           }
 
-          const product = normalizeProduct(data);
+          const product = normalizeProduct(data) ?? normalizeProduct(fallbackProducts.find(
+            (fallbackProduct) => fallbackProduct.id === slug
+          ));
           if (product?.status === 'archived') {
             return null;
           }
@@ -199,7 +193,9 @@ export function ProductDetail() {
     );
   }
 
-  const categorySlug = normalizeCategorySlug(product.category || '');
+  const categorySlug = normalizeProductCategorySlug(
+    getCanonicalProductCategory(product.category) || product.category || ''
+  );
   const pageUrl = `https://oakcherrykraft.com/products/${categorySlug}/${slug}`;
   return (
     <PageContainer className="space-y-10 pb-20">

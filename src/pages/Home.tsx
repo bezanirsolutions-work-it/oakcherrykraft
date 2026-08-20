@@ -25,10 +25,11 @@ import { Button, Card, SectionHeader } from '../components/ui';
 import { SectionTitle } from '../components/base/SectionTitle';
 import { products } from '../data/products';
 import { getCachedData } from '../lib/cache';
-import { featuredProductSelectColumns, getProductImage, normalizeProducts, type Product } from '../lib/products';
+import { normalizeProducts, type Product } from '../lib/products';
 import { supabase } from '../lib/supabase';
 import { fetchFeaturedProjects, fetchProjectOfMonth, type Project } from '../lib/projects';
 import type { Testimonial } from '../hooks/useTestimonials';
+import { PRODUCT_CATEGORIES, normalizeProductCategorySlug } from '../lib/productCategories';
 
 const reveal = {
   hidden: { opacity: 0, y: 24 },
@@ -43,14 +44,20 @@ const sectionStagger = {
 const MotionLink = motion(Link);
 const founderPortrait = new URL('../../ADE\'s.jpeg', import.meta.url).href;
 
-const categoryCards = [
-  { title: 'Dining Furniture', description: 'Made for gathering.', image: '/assets/hero/intro-picture.webp', pathValue: 'dining' },
-  { title: 'Living Room Furniture', description: 'Designed for everyday comfort.', image: '/assets/living-room-cover.webp', pathValue: 'living-room' },
-  { title: 'Bedroom Furniture', description: 'Crafted for rest and retreat.', image: '/assets/bedroom-furniture-cover.webp', pathValue: 'bedroom' },
-  { title: 'Office Furniture', description: 'Designed for focused work.', image: '/assets/office-furniture-cover.webp', pathValue: 'office' },
-  { title: 'Kitchen Furniture', description: 'Beautifully practical storage and cabinetry.', image: '/assets/19.webp', pathValue: 'kitchen' },
-  { title: 'Outdoor Furniture', description: 'Made for open-air living.', image: '/assets/outdoor-furniture.webp', pathValue: 'outdoor' },
-];
+const categoryCardDetails = {
+  Dining: { title: 'Dining Furniture', description: 'Made for gathering.', image: '/assets/hero/intro-picture.webp' },
+  'Living Room': { title: 'Living Room Furniture', description: 'Designed for everyday comfort.', image: '/assets/living-room-cover.webp' },
+  Bedroom: { title: 'Bedroom Furniture', description: 'Crafted for rest and retreat.', image: '/assets/bedroom-furniture-cover.webp' },
+  Office: { title: 'Office Furniture', description: 'Designed for focused work.', image: '/assets/office-furniture-cover.webp' },
+  Kitchen: { title: 'Kitchen Furniture', description: 'Beautifully practical storage and cabinetry.', image: '/assets/19.webp' },
+  Outdoor: { title: 'Outdoor Furniture', description: 'Made for open-air living.', image: '/assets/outdoor-furniture.webp' },
+} satisfies Record<(typeof PRODUCT_CATEGORIES)[number], { title: string; description: string; image: string }>;
+
+const categoryCards = PRODUCT_CATEGORIES.map((category) => ({
+  ...categoryCardDetails[category],
+  category,
+  pathValue: normalizeProductCategorySlug(category),
+}));
 
 const defaultFeaturedProducts = normalizeProducts(products).slice(0, 3);
 
@@ -181,55 +188,10 @@ const testimonials: Testimonial[] = [
 ];
 
 export function Home() {
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>(defaultFeaturedProducts);
-  const [_isFeaturedLoading, setIsFeaturedLoading] = useState(true);
-  const [_featuredError, setFeaturedError] = useState<string | null>(null);
   const [featuredProjects, setFeaturedProjects] = useState<Project[]>([]);
   const [projectOfMonth, setProjectOfMonth] = useState<Project | null>(null);
   const [isProjectsLoading, setIsProjectsLoading] = useState(true);
   const [projectsError, setProjectsError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const fetchFeaturedProducts = async () => {
-      setIsFeaturedLoading(true);
-      setFeaturedError(null);
-
-      try {
-        const activeProducts = await getCachedData<Product[]>(`products:homepage-featured`, 10 * 60 * 1000, async () => {
-          const { data, error } = await supabase
-            .from('products')
-            .select(featuredProductSelectColumns)
-            .eq('is_active', true)
-            .order('created_at', { ascending: false });
-
-          if (error) throw error;
-          return normalizeProducts(data);
-        });
-
-        if (!mounted) return;
-
-        const featuredItems = activeProducts.slice(0, 3);
-        setFeaturedProducts(featuredItems);
-      } catch (error) {
-        if (!mounted) return;
-        setFeaturedError(error instanceof Error ? error.message : 'Unable to load featured products.');
-      } finally {
-        if (mounted) {
-          setIsFeaturedLoading(false);
-        }
-      }
-    };
-
-    deferAfterHeroPaint(() => {
-      void fetchFeaturedProducts();
-    });
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -266,15 +228,6 @@ export function Home() {
     };
   }, []);
 
-const normalizeCategorySlug = (category: string) =>
-  category
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '');
-
-  const displayFeaturedProducts = featuredProducts.length > 0 ? featuredProducts : defaultFeaturedProducts;
-
   return (
     <div className="min-h-screen">
       <SEO
@@ -289,10 +242,10 @@ const normalizeCategorySlug = (category: string) =>
         <FeaturedCollectionsSection>
           <section id="explore-collection">
             <SectionHeader
-              eyebrow="Explore the collection"
+              eyebrow="THE COLLECTION"
               title="Furniture for the way you want to live."
-              description="From a statement dining table to a complete bespoke installation, each piece is made to feel unmistakably yours."
-              className="mb-6"
+              description="Thoughtfully designed furniture for dining, living, bedroom, office, kitchen, and outdoor spaces."
+              className="mb-6 lg:max-w-none lg:[&>p:last-child]:max-w-none lg:[&>p:last-child]:whitespace-nowrap"
             />
           </section>
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.12 }} variants={sectionStagger} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -326,52 +279,6 @@ const normalizeCategorySlug = (category: string) =>
         </motion.div>
       </FeaturedCollectionsSection>
 
-      <section className="section-gap">
-        <div className="container-wide">
-          <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
-            <SectionHeader
-              eyebrow="Featured products"
-              title="Curated furniture ready for commission."
-              description="Explore a premium selection of signature pieces designed for modern living and enduring quality."
-              className="max-w-3xl"
-            />
-            <Button variant="link" asChild icon={<ArrowUpRight size={17} aria-hidden="true" />}>
-              <Link to="/products">View all products</Link>
-            </Button>
-          </div>
-
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.12 }} variants={sectionStagger} className="mt-6 grid gap-5 lg:grid-cols-3">
-            {displayFeaturedProducts.map((product) => (
-              <motion.article
-                key={product.id}
-                variants={reveal}
-                className="group overflow-hidden rounded-[1.75rem] border border-bark/10 bg-white shadow-card transition duration-300 hover:-translate-y-1 hover:shadow-medium focus-within:outline-none focus-within:ring-4 focus-within:ring-oak-200 focus-within:ring-offset-2 focus-within:ring-offset-white"
-              >
-                <div className="relative aspect-[4/3] overflow-hidden">
-                  <img
-                    src={getProductImage(product)}
-                    alt={product.name ?? ''}
-                    loading="lazy"
-                    decoding="async"
-                    className="h-full w-full object-cover transition duration-700 ease-brand group-hover:scale-105"
-                  />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-2xl font-semibold text-bark">{product.name}</h3>
-                  <p className="mt-3 text-sm leading-7 text-bark/70">{product.description || 'Premium handcrafted furniture.'}</p>
-                  <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="text-sm font-medium text-bark/70">{product.material || 'Fine wood'}</p>
-                    <Button variant="link" size="sm" asChild className="px-0">
-                      <Link to={`/products/${normalizeCategorySlug(product.category ?? '')}/${product.slug ?? product.id}`} aria-label={`View ${product.name}`}>View product</Link>
-                    </Button>
-                  </div>
-                </div>
-              </motion.article>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
       {projectOfMonth ? (
         <section className="section-gap bg-sand/40">
           <div className="container-wide">
@@ -404,13 +311,13 @@ const normalizeCategorySlug = (category: string) =>
                 </div>
                 <div className="space-y-4">
                   <h2 className="text-4xl font-semibold text-bark sm:text-5xl">{projectOfMonth.title}</h2>
-                  <p className="max-w-2xl text-base leading-8 text-bark/75">{projectOfMonth.description}</p>
                 </div>
                 <Button size="lg" asChild>
                   <Link to={`/projects/${projectOfMonth.slug}`}>View Full Project</Link>
                 </Button>
               </motion.div>
             </div>
+            <p className="mt-8 max-w-none text-base leading-8 text-bark/75">{projectOfMonth.description}</p>
           </div>
         </section>
       ) : null}
@@ -450,19 +357,18 @@ const normalizeCategorySlug = (category: string) =>
       </Suspense>
 
       <TestimonialsSection>
+        <div className="grid items-stretch gap-10 lg:grid-cols-2 lg:gap-16">
             <motion.div
               initial={{ opacity: 0, x: -22 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-              className="relative overflow-hidden rounded-[2rem] border border-bark/10 bg-sand shadow-soft"
+              className="relative aspect-[4/5] overflow-hidden rounded-[2rem] border border-bark/10 bg-sand shadow-soft lg:aspect-auto lg:min-h-[620px]"
             >
-              <div className="absolute inset-0 rounded-[2rem] bg-[radial-gradient(circle_at_top_left,_rgba(255,247,236,0.85),_transparent_45%)] opacity-90" aria-hidden="true" />
-              <div className="absolute left-8 top-8 h-24 w-24 rounded-full bg-oak-100/80 blur-3xl" aria-hidden="true" />
               <img
                 src={founderPortrait}
                 alt="Adeyemo Rhodes-Vivour, founder of Oak Cherry Kraft"
-                className="relative h-full w-full object-cover transition duration-700 ease-brand hover:scale-[1.01]"
+                className="h-full w-full object-cover transition duration-700 ease-brand hover:scale-[1.01]"
               />
             </motion.div>
 
@@ -471,7 +377,7 @@ const normalizeCategorySlug = (category: string) =>
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-              className="space-y-4"
+              className="flex flex-col justify-center space-y-8 py-2 lg:py-8"
             >
               <SectionHeader
                 eyebrow="Meet the Founder"
@@ -494,6 +400,7 @@ const normalizeCategorySlug = (category: string) =>
                 </div>
               </Card>
             </motion.div>
+              </div>
       </TestimonialsSection>
 
       <FeaturedProjectsSection>
