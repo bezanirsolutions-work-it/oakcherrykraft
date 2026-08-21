@@ -7,12 +7,7 @@ import { PageHeader } from '../components/layout/PageHeader';
 import { PageContainer } from '../components/layout/PageContainer';
 import { AnimatedImage, Badge, Button, Card, Breadcrumb, EmptyState, SectionHeader } from '../components/ui';
 import { fetchProjects, type Project } from '../lib/projects';
-import projectOneVideo from '../../Project 6.mp4';
-import projectTwoVideo from '../../PROJECT 2.mp4';
-import projectFourImage from '../../PROJECT 4.jpeg';
-import projectThreeVideo from '../../Project 3.mp4';
-import projectFiveVideo from '../../Project 5.mp4';
-import projectSixVideo from '../../PROJECT 1.mp4';
+import { inTheRealWorldProjects } from '../data/inTheRealWorld';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 24 },
@@ -116,21 +111,21 @@ export function ProjectPortfolio() {
 
             <div className="relative min-h-0 lg:mb-[132px] lg:min-h-[620px]">
               <div className="relative z-10 w-full overflow-hidden rounded-[2rem] border border-bark/10 bg-bark shadow-[0_28px_80px_rgba(46,36,28,0.16)] lg:absolute lg:right-0 lg:top-0 lg:w-[74%]">
-                <video className="h-auto max-h-[540px] w-full object-contain" src={projectOneVideo} aria-label="Primary exhibition footage" autoPlay={!reducedMotion} muted loop playsInline controls preload="metadata" />
+                <video className="h-auto max-h-[540px] w-full object-contain" src={inTheRealWorldProjects[0].media} aria-label={inTheRealWorldProjects[0].alt} autoPlay={!reducedMotion} muted loop playsInline controls preload="metadata" />
               </div>
 
               <div className="relative z-20 mt-6 w-[78%] overflow-hidden rounded-[1.8rem] border border-bark/10 bg-bark shadow-[0_24px_60px_rgba(46,36,28,0.14)] lg:absolute lg:bottom-0 lg:left-0 lg:mt-0 lg:w-[46%]">
-                <video className="h-auto max-h-[300px] w-full object-contain" src={projectTwoVideo} aria-label="Supporting exhibition footage" autoPlay={!reducedMotion} muted loop playsInline controls preload="metadata" />
+                <video className="h-auto max-h-[300px] w-full object-contain" src={inTheRealWorldProjects[1].media} aria-label={inTheRealWorldProjects[1].alt} autoPlay={!reducedMotion} muted loop playsInline controls preload="metadata" />
               </div>
 
               <div className="relative z-30 mt-6 ml-auto w-[62%] overflow-hidden rounded-[1.6rem] border border-white/70 bg-sand shadow-[0_20px_50px_rgba(46,36,28,0.18)] lg:absolute lg:bottom-10 lg:right-[8%] lg:mt-0 lg:ml-0 lg:w-[31%]">
-                <img src={projectFourImage} alt="A featured Oak Cherry Kraft project" loading="lazy" decoding="async" className="aspect-[4/5] h-full w-full object-cover" />
+                <img src={inTheRealWorldProjects[2].media} alt={inTheRealWorldProjects[2].alt} loading="lazy" decoding="async" className="aspect-[4/5] h-full w-full object-cover" />
               </div>
 
               <div className="relative mt-6 grid grid-cols-3 gap-3 lg:absolute lg:bottom-[-132px] lg:left-[8%] lg:right-0 lg:mt-0">
-                {[projectThreeVideo, projectFiveVideo, projectSixVideo].map((src, index) => (
-                  <div key={src} className="relative overflow-hidden rounded-[1.2rem] border border-bark/10 bg-bark shadow-soft">
-                    <video className="aspect-[4/3] h-full w-full object-cover" src={src} aria-label={`Additional exhibition footage ${index + 1}`} autoPlay={!reducedMotion} muted loop playsInline controls preload="metadata" />
+                {inTheRealWorldProjects.slice(3).map((project) => (
+                  <div key={project.id} className="relative overflow-hidden rounded-[1.2rem] border border-bark/10 bg-bark shadow-soft">
+                    <video className="aspect-[4/3] h-full w-full object-cover" src={project.media} aria-label={project.alt} autoPlay={!reducedMotion} muted loop playsInline controls preload="metadata" />
                   </div>
                 ))}
               </div>

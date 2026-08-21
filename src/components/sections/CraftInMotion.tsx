@@ -76,7 +76,7 @@ export function CraftInMotion() {
         }
 
         .craft-track {
-          animation: craftJourney 38s linear infinite;
+          animation: craftJourney 26s linear infinite;
           will-change: transform;
         }
 

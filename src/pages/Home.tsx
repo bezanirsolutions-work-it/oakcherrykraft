@@ -5,11 +5,11 @@ import { Link } from 'react-router-dom';
 import {
   ArrowUpRight,
   ChevronRight,
-  MapPin,
   Ruler,
   Truck,
   Hammer,
   CheckCircle2,
+  Play,
 } from 'lucide-react';
 import {
   CraftInMotion,
@@ -27,9 +27,9 @@ import { products } from '../data/products';
 import { getCachedData } from '../lib/cache';
 import { normalizeProducts, type Product } from '../lib/products';
 import { supabase } from '../lib/supabase';
-import { fetchFeaturedProjects, fetchProjectOfMonth, type Project } from '../lib/projects';
 import type { Testimonial } from '../hooks/useTestimonials';
 import { CATEGORY_HIERARCHY, type ProductCategoryGroup } from '../lib/productCategories';
+import { inTheRealWorldProjects } from '../data/inTheRealWorld';
 
 const reveal = {
   hidden: { opacity: 0, y: 24 },
@@ -79,28 +79,6 @@ const craftMarqueeItems = ['CUSTOM FURNITURE', 'BESPOKE DESIGN', 'MASTER CRAFTSM
 const spaceMarqueeItems = CATEGORY_HIERARCHY.flatMap((group) => group.categories.map((category) => category.displayLabel));
 
 const defaultFeaturedProducts = normalizeProducts(products).slice(0, 3);
-
-const defaultProjectOfMonth: Project = {
-  id: 'project-of-the-month',
-  slug: 'project-of-the-month',
-  title: 'Luxury Dining Suite in Lekki',
-  description: 'An elegant dining collection with hand-carved timber details, designed to anchor a refined home interior with warmth and precision.',
-  category: 'Residential',
-  location: 'Lekki, Lagos',
-  status: 'Completed',
-  cover_image: '/assets/hero/intro-picture.webp',
-  gallery_images: [],
-  budget_range: '',
-  duration: '11 weeks',
-  completion_date: '11 weeks',
-  wood_species: 'Mahogany & Oak',
-  finish: 'Hand-rubbed oil & beeswax',
-  show_in_gallery: true,
-  featured_project: false,
-  project_of_the_month: false,
-  created_at: '',
-  updated_at: '',
-};
 
 const projectTimeline = [
   {
@@ -206,24 +184,6 @@ function CategoryRail({ group }: { group: ProductCategoryGroup }) {
   );
 }
 
-const deferAfterHeroPaint = (callback: () => void) => {
-  const run = () => {
-    if (typeof requestIdleCallback !== 'undefined') {
-      requestIdleCallback(() => callback());
-      return;
-    }
-
-    window.setTimeout(callback, 0);
-  };
-
-  if (typeof requestAnimationFrame !== 'undefined') {
-    requestAnimationFrame(run);
-    return;
-  }
-
-  run();
-};
-
 const testimonials: Testimonial[] = [
   {
     id: 'testimonial-1',
@@ -288,45 +248,7 @@ const testimonials: Testimonial[] = [
 ];
 
 export function Home() {
-  const [featuredProjects, setFeaturedProjects] = useState<Project[]>([]);
-  const [projectOfMonth, setProjectOfMonth] = useState<Project | null>(null);
-  const [isProjectsLoading, setIsProjectsLoading] = useState(true);
-  const [projectsError, setProjectsError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const loadProjects = async () => {
-      setIsProjectsLoading(true);
-      setProjectsError(null);
-      try {
-        const [featured, projectOfMonthData] = await Promise.all([
-          fetchFeaturedProjects(),
-          fetchProjectOfMonth(),
-        ]);
-        if (mounted) {
-          setFeaturedProjects(featured);
-          setProjectOfMonth(projectOfMonthData ?? defaultProjectOfMonth);
-        }
-      } catch (err) {
-        if (mounted) {
-          setFeaturedProjects([]);
-          setProjectOfMonth(defaultProjectOfMonth);
-        }
-      } finally {
-        if (mounted) setIsProjectsLoading(false);
-      }
-    };
-
-    deferAfterHeroPaint(() => {
-      if (!mounted) return;
-      void loadProjects();
-    });
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  const reducedMotion = useReducedMotion();
 
   return (
     <div className="min-h-screen">
@@ -356,54 +278,11 @@ export function Home() {
               eyebrow="THE COLLECTION"
               title="Explore our spaces."
               description="Thoughtfully designed furniture for residential and commercial spaces, made to begin a conversation with your room."
-              className="mx-auto mb-6 max-w-4xl text-center"
+              className="mb-6 max-w-none text-left sm:[&_p:last-child]:whitespace-nowrap"
             />
           </section>
           {CATEGORY_HIERARCHY.map((group) => <CategoryRail key={group.groupSlug} group={group} />)}
       </FeaturedCollectionsSection>
-
-      {projectOfMonth ? (
-        <section className="section-gap bg-sand/40">
-          <div className="container-wide">
-            <div className="grid gap-8 xl:grid-cols-[1.35fr_0.65fr] xl:items-center xl:gap-16">
-              <motion.div
-                initial={{ opacity: 0, x: -18 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, amount: 0.3 }}
-                transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
-                className="group relative min-h-[420px] overflow-hidden rounded-[2rem] border border-bark/10 bg-white shadow-soft xl:min-h-[560px]"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/80 to-transparent" aria-hidden="true" />
-                <img
-                  src={projectOfMonth.cover_image || defaultProjectOfMonth.cover_image || ''}
-                  alt={projectOfMonth.title}
-                  loading="lazy"
-                  decoding="async"
-                  className="relative h-full w-full object-cover transition duration-700 ease-brand group-hover:scale-105"
-                />
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, y: 18 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.3 }}
-                transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
-                className="space-y-6"
-              >
-                <div className="inline-flex rounded-full border border-bark/10 bg-white px-4 py-2 text-sm font-semibold text-bark shadow-sm">
-                  Project of the Month
-                </div>
-                <div className="space-y-4">
-                  <h2 className="text-4xl font-semibold text-bark sm:text-5xl">{projectOfMonth.title}</h2>
-                </div>
-                <Button size="lg" asChild>
-                  <Link to={`/projects/${projectOfMonth.slug}`}>View Full Project</Link>
-                </Button>
-              </motion.div>
-            </div>
-            <p className="mt-8 max-w-none text-base leading-8 text-bark/75">{projectOfMonth.description}</p>
-          </div>
-        </section>
-      ) : null}
 
       <Suspense fallback={null}>
         <WhyChooseSection>
@@ -505,61 +384,31 @@ export function Home() {
             </Button>
           </header>
 
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.12 }} variants={sectionStagger} className="mt-4 grid gap-5 lg:grid-cols-2">
-            {isProjectsLoading ? (
-              Array.from({ length: 3 }).map((_, index) => (
-                <motion.article
-                  key={`project-skeleton-${index}`}
-                  variants={reveal}
-                  className="overflow-hidden rounded-[1.75rem] border border-bark/10 bg-white shadow-card"
-                >
-                  <div className="relative aspect-[4/3] overflow-hidden bg-bark/5">
-                    <div className="h-full w-full animate-pulse bg-bark/10" />
-                  </div>
-                  <div className="space-y-3 p-6">
-                    <div className="h-4 w-24 animate-pulse rounded-full bg-bark/10" />
-                    <div className="h-7 w-3/4 animate-pulse rounded-full bg-bark/10" />
-                    <div className="h-4 w-full animate-pulse rounded-full bg-bark/10" />
-                    <div className="h-4 w-5/6 animate-pulse rounded-full bg-bark/10" />
-                  </div>
-                </motion.article>
-              ))
-            ) : projectsError ? (
-              <div className="col-span-full rounded-[1.5rem] border border-bark/10 bg-white p-8 text-center text-sm leading-7 text-bark/70 shadow-soft">
-                {projectsError}
-              </div>
-            ) : featuredProjects.length > 0 ? featuredProjects.map((project, index) => (
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.12 }} variants={sectionStagger} className="mt-4 grid gap-5 md:grid-cols-3">
+            {inTheRealWorldProjects.slice(0, 3).map((project, index) => (
               <motion.article
                 key={project.id}
                 variants={reveal}
-                className={`group overflow-hidden rounded-[1.75rem] border border-bark/10 bg-white shadow-card transition duration-300 hover:-translate-y-1 hover:shadow-medium focus-within:outline-none focus-within:ring-4 focus-within:ring-oak-200 focus-within:ring-offset-2 focus-within:ring-offset-white ${index === 0 ? 'lg:col-span-2 lg:-mx-[clamp(1.25rem,3vw,3.5rem)] lg:rounded-none' : ''}`}
+                className="group overflow-hidden rounded-[1.75rem] border border-bark/10 bg-white shadow-card transition duration-300 hover:-translate-y-1 hover:shadow-medium"
               >
-                <div className={`relative overflow-hidden bg-sand ${index === 0 ? 'aspect-[16/8] lg:aspect-[16/7]' : 'aspect-[4/3]'}`}>
+                <div className="relative aspect-[4/3] overflow-hidden bg-sand">
                   <img
-                    src={project.cover_image || defaultProjectOfMonth.cover_image || ''}
-                    alt={`${project.title} project in ${project.category}`}
+                    src={project.poster || project.media}
+                    alt={project.alt}
                     loading="lazy"
                     decoding="async"
-                    className="h-full w-full object-contain transition duration-700 ease-brand group-hover:scale-[1.02]"
+                    className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
                   />
-                  <span className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 text-xs font-semibold text-bark shadow-soft">
-                    <MapPin size={13} aria-hidden="true" />
-                    {project.category}
-                  </span>
-                </div>
-                <div className={`p-6 ${index === 0 ? 'lg:p-8' : ''}`}>
-                  <h3 className="text-2xl font-semibold text-bark">{project.title}</h3>
-                  <p className="mt-3 text-sm leading-7 text-bark/70">{project.description}</p>
-                  <Button variant="link" size="sm" asChild className="mt-5 px-0">
-                    <Link to={`/projects/${project.slug}`}>View project</Link>
-                  </Button>
+                  {project.type === 'video' ? (
+                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/10">
+                      <span className="flex h-14 w-14 items-center justify-center rounded-full border border-white/80 bg-white/15 shadow-lg backdrop-blur-sm">
+                        <Play className="ml-1 h-6 w-6 fill-white text-white" aria-hidden="true" />
+                      </span>
+                    </div>
+                  ) : null}
                 </div>
               </motion.article>
-            )) : (
-              <div className="col-span-full rounded-[1.5rem] border border-bark/10 bg-white p-8 text-center text-sm leading-7 text-bark/70 shadow-soft">
-                No featured projects are available right now. Please check back soon.
-              </div>
-            )}
+            ))}
           </motion.div>
         </div>
       </FeaturedProjectsSection>
