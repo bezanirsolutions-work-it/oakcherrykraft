@@ -85,12 +85,12 @@ export function ProjectDetail() {
       />
       <PageHeader title={project.title} subtitle={project.description} showBreadcrumb />
       <Breadcrumb items={[{ label: 'Home', path: '/' }, { label: 'Portfolio', path: '/projects' }, { label: project.title }]} className="pt-6" />
-      <motion.section initial="hidden" animate="visible" variants={fadeIn} className="space-y-10">
-        <SectionHeader eyebrow="Project details" title={project.title} description={project.description} />
-        <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-start lg:gap-16">
-          <div className="space-y-8">
+      <motion.section initial="hidden" animate="visible" variants={fadeIn} className="w-full space-y-10">
+        <SectionHeader eyebrow="Project details" title={project.title} description={project.description} className="w-full max-w-none" />
+        <div className="grid w-full gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-start lg:gap-16">
+          <div className="w-full space-y-8">
             <AnimatedImage src={project.cover_image || ''} alt={project.title} aspectRatio="16 / 10" overlay objectFit="contain" />
-            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid w-full gap-6 sm:grid-cols-2 xl:grid-cols-3">
               <Card>
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oak-700">Client</p>
                 <p className="mt-3 text-lg font-semibold text-bark">{project.client_name || 'Private client'}</p>
@@ -121,12 +121,12 @@ export function ProjectDetail() {
               </Card>
             </div>
           </div>
-          <div className="space-y-6">
-            <Card>
+          <div className="w-full space-y-6">
+            <Card className="w-full">
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oak-700">Overview</p>
               <p className="mt-4 text-base leading-8 text-bark/75">{project.description}</p>
             </Card>
-            <Card className="bg-sand">
+            <Card className="w-full bg-sand">
               <div className="flex items-center gap-3 text-bark/80">
                 <MapPin size={18} aria-hidden="true" />
                 <p>Studio and delivery available nationwide.</p>
