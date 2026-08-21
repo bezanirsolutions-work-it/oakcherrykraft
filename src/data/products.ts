@@ -2,7 +2,7 @@ export const products = [
   {
     id: 'intertwined-branch-base-console-table',
     name: 'Intertwined Branch Base Live-Edge Console Table',
-    category: 'Custom furniture',
+    category: 'Dining',
     description: 'A dramatic console table anchored by an intertwined branch base and live-edge top in rich walnut tones.',
     material: 'Teak',
     price_label: 'Made to order',
@@ -15,7 +15,7 @@ export const products = [
   {
     id: 'organic-root-slice-coffee-table-bench-set',
     name: 'Organic Root Slice Coffee Table & Curved Slat-Back Bench Set',
-    category: 'Living Room',
+    category: 'Living Spaces',
     description: 'A sculptural coffee table and bench set crafted from natural root slice timber, framed in warm blonde tones and matte finishes.',
     material: 'Teak',
     price_label: 'Made to order',
@@ -28,7 +28,7 @@ export const products = [
   {
     id: 'natural-tree-branch-plant-stand',
     name: 'Natural Tree Branch Multi-Tier Plant Stand & Display Shelf',
-    category: 'Shelving',
+    category: 'Living Spaces',
     description: 'A sculptural, multi-tier display shelf crafted for plants and objects, combining warm wood tones with refined satin finish.',
     material: 'Teak',
     price_label: 'Made to order',
@@ -54,7 +54,7 @@ export const products = [
   {
     id: 'living-room-sectional',
     name: 'Modular Living Room Sofa System',
-    category: 'Living Room',
+    category: 'Living Spaces',
     description: 'A contemporary sectional sofa with modular elements, allowing flexible configurations for any living space.',
     material: 'Oak',
     price_label: 'Made to order',
@@ -67,7 +67,7 @@ export const products = [
   {
     id: 'bedroom-platform-bed',
     name: 'Minimalist Platform Bed Frame',
-    category: 'Bedroom',
+    category: 'Bedrooms',
     description: 'A low-profile platform bed with integrated storage, combining functionality with understated elegance.',
     material: 'Teak',
     price_label: 'Made to order',
@@ -80,7 +80,7 @@ export const products = [
   {
     id: 'office-desk-workspace',
     name: 'Executive Workspace Desk',
-    category: 'Office',
+    category: 'Offices',
     description: 'A professional office desk with integrated storage and cable management, designed for focused work and refinement.',
     material: 'Walnut',
     price_label: 'Made to order',
@@ -106,7 +106,7 @@ export const products = [
   {
     id: 'outdoor-teak-seating',
     name: 'Outdoor Teak Lounge Set',
-    category: 'Outdoor',
+    category: 'Outdoor Living',
     description: 'A weather-resistant outdoor seating collection crafted from sustainably harvested teak, designed for open-air living.',
     material: 'Teak',
     price_label: 'Made to order',

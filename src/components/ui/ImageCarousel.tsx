@@ -34,8 +34,9 @@ export function ImageCarousel({ images, alt, className = '' }: ImageCarouselProp
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.35 }}
-            loading="lazy"
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            whileHover={{ scale: 1.015 }}
+            loading={index === 0 ? 'eager' : 'lazy'}
             decoding="async"
             onError={(e) => {
               const img = e.currentTarget as HTMLImageElement;

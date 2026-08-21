@@ -5,11 +5,17 @@ import { Link, useParams } from 'react-router-dom';
 import { PageHeader } from '../components/layout/PageHeader';
 import { getCachedData } from '../lib/cache';
 import { PageContainer } from '../components/layout/PageContainer';
-import { Button, EmptyState, LoadingState, SectionHeader, ProductSkeleton } from '../components/ui';
+import { Button, EmptyState, LoadingState, SectionHeader, ProductSkeleton, Reveal } from '../components/ui';
 import { getProductImage, normalizeProducts, productSelectColumns, type Product } from '../lib/products';
 import { products as fallbackProducts } from '../data/products';
-import { getCanonicalProductCategory, getProductCategoryFromSlug, normalizeProductCategorySlug, PRODUCT_CATEGORIES } from '../lib/productCategories';
+import {
+  getCanonicalCategorySlug,
+  getCategoryBySlug,
+  getCategoryDisplayLabel,
+  CATEGORY_HIERARCHY
+} from '../lib/productCategories';
 import { supabase } from '../lib/supabase';
+import restaurantCategoryCover from '../../Restaurant.jpeg';
 import {
   recordProductsFetchStart,
   recordProductsFetchEnd,
@@ -54,7 +60,7 @@ export function Products() {
       setError(null);
 
       try {
-        const data = await getCachedData<Product[]>(`products:catalog`, 10 * 60 * 1000, async () => {
+        const data = await getCachedData<Product[]>(`products:catalog:v2`, 10 * 60 * 1000, async () => {
           const { data, error: fetchError } = await supabase
             .from('products')
             .select(productSelectColumns)
@@ -67,12 +73,9 @@ export function Products() {
           }
 
           const liveProducts = normalizeProducts(data);
-          const liveProductIds = new Set(liveProducts.map((product) => product.id));
-          const missingFallbackProducts = normalizeProducts(fallbackProducts).filter(
-            (product) => !liveProductIds.has(product.id)
-          );
-
-          return [...liveProducts, ...missingFallbackProducts];
+          return liveProducts.length > 0
+            ? liveProducts
+            : normalizeProducts(fallbackProducts);
         });
 
         recordProductsFetchEnd();
@@ -93,14 +96,16 @@ export function Products() {
   }, []);
 
   const categories = useMemo(() => {
-    return PRODUCT_CATEGORIES.map((label) => ({
-      slug: normalizeProductCategorySlug(label),
-      label,
-    }));
-  }, [products]);
+    return CATEGORY_HIERARCHY.flatMap((group) =>
+      group.categories.map((cat) => ({
+        slug: cat.slug,
+        label: cat.displayLabel,
+      }))
+    );
+  }, []);
 
   const selectedCategory = activeCategoryFilter
-    ? categories.find((item) => item.slug === normalizeProductCategorySlug(activeCategoryFilter))
+    ? categories.find((item) => item.slug === activeCategoryFilter)
     : null;
 
   const selectedCategoryName = selectedCategory?.label ?? null;
@@ -114,8 +119,11 @@ export function Products() {
     const normalizedQuery = searchQuery.trim().toLowerCase();
 
     return products.filter((product) => {
-      if (activeCategoryFilter && getCanonicalProductCategory(product.category) !== getProductCategoryFromSlug(activeCategoryFilter)) {
-        return false;
+      if (activeCategoryFilter) {
+        const productCanonicalSlug = getCanonicalCategorySlug(product.category);
+        if (productCanonicalSlug !== activeCategoryFilter) {
+          return false;
+        }
       }
 
       if (!normalizedQuery) {
@@ -173,6 +181,7 @@ export function Products() {
         title={selectedCategoryName || 'Furniture Built to Feel Natural, Lasting, and Beautifully Scaled'}
         subtitle="Explore considered pieces for dining, living, bedroom, and custom spaces. Every published design is made to order and can be tailored to your space."
         showBreadcrumb
+        image={selectedCategory?.slug === 'restaurants' ? restaurantCategoryCover : undefined}
       />
 
       <section
@@ -243,20 +252,19 @@ export function Products() {
           />
         ) : (
           <div
-            className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+            className="grid gap-x-5 gap-y-10 md:grid-cols-2 lg:grid-cols-4"
           >
             {filteredProducts.map((product, index) => {
               const displayImage = getProductImage(product);
               const productSlug = product.slug || product.id;
-              const categorySlug = normalizeProductCategorySlug(
-                getCanonicalProductCategory(product.category) || product.category || ''
-              );
+              const categorySlug = getCanonicalCategorySlug(product.category) || '';
               return (
+                <Reveal key={product.id} delay={Math.min(index * 0.04, 0.2)} className="h-full">
                 <article
                   key={product.id}
                   className="group overflow-hidden rounded-[1.5rem] border border-bark/10 bg-white shadow-card transition duration-300 hover:shadow-medium hover:-translate-y-1"
                 >
-                  <div className="relative aspect-[4/3] overflow-hidden bg-surface-strong">
+                  <div className="relative aspect-[0.86/1] overflow-hidden bg-surface-strong">
                     <img
                       src={displayImage}
                       alt={product.name ?? ''}
@@ -270,10 +278,10 @@ export function Products() {
                       {product.status === 'published' || product.status === 'available' ? 'Available to commission' : 'Made to order'}
                     </span>
                   </div>
-                  <div className="p-6 sm:p-7">
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oak-700">{product.category}</p>
-                    <h2 className="mt-3 font-display text-3xl font-semibold text-bark">{product.name}</h2>
-                    <p className="mt-3 text-sm leading-7 text-bark/70">{product.description || 'Premium handcrafted furniture.'}</p>
+                  <div className="p-5 sm:p-6">
+                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oak-700 transition-transform duration-300 ease-brand group-hover:translate-x-1">{product.category}</p>
+                    <h2 className="mt-3 font-display text-3xl font-semibold text-bark transition-transform duration-300 ease-brand group-hover:translate-x-1">{product.name}</h2>
+                    <p className="mt-3 text-sm leading-7 text-bark/70 transition-colors duration-300 group-hover:text-bark/80">{product.description || 'Premium handcrafted furniture.'}</p>
                     <div className="mt-6 flex flex-col gap-3 border-t border-bark/10 pt-5 text-sm sm:flex-row sm:items-center sm:justify-between">
                       <span className="inline-flex items-center gap-2 text-bark/65">
                         <Clock3 size={15} aria-hidden="true" />
@@ -288,11 +296,11 @@ export function Products() {
                           size="sm"
                           asChild
                           className="px-0"
-                          icon={<ArrowUpRight size={16} aria-hidden="true" />}
+                          icon={<ArrowUpRight size={16} className="transition-transform duration-300 ease-brand group-hover:translate-x-1" aria-hidden="true" />}
                         >
                           <Link to={`/products/${categorySlug}/${productSlug}`}>View product</Link>
                         </Button>
-                        <Button variant="secondary" size="sm" asChild className="px-0" icon={<ArrowUpRight size={16} aria-hidden="true" />}>
+                        <Button variant="secondary" size="sm" asChild className="px-0" icon={<ArrowUpRight size={16} className="transition-transform duration-300 ease-brand group-hover:translate-x-1" aria-hidden="true" />}>
                           <Link to="/request-quote">Request quote</Link>
                         </Button>
                       </div>
@@ -311,6 +319,7 @@ export function Products() {
                     </div>
                   </div>
                 </article>
+                </Reveal>
               );
             })}
           </div>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { recordLayoutStateChange } from '../../lib/perfInstrumentation';
 import { BUSINESS_LOCATIONS } from '../../lib/locations';
+import { Reveal } from '../ui/Reveal';
 
 export function Footer() {
   const [newsletterStatus, setNewsletterStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -29,7 +30,7 @@ export function Footer() {
   return (
     <footer className="border-t border-bark/10 bg-sand px-4 py-14 text-sm text-bark sm:px-8 sm:py-16 lg:px-10">
       <div className="mx-auto max-w-7xl">
-        <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr_1fr] lg:gap-16">
+        <Reveal className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr_1fr] lg:gap-16">
           <div>
             <p className="font-display text-3xl font-semibold text-bark">Oak Cherry Kraft</p>
             <p className="mt-2 text-xs font-semibold uppercase tracking-[0.25em] text-oak-700">Artistry Limited</p>
@@ -82,7 +83,7 @@ export function Footer() {
               ) : null}
             </form>
           </div>
-        </div>
+        </Reveal>
 
         <div className="mt-12 rounded-[1.75rem] border border-bark/10 bg-white p-6 shadow-soft sm:p-8 lg:flex lg:items-center lg:justify-between">
           <div>

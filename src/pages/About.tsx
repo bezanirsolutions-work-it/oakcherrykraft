@@ -6,7 +6,8 @@ import { PageContainer } from '../components/layout/PageContainer';
 import { AnimatedImage, Button, Card, SectionHeader } from '../components/ui';
 import founderVideo from '../../assets/videos/founder.mp4';
 import founderCaptions from '../../assets/videos/founder-captions.vtt';
-import replaceChairImage from '../../REPLACE CHAIR.jpeg';
+import woodScrapingVideo from '../../wood scraping.mp4';
+import workshopVideo from '../../workshop.mp4';
 
 const trustPoints = [
   'Premium hardwoods selected for grain, strength, and character.',
@@ -35,17 +36,17 @@ export function About() {
         url="https://oakcherrykraft.com/about"
       />
 
-      <section className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-14">
+      <section className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-center lg:gap-20">
         <motion.div initial={{ opacity: 0, x: -24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7, ease: 'easeOut' }} className="space-y-7">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oak-700">Our story</p>
           <h2 className="font-display text-4xl font-semibold leading-[1.02] tracking-[-0.03em] text-bark sm:text-5xl">A studio approach to furniture that feels personal and lasting.</h2>
           <p className="max-w-xl text-lg leading-8 text-bark/70">We work closely with each client to shape pieces that fit their architecture, rhythm, and the way they want to live.</p>
           <Button asChild icon={<ArrowUpRight size={17} aria-hidden="true" />}><Link to="/contact">Start a conversation</Link></Button>
         </motion.div>
-        <AnimatedImage src="/assets/about-page.webp" alt="Oak Cherry Kraft workshop and furniture" aspectRatio="3 / 5" overlay priority objectFit="contain" className="bg-sand object-center" />
+        <AnimatedImage src="/assets/about-page.webp" alt="Oak Cherry Kraft workshop and furniture" aspectRatio="16 / 10" overlay priority objectFit="cover" className="bg-sand object-center lg:aspect-[16/9]" />
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-3">
+      <section className="grid gap-6 lg:grid-cols-[1fr_1.15fr_1fr] lg:items-stretch">
         <motion.div variants={fadeIn} whileHover={{ y: -4 }} className="transition-transform duration-300">
           <Card className="bg-white">
             <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-oak-100 text-oak-700" aria-hidden="true"><Heart size={22} /></span>
@@ -101,10 +102,34 @@ export function About() {
         <SectionHeader eyebrow="Inside the workshop" title="Where material becomes meaning." description="Our workshop is a place for patience, precision, and the tactile decisions that make every piece distinct." />
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.18 }} variants={sectionStagger} className="grid gap-5 md:grid-cols-[1.15fr_0.85fr]">
           <motion.div variants={fadeIn} whileHover={{ scale: 1.02 }} className="transition-transform duration-300">
-            <AnimatedImage src="https://images.unsplash.com/photo-1531058020387-3be344556be6?auto=format&fit=crop&w=1400&q=85" alt="Woodworking tools and workshop materials" aspectRatio="16 / 10" overlay />
+            <div className="overflow-hidden rounded-[2rem] border border-bark/10 bg-sand shadow-soft">
+              <video
+                className="h-auto w-full object-contain"
+                src={woodScrapingVideo}
+                aria-label="Wood scraping in the Oak Cherry Kraft workshop"
+                autoPlay
+                muted
+                loop
+                playsInline
+                controls
+                preload="metadata"
+              />
+            </div>
           </motion.div>
           <motion.div variants={fadeIn} whileHover={{ scale: 1.02 }} className="transition-transform duration-300">
-            <AnimatedImage src={replaceChairImage} alt="Chair detail from the Oak Cherry Kraft workshop" objectFit="contain" overlay />
+            <div className="overflow-hidden rounded-[2rem] border border-bark/10 bg-sand shadow-soft">
+              <video
+                className="h-auto w-full object-contain"
+                src={workshopVideo}
+                aria-label="Oak Cherry Kraft workshop video"
+                autoPlay
+                muted
+                loop
+                playsInline
+                controls
+                preload="metadata"
+              />
+            </div>
           </motion.div>
         </motion.div>
       </section>

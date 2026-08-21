@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { SEO } from '../components/layout/SEO';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ArrowUpRight, ChevronRight, Hammer, Sparkles, Truck } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { PageContainer } from '../components/layout/PageContainer';
@@ -66,6 +66,7 @@ export function Configurator() {
   const location = useLocation();
   const locationState = location.state as ConfiguratorLocationState | null;
   const navigate = useNavigate();
+  const reducedMotion = useReducedMotion();
 
   const [savedConfiguration, setSavedConfiguration] = useState<Partial<QuoteFormValues> | null>(null);
 
@@ -566,11 +567,26 @@ export function Configurator() {
                 <span className="inline-flex items-center gap-2 rounded-full bg-sand px-4 py-2 text-sm font-semibold text-bark shadow-soft"><ChevronRight size={16} aria-hidden="true" />{Math.round(progress)}%</span>
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-bark/10">
-                <div className="h-full rounded-full bg-oak-600 transition-all" style={{ width: `${progress}%` }} />
+                <motion.div
+                  className="h-full origin-left rounded-full bg-oak-600"
+                  initial={false}
+                  animate={{ scaleX: progress / 100 }}
+                  transition={reducedMotion ? { duration: 0 } : { duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                />
               </div>
             </div>
 
-            {stepContent()}
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={step}
+                  initial={reducedMotion ? false : { opacity: 0, x: 12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={reducedMotion ? undefined : { opacity: 0, x: -12 }}
+                  transition={reducedMotion ? { duration: 0 } : { duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  {stepContent()}
+                </motion.div>
+              </AnimatePresence>
 
             {submissionStatus !== 'idle' ? (
               <div

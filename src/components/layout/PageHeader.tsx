@@ -6,9 +6,10 @@ interface PageHeaderProps {
   subtitle?: string;
   height?: string;
   showBreadcrumb?: boolean;
+  image?: string;
 }
 
-export function PageHeader({ title, subtitle, height = 'min-h-[320px] sm:min-h-[420px]', showBreadcrumb = false }: PageHeaderProps) {
+export function PageHeader({ title, subtitle, height = 'min-h-[320px] sm:min-h-[420px]', showBreadcrumb = false, image = '/assets/hero/GENERATED.webp' }: PageHeaderProps) {
   const location = useLocation();
   const pathSegments = location.pathname.split('/').filter(Boolean);
 
@@ -21,7 +22,7 @@ export function PageHeader({ title, subtitle, height = 'min-h-[320px] sm:min-h-[
       }}
     >
       <img
-        src="/assets/hero/GENERATED.webp"
+        src={image}
         alt=""
         aria-hidden="true"
         className="absolute inset-0 h-full w-full object-cover"
@@ -33,8 +34,8 @@ export function PageHeader({ title, subtitle, height = 'min-h-[320px] sm:min-h-[
       />
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(12,10,8,0.38),rgba(12,10,8,0.16),rgba(12,10,8,0.34))]" aria-hidden="true" />
 
-      <div className="relative z-10 mx-auto flex h-full max-w-[1400px] items-center">
-        <div className="max-w-3xl rounded-[24px] border border-white/15 bg-[rgba(12,10,8,0.2)] p-8 backdrop-blur-[2px] sm:p-10 lg:p-12">
+      <div className="relative z-10 mx-auto flex h-full w-full max-w-[1600px] items-center">
+        <div className="max-w-4xl py-4 sm:py-8 lg:max-w-5xl">
           {showBreadcrumb ? (
             <nav aria-label="Breadcrumb" className="mb-6 flex flex-wrap items-center gap-2 text-sm text-[#e9dcc8]">
               <Link to="/" className="transition hover:text-white">
@@ -69,7 +70,7 @@ export function PageHeader({ title, subtitle, height = 'min-h-[320px] sm:min-h-[
             </span>
           </div>
 
-          <h1 className="mt-7 max-w-[760px] font-serif text-[2.4rem] leading-[1.04] tracking-[-0.03em] text-white sm:text-[3rem] md:text-[3.5rem] lg:text-[4rem]">
+          <h1 className="mt-7 max-w-[900px] font-serif text-[2.4rem] leading-[1.04] tracking-[-0.03em] text-white sm:text-[3.5rem] md:text-[4.2rem] lg:text-[5.2rem]">
             {title}
           </h1>
 

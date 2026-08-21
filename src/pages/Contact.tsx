@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { SEO } from '../components/layout/SEO';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Mail, MapPin, MessageCircle, Phone, Send, Clock3, Instagram } from 'lucide-react';
 import { emailService } from '../services/email';
 import { PageHeader } from '../components/layout/PageHeader';
@@ -115,16 +115,17 @@ export function Contact() {
               <h2 className="mt-3 font-display text-3xl font-semibold text-bark">Tell us what you&apos;re imagining.</h2>
             </div>
 
+            <AnimatePresence mode="wait" initial={false}>
             {status === 'success' ? (
-              <div className="space-y-4 rounded-[1.5rem] border border-emerald-200 bg-emerald-50 p-6">
+              <motion.div key="success" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }} className="space-y-4 rounded-[1.5rem] border border-emerald-200 bg-emerald-50 p-6">
                 <p className="text-sm font-semibold text-emerald-700">✓ Message sent successfully</p>
                 <p className="text-sm text-emerald-600">{feedbackMessage}</p>
                 <Button variant="secondary" onClick={() => setStatus('idle')} className="w-full">
                   Send another message
                 </Button>
-              </div>
+              </motion.div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <motion.form key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }} onSubmit={handleSubmit} className="space-y-5">
                 {status === 'error' && (
                   <div className="space-y-4 rounded-[1.5rem] border border-rose-200 bg-rose-50 p-6">
                     <p className="text-sm font-semibold text-rose-700">⚠ Error sending message</p>
@@ -156,8 +157,9 @@ export function Contact() {
                   <textarea name="message" required className="mt-2 h-36 w-full resize-y rounded-xl border border-bark/10 bg-sand/70 px-4 py-3 text-base text-bark outline-none transition placeholder:text-bark/40 focus:border-oak-600 focus:ring-4 focus:ring-oak-200" placeholder="Tell us about your space, timeline, and pieces you have in mind." />
                 </label>
                 <Button type="submit" disabled={status === 'submitting'} className="w-full sm:w-auto" icon={<Send size={17} aria-hidden="true" />}>{status === 'submitting' ? 'Sending…' : 'Send enquiry'}</Button>
-              </form>
+              </motion.form>
             )}
+            </AnimatePresence>
           </Card>
         </motion.div>
       </motion.div>

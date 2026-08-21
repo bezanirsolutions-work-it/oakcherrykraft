@@ -26,7 +26,7 @@ import {
   saveRecentlyViewedProductSlug,
   type Product,
 } from '../lib/products';
-import { getCanonicalProductCategory, normalizeProductCategorySlug } from '../lib/productCategories';
+import { getCanonicalCategorySlug, getCategoryDisplayLabel } from '../lib/productCategories';
 import { supabase } from '../lib/supabase';
 import { products as fallbackProducts } from '../data/products';
 
@@ -97,9 +97,27 @@ export function ProductDetail() {
             throw fetchError;
           }
 
-          const product = normalizeProduct(data) ?? normalizeProduct(fallbackProducts.find(
-            (fallbackProduct) => fallbackProduct.id === slug
-          ));
+          let fallbackProduct: Product | null = null;
+          if (!data && fetchError?.code === 'PGRST116') {
+            const { data: liveProducts, error: liveProductsError } = await supabase
+              .from('products')
+              .select('id')
+              .in('status', ['published', 'available'])
+              .eq('is_active', true)
+              .limit(1);
+
+            if (liveProductsError) {
+              throw liveProductsError;
+            }
+
+            if ((liveProducts ?? []).length === 0) {
+              fallbackProduct = normalizeProduct(fallbackProducts.find(
+                (localProduct) => localProduct.id === slug
+              ));
+            }
+          }
+
+          const product = normalizeProduct(data) ?? fallbackProduct;
           if (product?.status === 'archived') {
             return null;
           }
@@ -193,10 +211,10 @@ export function ProductDetail() {
     );
   }
 
-  const categorySlug = normalizeProductCategorySlug(
-    getCanonicalProductCategory(product.category) || product.category || ''
-  );
-  const pageUrl = `https://oakcherrykraft.com/products/${categorySlug}/${slug}`;
+  const categorySlug = getCanonicalCategorySlug(product.category) || '';
+  const pageUrl = categorySlug
+    ? `https://oakcherrykraft.com/products/${categorySlug}/${slug}`
+    : `https://oakcherrykraft.com/products/${slug}`;
   return (
     <PageContainer className="space-y-10 pb-20">
       <SEO
@@ -210,7 +228,7 @@ export function ProductDetail() {
         items={[
           { label: 'Home', path: '/' },
           { label: 'Products', path: '/products' },
-          { label: product.category ?? '', path: `/products/${categorySlug}` },
+          ...(categorySlug ? [{ label: getCategoryDisplayLabel(categorySlug), path: `/products/${categorySlug}` }] : []),
           { label: product.name ?? '' },
         ]}
         className="pt-6"

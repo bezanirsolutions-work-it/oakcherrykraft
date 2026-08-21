@@ -1,6 +1,5 @@
-import { useEffect, useState, type ReactNode } from 'react';
-import { SectionHeader } from '../ui';
-import { Card } from '../ui';
+import { useState, type ReactNode } from 'react';
+import { SectionHeader, TestimonialCarousel } from '../ui';
 import { useTestimonials } from '../../hooks/useTestimonials';
 import type { Testimonial } from '../../hooks/useTestimonials';
 
@@ -63,20 +62,9 @@ export function TestimonialsSection({ children }: TestimonialsSectionProps) {
               eyebrow="Client stories"
               title="The details people remember."
               description="Our work is measured not only in finish and form, but in how beautifully it becomes part of everyday life."
-              className="mb-8"
+              className="mx-auto mb-8 max-w-4xl text-center [&_p:last-child]:max-w-none sm:[&_p:last-child]:whitespace-nowrap"
             />
-            <div className="grid gap-5 lg:grid-cols-3">
-              {displayTestimonials.slice(0, 3).map((testimonial, index) => (
-                <Card key={testimonial.id ?? `testimonial-${index}`} className="rounded-[1.75rem] border border-bark/10 bg-white p-8 shadow-soft">
-                  <p className="text-sm tracking-[0.22em] text-clay" aria-label="Five stars">{Array.from({ length: testimonial.rating ?? 5 }).map(() => '★').join('')}</p>
-                  <blockquote className="mt-5 font-display text-2xl leading-snug text-bark">"{testimonial.testimonial}"</blockquote>
-                  <div className="mt-6 text-sm leading-7 text-bark/70">
-                    <p className="font-semibold text-bark">{testimonial.name ?? 'Client'}</p>
-                    {testimonial.company ? <p>{testimonial.company}</p> : null}
-                  </div>
-                </Card>
-              ))}
-            </div>
+            <TestimonialCarousel testimonials={displayTestimonials.slice(0, 5)} />
           </>
         )}
       </div>

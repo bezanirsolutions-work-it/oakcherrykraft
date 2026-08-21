@@ -3,6 +3,7 @@ export * from './BrandIntroductionSection';
 export * from './FeaturedCollectionsSection';
 export * from './WhyChooseSection';
 export * from './CraftsmanshipProcessSection';
+export * from './CraftInMotion';
 export * from './FeaturedProjectsSection';
 export * from './SustainabilitySection';
 export * from './TestimonialsSection';

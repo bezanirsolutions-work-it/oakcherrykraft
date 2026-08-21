@@ -319,6 +319,59 @@ export function getChatResponse(
     'can you work with hotels',
     'can you make furniture for an office',
     'business furniture',
+    'lounges',
+    'lounge furniture',
+    'restaurants furniture',
+    'hospitality furniture',
+  ];
+
+  /**
+   * Category-specific patterns for the new space-based category structure.
+   * Helps the chatbot understand questions about specific room/space categories.
+   */
+  const categoryPatterns = [
+    'what categories do you have',
+    'what spaces do you furnish',
+    'what types of spaces',
+    'what rooms do you furnish',
+    'kitchen furniture',
+    'do you make kitchen furniture',
+    'do you furnish kitchens',
+    'bedroom furniture',
+    'do you make bedroom furniture',
+    'do you furnish bedrooms',
+    'dining furniture',
+    'do you make dining furniture',
+    'do you furnish dining rooms',
+    'living room furniture',
+    'living space furniture',
+    'do you make living room furniture',
+    'do you furnish living rooms',
+    'outdoor furniture',
+    'outdoor living',
+    'do you make outdoor furniture',
+    'do you furnish outdoor spaces',
+    'bathroom furniture',
+    'bathroom vanity',
+    'do you make bathroom furniture',
+    'do you furnish bathrooms',
+    'entryway furniture',
+    'foyer furniture',
+    'do you make entryway furniture',
+    'do you furnish entryways',
+    'hallway furniture',
+    'do you make hallway furniture',
+    'do you furnish hallways',
+    'office furniture',
+    'do you make office furniture',
+    'do you furnish offices',
+    'ante room furniture',
+    'do you make restaurant furniture',
+    'do you make lounge furniture',
+    'residential furniture',
+    'do you furnish residential spaces',
+    'what residential categories',
+    'what commercial categories',
   ];
 
   const homeFurnishingPatterns = [
@@ -721,6 +774,16 @@ export function getChatResponse(
       actions: [
         { label: 'Explore Products', href: ROUTES.products },
         { label: 'Request a Quote', href: ROUTES.requestQuote },
+      ],
+    };
+  }
+
+  if (hasAny(normalized, categoryPatterns)) {
+    return {
+      message: `Oak Cherry Kraft furnishes a range of spaces including: Residential — Bathrooms, Ante Rooms, Kitchens, Bedrooms, Living Spaces, Entryways, Hallways, Dining, and Outdoor Living. Commercial — Offices, Restaurants, and Lounges. Each space has curated furniture options, and custom designs are available for any category.`,
+      actions: [
+        { label: 'Explore Collection', href: ROUTES.products },
+        { label: 'Design Custom Furniture', href: ROUTES.configurationSelector },
       ],
     };
   }

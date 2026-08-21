@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
+import { MotionConfig } from 'framer-motion';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { ErrorBoundary, Layout } from './components/layout';
@@ -44,6 +45,7 @@ export default function App() {
   const location = useLocation();
 
   return (
+    <MotionConfig reducedMotion="user">
     <ErrorBoundary>
       <AnimatePresence mode="wait" initial={false}>
         <Suspense fallback={null}>
@@ -282,5 +284,6 @@ export default function App() {
         </Suspense>
       </AnimatePresence>
     </ErrorBoundary>
+    </MotionConfig>
   );
 }

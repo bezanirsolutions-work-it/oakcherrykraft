@@ -9,15 +9,11 @@ import { cn } from '../../lib/cn';
 import { supabase } from '../../lib/supabase';
 import { getEstimatedPriceRange } from '../../utils/priceEstimator';
 import { emailService } from '../../services/email';
+import { CATEGORY_HIERARCHY } from '../../lib/productCategories';
 
-export const categories = [
-  'Dining & entertaining',
-  'Living room',
-  'Bedroom',
-  'Office',
-  'Hospitality',
-  'Outdoor',
-];
+export const categories = CATEGORY_HIERARCHY.flatMap((group) =>
+  group.categories.map((cat) => cat.displayLabel)
+);
 
 export const productTypes = [
   'Table',

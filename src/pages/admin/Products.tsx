@@ -7,7 +7,7 @@ import { supabase } from '../../lib/supabase';
 import type { Database } from '../../lib/database';
 import { normalizeImageUrl, normalizeProductImageFields } from '../../lib/imageUtils';
 import { useDialogFocus } from '../../components/admin/useDialogFocus';
-import { PRODUCT_CATEGORIES } from '../../lib/productCategories';
+import { CATEGORY_HIERARCHY } from '../../lib/productCategories';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -199,7 +199,9 @@ const statusBadgeClass = (status?: string) => {
 };
 
 const productStatusOptions = ['draft', 'published', 'archived'];
-const productCategoryOptions = [...PRODUCT_CATEGORIES];
+const productCategoryOptions = CATEGORY_HIERARCHY.flatMap((group) =>
+  group.categories.map((cat) => cat.displayLabel)
+);
 const productMaterialOptions = [
   'Solid Oak',
   'Mahogany',
