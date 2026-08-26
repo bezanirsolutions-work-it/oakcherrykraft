@@ -52,6 +52,54 @@ const entrywayCover = new URL('../../entryway.jpeg', import.meta.url).href;
 const livingSpaceCover = new URL('../../living spacess.jpeg', import.meta.url).href;
 const restaurantCategoryCover = new URL('../../Restaurant.jpeg', import.meta.url).href;
 
+function SelectedWorkMedia({ project }: { project: (typeof inTheRealWorldProjects)[number] }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const playVideo = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.defaultMuted = false;
+    video.muted = false;
+    video.volume = 1;
+    setIsPlaying(true);
+    void video.play();
+  };
+
+  return (
+    <div className="relative aspect-[4/3] overflow-hidden bg-sand">
+      {project.type === 'video' ? (
+        <video
+          ref={videoRef}
+          className="h-full w-full object-cover"
+          src={project.media}
+          poster={project.poster}
+          aria-label={project.alt}
+          loop
+          playsInline
+          controls={isPlaying}
+          preload="metadata"
+        />
+      ) : (
+        <img src={project.media} alt={project.alt} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+      )}
+      {project.type === 'video' && !isPlaying ? (
+        <button
+          type="button"
+          onClick={playVideo}
+          aria-label={`Play ${project.alt}`}
+          className="absolute inset-0 flex items-center justify-center bg-black/10 transition hover:bg-black/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-inset"
+        >
+          <span className="flex h-14 w-14 items-center justify-center rounded-full border border-white/80 bg-white/15 shadow-lg backdrop-blur-sm">
+            <Play className="ml-1 h-6 w-6 fill-white text-white" aria-hidden="true" />
+          </span>
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
 /**
  * Mapping of category slugs to display details (title, description, image).
  * Used for the homepage collection cards.
@@ -385,28 +433,13 @@ export function Home() {
           </header>
 
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.12 }} variants={sectionStagger} className="mt-4 grid gap-5 md:grid-cols-3">
-            {inTheRealWorldProjects.slice(0, 3).map((project, index) => (
+            {[inTheRealWorldProjects[3], inTheRealWorldProjects[1], inTheRealWorldProjects[2]].map((project) => (
               <motion.article
                 key={project.id}
                 variants={reveal}
                 className="group overflow-hidden rounded-[1.75rem] border border-bark/10 bg-white shadow-card transition duration-300 hover:-translate-y-1 hover:shadow-medium"
               >
-                <div className="relative aspect-[4/3] overflow-hidden bg-sand">
-                  <img
-                    src={project.poster || project.media}
-                    alt={project.alt}
-                    loading="lazy"
-                    decoding="async"
-                    className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
-                  />
-                  {project.type === 'video' ? (
-                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/10">
-                      <span className="flex h-14 w-14 items-center justify-center rounded-full border border-white/80 bg-white/15 shadow-lg backdrop-blur-sm">
-                        <Play className="ml-1 h-6 w-6 fill-white text-white" aria-hidden="true" />
-                      </span>
-                    </div>
-                  ) : null}
-                </div>
+                <SelectedWorkMedia project={project} />
               </motion.article>
             ))}
           </motion.div>

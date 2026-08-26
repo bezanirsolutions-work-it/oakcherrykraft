@@ -14,6 +14,14 @@ const fadeIn = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as const } },
 };
 
+const playVideoWithAudio = (event: React.MouseEvent<HTMLVideoElement>) => {
+  const video = event.currentTarget;
+  video.defaultMuted = false;
+  video.muted = false;
+  video.volume = 1;
+  if (video.paused) void video.play();
+};
+
 const projectCategories = ['All', 'Residential', 'Commercial', 'Hospitality', 'Office', 'Custom Furniture', 'Outdoor', 'Bedroom', 'Living Room', 'Dining', 'Kitchen'];
 const sortOptions = [
   { value: 'updated_at', label: 'Recently updated' },
@@ -111,11 +119,11 @@ export function ProjectPortfolio() {
 
             <div className="relative min-h-0 lg:mb-[132px] lg:min-h-[620px]">
               <div className="relative z-10 w-full overflow-hidden rounded-[2rem] border border-bark/10 bg-bark shadow-[0_28px_80px_rgba(46,36,28,0.16)] lg:absolute lg:right-0 lg:top-0 lg:w-[74%]">
-                <video className="h-auto max-h-[540px] w-full object-contain" src={inTheRealWorldProjects[0].media} aria-label={inTheRealWorldProjects[0].alt} autoPlay={!reducedMotion} muted loop playsInline controls preload="metadata" />
+                <video className="h-auto max-h-[540px] w-full object-contain" src={inTheRealWorldProjects[0].media} aria-label={inTheRealWorldProjects[0].alt} loop playsInline controls preload="metadata" onClick={playVideoWithAudio} />
               </div>
 
               <div className="relative z-20 mt-6 w-[78%] overflow-hidden rounded-[1.8rem] border border-bark/10 bg-bark shadow-[0_24px_60px_rgba(46,36,28,0.14)] lg:absolute lg:bottom-0 lg:left-0 lg:mt-0 lg:w-[46%]">
-                <video className="h-auto max-h-[300px] w-full object-contain" src={inTheRealWorldProjects[1].media} aria-label={inTheRealWorldProjects[1].alt} autoPlay={!reducedMotion} muted loop playsInline controls preload="metadata" />
+                <video className="h-auto max-h-[300px] w-full object-contain" src={inTheRealWorldProjects[1].media} aria-label={inTheRealWorldProjects[1].alt} loop playsInline controls preload="metadata" onClick={playVideoWithAudio} />
               </div>
 
               <div className="relative z-30 mt-6 ml-auto w-[62%] overflow-hidden rounded-[1.6rem] border border-white/70 bg-sand shadow-[0_20px_50px_rgba(46,36,28,0.18)] lg:absolute lg:bottom-10 lg:right-[8%] lg:mt-0 lg:ml-0 lg:w-[31%]">
@@ -125,7 +133,7 @@ export function ProjectPortfolio() {
               <div className="relative mt-6 grid grid-cols-3 gap-3 lg:absolute lg:bottom-[-132px] lg:left-[8%] lg:right-0 lg:mt-0">
                 {inTheRealWorldProjects.slice(3).map((project) => (
                   <div key={project.id} className="relative overflow-hidden rounded-[1.2rem] border border-bark/10 bg-bark shadow-soft">
-                    <video className="aspect-[4/3] h-full w-full object-cover" src={project.media} aria-label={project.alt} autoPlay={!reducedMotion} muted loop playsInline controls preload="metadata" />
+                    <video className="aspect-[4/3] h-full w-full object-cover" src={project.media} aria-label={project.alt} loop playsInline controls preload="metadata" onClick={playVideoWithAudio} />
                   </div>
                 ))}
               </div>
