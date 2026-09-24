@@ -24,18 +24,63 @@ const stepDefinitions = [
 
 const CONFIGURATOR_STORAGE_KEY = 'oakcherrykraft:configurator-state';
 
-const baseConfiguration: Partial<QuoteFormValues> = {
+const normalizeSelectionList = (value?: string | string[] | null): string[] => {
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
+  }
+
+  if (typeof value === 'string') {
+    return value
+      .split(',')
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0);
+  }
+
+  return [];
+};
+
+const formatSelectionList = (value?: string | string[] | null) => {
+  const selected = normalizeSelectionList(value);
+  return selected.length > 0 ? selected.join(', ') : 'Not selected';
+};
+
+const toggleSelection = (current: string[], option: string) =>
+  current.includes(option) ? current.filter((item) => item !== option) : [...current, option];
+
+type ConfiguratorState = Omit<Partial<QuoteFormValues>, 'category' | 'productType' | 'woodSpecies' | 'finish'> & {
+  product: string;
+  category: string[];
+  productType: string[];
+  colour: string;
+  legStyle: string;
+  accessories: string;
+  width: number;
+  depth: number;
+  height: number;
+  woodSpecies: string[];
+  finish: string[];
+  quantity: number;
+  deliveryLocation: string;
+  preferredDate: string;
+  budgetRange: string;
+  name: string;
+  email: string;
+  phone: string;
+  additionalNotes: string;
+};
+
+const baseConfiguration: ConfiguratorState = {
   product: '',
-  category: '',
-  productType: '',
+  category: [],
+  productType: [],
   colour: '',
   legStyle: '',
   accessories: '',
   width: 120,
   depth: 60,
   height: 75,
-  woodSpecies: 'Oak',
-  finish: 'Natural oil',
+  woodSpecies: ['Oak'],
+  finish: ['Natural oil'],
   quantity: 1,
   deliveryLocation: '',
   preferredDate: '',
@@ -68,7 +113,7 @@ export function Configurator() {
   const navigate = useNavigate();
   const reducedMotion = useReducedMotion();
 
-  const [savedConfiguration, setSavedConfiguration] = useState<Partial<QuoteFormValues> | null>(null);
+  const [savedConfiguration, setSavedConfiguration] = useState<Partial<ConfiguratorState> | null>(null);
 
   const routeState = locationState;
   const searchParams = new URLSearchParams(location.search);
@@ -91,28 +136,28 @@ export function Configurator() {
     '';
   const hasSelectedProduct = Boolean(incomingProductName || incomingCategory);
 
-  const initialConfiguration = useMemo<Partial<QuoteFormValues>>(() => ({
+  const initialConfiguration = useMemo<ConfiguratorState>(() => ({
     ...baseConfiguration,
     ...(savedConfiguration ?? {}),
     ...(incomingProductName ? { product: incomingProductName } : {}),
-    ...(incomingCategory ? { category: incomingCategory } : {}),
-    ...(incomingWood ? { woodSpecies: incomingWood } : {}),
-    ...(incomingFinish ? { finish: incomingFinish } : {}),
+    ...(incomingCategory ? { category: normalizeSelectionList(incomingCategory) } : {}),
+    ...(incomingWood ? { woodSpecies: normalizeSelectionList(incomingWood) } : {}),
+    ...(incomingFinish ? { finish: normalizeSelectionList(incomingFinish) } : {}),
   }), [incomingProductName, incomingCategory, incomingWood, incomingFinish, savedConfiguration]);
 
   const [step, setStep] = useState(0);
-  const [configuration, setConfiguration] = useState<Partial<QuoteFormValues>>(initialConfiguration);
+  const [configuration, setConfiguration] = useState<ConfiguratorState>(initialConfiguration);
   const [selectedProductName, setSelectedProductName] = useState(incomingProductName);
 
   useEffect(() => {
     const nextStep = hasSelectedProduct ? 1 : 0;
-    const sanitizedConfiguration = {
+    const sanitizedConfiguration: ConfiguratorState = {
       ...baseConfiguration,
       ...(savedConfiguration ?? {}),
       ...(incomingProductName ? { product: incomingProductName } : {}),
-      ...(incomingCategory ? { category: incomingCategory } : {}),
-      ...(incomingWood ? { woodSpecies: incomingWood } : {}),
-      ...(incomingFinish ? { finish: incomingFinish } : {}),
+      ...(incomingCategory ? { category: normalizeSelectionList(incomingCategory) } : {}),
+      ...(incomingWood ? { woodSpecies: normalizeSelectionList(incomingWood) } : {}),
+      ...(incomingFinish ? { finish: normalizeSelectionList(incomingFinish) } : {}),
     };
 
     setSelectedProductName(incomingProductName || '');
@@ -144,10 +189,18 @@ export function Configurator() {
       const raw = window.localStorage.getItem(CONFIGURATOR_STORAGE_KEY);
       if (!raw) return;
 
-      const parsed = JSON.parse(raw) as { configuration?: Partial<QuoteFormValues>; step?: number } | null;
+      const parsed = JSON.parse(raw) as { configuration?: Partial<ConfiguratorState>; step?: number } | null;
       if (!parsed?.configuration) return;
 
-      setSavedConfiguration(parsed.configuration);
+      const restoredConfiguration: Partial<ConfiguratorState> = {
+        ...parsed.configuration,
+        category: normalizeSelectionList(parsed.configuration.category),
+        productType: normalizeSelectionList(parsed.configuration.productType),
+        woodSpecies: normalizeSelectionList(parsed.configuration.woodSpecies),
+        finish: normalizeSelectionList(parsed.configuration.finish),
+      };
+
+      setSavedConfiguration(restoredConfiguration);
       if (typeof parsed.step === 'number') {
         setStep(parsed.step);
       }
@@ -161,15 +214,15 @@ export function Configurator() {
   const stepComplete = useMemo(() => {
     switch (step) {
       case 0:
-        return Boolean(configuration.category);
+        return configuration.category.length > 0;
       case 1:
-        return Boolean(configuration.productType);
+        return configuration.productType.length > 0;
       case 2:
         return Boolean(configuration.width && configuration.depth && configuration.height);
       case 3:
-        return Boolean(configuration.woodSpecies);
+        return configuration.woodSpecies.length > 0;
       case 4:
-        return Boolean(configuration.finish);
+        return configuration.finish.length > 0;
       case 5:
         return Boolean(configuration.quantity && configuration.quantity > 0);
       case 6:
@@ -186,11 +239,11 @@ export function Configurator() {
   const summaryItems = useMemo(
     () => [
       { label: 'Product', value: configuration.product || 'Not selected' },
-      { label: 'Category', value: configuration.category || 'Not selected' },
-      { label: 'Project type', value: configuration.productType || 'Not selected' },
+      { label: 'Category', value: formatSelectionList(configuration.category) },
+      { label: 'Project type', value: formatSelectionList(configuration.productType) },
       { label: 'Dimensions', value: configuration.width && configuration.depth && configuration.height ? `${configuration.width} × ${configuration.depth} × ${configuration.height} cm` : 'Not set' },
-      { label: 'Wood species', value: configuration.woodSpecies || 'Not selected' },
-      { label: 'Finish', value: configuration.finish || 'Not selected' },
+      { label: 'Wood species', value: formatSelectionList(configuration.woodSpecies) },
+      { label: 'Finish', value: formatSelectionList(configuration.finish) },
       { label: 'Estimated price', value: getEstimatedPriceRange(configuration) },
       { label: 'Colour', value: configuration.colour || 'Not selected' },
       { label: 'Leg style', value: configuration.legStyle || 'Not selected' },
@@ -203,7 +256,7 @@ export function Configurator() {
     [configuration],
   );
 
-  const updateField = <K extends keyof QuoteFormValues>(field: K, value: QuoteFormValues[K]) => {
+  const updateField = <K extends keyof ConfiguratorState>(field: K, value: ConfiguratorState[K]) => {
     setConfiguration((current) => ({ ...current, [field]: value }));
   };
 
@@ -216,8 +269,15 @@ export function Configurator() {
   };
 
   const submitDesign = async () => {
-    // route to the canonical request-quote page and hand over the completed configuration
-    navigate('/request-quote', { state: { prefill: configuration } });
+    const quotePrefill: Partial<QuoteFormValues> = {
+      ...configuration,
+      category: formatSelectionList(configuration.category),
+      productType: formatSelectionList(configuration.productType),
+      woodSpecies: formatSelectionList(configuration.woodSpecies),
+      finish: formatSelectionList(configuration.finish),
+    };
+
+    navigate('/request-quote', { state: { prefill: quotePrefill } });
   };
 
   const selectedProductObj = routeState?.selectedProduct ?? null;
@@ -231,38 +291,48 @@ export function Configurator() {
       case 0:
         return (
           <div className="space-y-5">
-            <p className="text-base leading-7 text-bark/75">Start with the furniture category that best reflects the space and use.</p>
+            <p className="text-base leading-7 text-bark/75">Select one or more furniture categories that match the space and use.</p>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {categories.map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => updateField('category', option)}
-                  className={`rounded-[1.5rem] border px-5 py-4 text-left transition ${configuration.category === option ? 'border-oak-500 bg-oak-50 text-bark' : 'border-bark/10 bg-white text-bark/75 hover:border-oak-400 hover:bg-sand/80'}`}
-                >
-                  <p className="font-semibold">{option}</p>
-                  <p className="mt-2 text-sm leading-6 text-bark/70">Refine the tone of the piece and the way it sits in the room.</p>
-                </button>
-              ))}
+              {categories.map((option) => {
+                const isSelected = configuration.category.includes(option);
+
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    aria-pressed={isSelected}
+                    onClick={() => updateField('category', toggleSelection(configuration.category, option))}
+                    className={`rounded-[1.5rem] border px-5 py-4 text-left transition ${isSelected ? 'border-oak-500 bg-oak-50 text-bark' : 'border-bark/10 bg-white text-bark/75 hover:border-oak-400 hover:bg-sand/80'}`}
+                  >
+                    <p className="font-semibold">{option}</p>
+                    <p className="mt-2 text-sm leading-6 text-bark/70">Refine the tone of the piece and the way it sits in the room.</p>
+                  </button>
+                );
+              })}
             </div>
           </div>
         );
       case 1:
         return (
           <div className="space-y-5">
-            <p className="text-base leading-7 text-bark/75">Choose the furniture type that aligns with your design ambition.</p>
+            <p className="text-base leading-7 text-bark/75">Choose one or more furniture types that align with your design ambition.</p>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {productTypes.map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => updateField('productType', option)}
-                  className={`rounded-[1.5rem] border px-5 py-4 text-left transition ${configuration.productType === option ? 'border-oak-500 bg-oak-50 text-bark' : 'border-bark/10 bg-white text-bark/75 hover:border-oak-400 hover:bg-sand/80'}`}
-                >
-                  <p className="font-semibold">{option}</p>
-                  <p className="mt-2 text-sm leading-6 text-bark/70">A focused choice helps us propose the right form and scale.</p>
-                </button>
-              ))}
+              {productTypes.map((option) => {
+                const isSelected = configuration.productType.includes(option);
+
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    aria-pressed={isSelected}
+                    onClick={() => updateField('productType', toggleSelection(configuration.productType, option))}
+                    className={`rounded-[1.5rem] border px-5 py-4 text-left transition ${isSelected ? 'border-oak-500 bg-oak-50 text-bark' : 'border-bark/10 bg-white text-bark/75 hover:border-oak-400 hover:bg-sand/80'}`}
+                  >
+                    <p className="font-semibold">{option}</p>
+                    <p className="mt-2 text-sm leading-6 text-bark/70">A focused choice helps us propose the right form and scale.</p>
+                  </button>
+                );
+              })}
             </div>
           </div>
         );
@@ -289,36 +359,46 @@ export function Configurator() {
       case 3:
         return (
           <div className="space-y-5">
-            <p className="text-base leading-7 text-bark/75">Choose a timber that feels grounded, rich, and tactile.</p>
+            <p className="text-base leading-7 text-bark/75">Choose one or more timbers that feel grounded, rich, and tactile.</p>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {woodSpecies.map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => updateField('woodSpecies', option)}
-                  className={`rounded-[1.5rem] border px-5 py-4 text-left transition ${configuration.woodSpecies === option ? 'border-oak-500 bg-oak-50 text-bark' : 'border-bark/10 bg-white text-bark/75 hover:border-oak-400 hover:bg-sand/80'}`}
-                >
-                  <p className="font-semibold">{option}</p>
-                </button>
-              ))}
+              {woodSpecies.map((option) => {
+                const isSelected = configuration.woodSpecies.includes(option);
+
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    aria-pressed={isSelected}
+                    onClick={() => updateField('woodSpecies', toggleSelection(configuration.woodSpecies, option))}
+                    className={`rounded-[1.5rem] border px-5 py-4 text-left transition ${isSelected ? 'border-oak-500 bg-oak-50 text-bark' : 'border-bark/10 bg-white text-bark/75 hover:border-oak-400 hover:bg-sand/80'}`}
+                  >
+                    <p className="font-semibold">{option}</p>
+                  </button>
+                );
+              })}
             </div>
           </div>
         );
       case 4:
         return (
           <div className="space-y-5">
-            <p className="text-base leading-7 text-bark/75">Select a finish that brings out the grain and the character of the wood.</p>
+            <p className="text-base leading-7 text-bark/75">Select one or more finishes that bring out the grain and character of the wood.</p>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {finishes.map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => updateField('finish', option)}
-                  className={`rounded-[1.5rem] border px-5 py-4 text-left transition ${configuration.finish === option ? 'border-oak-500 bg-oak-50 text-bark' : 'border-bark/10 bg-white text-bark/75 hover:border-oak-400 hover:bg-sand/80'}`}
-                >
-                  <p className="font-semibold">{option}</p>
-                </button>
-              ))}
+              {finishes.map((option) => {
+                const isSelected = configuration.finish.includes(option);
+
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    aria-pressed={isSelected}
+                    onClick={() => updateField('finish', toggleSelection(configuration.finish, option))}
+                    className={`rounded-[1.5rem] border px-5 py-4 text-left transition ${isSelected ? 'border-oak-500 bg-oak-50 text-bark' : 'border-bark/10 bg-white text-bark/75 hover:border-oak-400 hover:bg-sand/80'}`}
+                  >
+                    <p className="font-semibold">{option}</p>
+                  </button>
+                );
+              })}
             </div>
           </div>
         );
@@ -435,16 +515,16 @@ export function Configurator() {
             title: 'Product details',
             items: [
               { label: 'Product', value: configuration.product || 'Custom design' },
-              { label: 'Category', value: configuration.category || 'Not selected' },
-              { label: 'Project type', value: configuration.productType || 'Not selected' },
+              { label: 'Category', value: formatSelectionList(configuration.category) },
+              { label: 'Project type', value: formatSelectionList(configuration.productType) },
               { label: 'Quantity', value: configuration.quantity ? `${configuration.quantity}` : 'Not set' },
             ],
           },
           {
             title: 'Material & finish',
             items: [
-              { label: 'Wood species', value: configuration.woodSpecies || 'Not selected' },
-              { label: 'Finish', value: configuration.finish || 'Not selected' },
+              { label: 'Wood species', value: formatSelectionList(configuration.woodSpecies) },
+              { label: 'Finish', value: formatSelectionList(configuration.finish) },
               { label: 'Colour', value: configuration.colour || 'Not selected' },
               { label: 'Leg style', value: configuration.legStyle || 'Not selected' },
               { label: 'Accessories', value: configuration.accessories || 'None' },

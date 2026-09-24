@@ -14,6 +14,14 @@ const fadeIn = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as const } },
 };
 
+const formatSelectionValue = (value?: string | string[] | null) => {
+  if (Array.isArray(value)) {
+    return value.filter(Boolean).join(', ') || '—';
+  }
+
+  return value ?? '—';
+};
+
 export function QuoteRequest() {
   const location = useLocation();
   const state = location.state as { prefill?: Partial<QuoteFormValues> } | null;
@@ -41,11 +49,11 @@ export function QuoteRequest() {
             <h3 className="mt-3 text-lg font-semibold text-bark">{prefillValues.product || 'Custom design'}</h3>
             <div className="mt-4 grid gap-2 sm:grid-cols-2 text-sm text-bark/75">
               <div>Dimensions: {prefillValues.width && prefillValues.depth && prefillValues.height ? `${prefillValues.width} × ${prefillValues.depth} × ${prefillValues.height} cm` : '—'}</div>
-              <div>Material: {prefillValues.woodSpecies ?? '—'}</div>
-              <div>Finish: {prefillValues.finish ?? '—'}</div>
+              <div>Material: {formatSelectionValue(prefillValues.woodSpecies)}</div>
+              <div>Finish: {formatSelectionValue(prefillValues.finish)}</div>
               <div>Colour: {prefillValues.colour ?? '—'}</div>
               <div>Style: {prefillValues.legStyle ?? '—'}</div>
-              <div>Accessories: {prefillValues.accessories ?? '—'}</div>
+              <div>Accessories: {formatSelectionValue(prefillValues.accessories)}</div>
             </div>
             {prefillValues.additionalNotes ? <p className="mt-4 text-sm text-bark/70">Notes: {prefillValues.additionalNotes}</p> : null}
           </div>

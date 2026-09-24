@@ -1,11 +1,19 @@
 export type PriceEstimatorConfiguration = {
-  productType?: string;
+  productType?: string | string[];
   width?: number;
   depth?: number;
   height?: number;
-  woodSpecies?: string;
-  finish?: string;
+  woodSpecies?: string | string[];
+  finish?: string | string[];
   accessories?: string | string[];
+};
+
+const resolveSelection = (value?: string | string[]) => {
+  if (Array.isArray(value)) {
+    return value.find((item) => typeof item === 'string' && item.trim().length > 0);
+  }
+
+  return typeof value === 'string' && value.trim().length > 0 ? value : undefined;
 };
 
 const productTypeScore: Record<string, number> = {
@@ -59,9 +67,12 @@ const normalizeDimension = (value: number | undefined, fallback: number) => {
 
 export function getEstimatedPriceScore(configuration: PriceEstimatorConfiguration) {
   const baseScore = 1;
-  const typeFactor = productTypeScore[configuration.productType ?? ''] ?? 1.05;
-  const woodFactor = woodSpeciesScore[configuration.woodSpecies ?? ''] ?? 1.1;
-  const finishFactor = finishScore[configuration.finish ?? ''] ?? 1.08;
+  const primaryType = resolveSelection(configuration.productType) ?? '';
+  const primaryWoodSpecies = resolveSelection(configuration.woodSpecies) ?? '';
+  const primaryFinish = resolveSelection(configuration.finish) ?? '';
+  const typeFactor = productTypeScore[primaryType] ?? 1.05;
+  const woodFactor = woodSpeciesScore[primaryWoodSpecies] ?? 1.1;
+  const finishFactor = finishScore[primaryFinish] ?? 1.08;
   const accessoryFactor = accessoriesScore(configuration.accessories);
 
   const width = normalizeDimension(configuration.width, 120);

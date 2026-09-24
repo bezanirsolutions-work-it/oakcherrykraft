@@ -42,7 +42,6 @@ const sectionStagger = {
 };
 
 const MotionLink = motion(Link);
-const founderPortrait = new URL('../../ADE\'s.jpeg', import.meta.url).href;
 const bathroomVanityCover = new URL('../../bathroom & vanity.jpeg', import.meta.url).href;
 const anteRoomCover = new URL('../../ante room.jpeg', import.meta.url).href;
 const kitchenCover = new URL('../../kitchenn.jpeg', import.meta.url).href;
@@ -348,54 +347,38 @@ export function Home() {
 
       <section className="section-gap -mt-8 md:-mt-12">
         <div className="container-wide">
-        <div className="grid items-stretch gap-10 lg:grid-cols-2 lg:gap-16">
-            <Reveal direction="left" className="h-full">
-            <motion.div
-              initial={{ opacity: 0, x: -22 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-              className="relative aspect-[4/5] overflow-hidden rounded-[2rem] border border-bark/10 bg-sand shadow-soft lg:aspect-auto lg:min-h-[620px]"
-            >
-              <img
-                src={founderPortrait}
-                alt="Adeyemo Rhodes-Vivour, founder of Oak Cherry Kraft"
-                className="h-full w-full object-cover transition duration-700 ease-brand hover:scale-[1.01]"
-              />
-            </motion.div>
-            </Reveal>
-
+          <div className="mx-auto max-w-4xl">
             <Reveal direction="right" delay={0.08} className="flex h-full flex-col justify-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-              className="space-y-8 py-2 lg:py-8"
-            >
-              <SectionHeader
-                eyebrow="Meet the Founder"
-                title="Adeyemo Rhodes-Vivour"
-                description="Founder, Oak Cherry Kraft"
-                className="max-w-3xl text-left"
-              />
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+                className="space-y-8 py-2 lg:py-8"
+              >
+                <SectionHeader
+                  eyebrow="Meet the Founder"
+                  title="Adeyemo Rhodes-Vivour"
+                  description="Founder, Oak Cherry Kraft"
+                  className="max-w-3xl text-left"
+                />
 
-              <div className="space-y-4 text-base leading-8 text-bark/75">
-                <p>At Oak Cherry Kraft, we believe great furniture creates lasting value. Led by Adeyemo Rhodes-Vivour, our studio creates bespoke furniture that balances elegance, durability, and functionality.</p>
-                <p>Every project begins with understanding the client&apos;s vision and ends with carefully crafted furniture made specifically for its space.</p>
-              </div>
-
-              <Card className="h-auto rounded-[1.75rem] border border-bark/10 bg-sand/80 p-6 shadow-soft">
-                <p className="text-xs font-semibold uppercase tracking-[0.32em] text-oak-700">Founder quote</p>
-                <blockquote className="mt-3 text-2xl font-display leading-tight text-bark">{"Great furniture isn't just built to fill a space—it's crafted to become part of the stories created within it."}</blockquote>
-                <div className="mt-4 text-sm leading-7 text-bark/75">
-                  <p className="font-semibold text-bark">Adeyemo Rhodes-Vivour</p>
-                  <p>Founder, Oak Cherry Kraft</p>
+                <div className="space-y-4 text-base leading-8 text-bark/75">
+                  <p>At Oak Cherry Kraft, we believe great furniture creates lasting value. Led by Adeyemo Rhodes-Vivour, our studio creates bespoke furniture that balances elegance, durability, and functionality.</p>
+                  <p>Every project begins with understanding the client&apos;s vision and ends with carefully crafted furniture made specifically for its space.</p>
                 </div>
-              </Card>
-            </motion.div>
+
+                <Card className="h-auto rounded-[1.75rem] border border-bark/10 bg-sand/80 p-6 shadow-soft">
+                  <p className="text-xs font-semibold uppercase tracking-[0.32em] text-oak-700">Founder quote</p>
+                  <blockquote className="mt-3 text-2xl font-display leading-tight text-bark">{"Great furniture isn't just built to fill a space—it's crafted to become part of the stories created within it."}</blockquote>
+                  <div className="mt-4 text-sm leading-7 text-bark/75">
+                    <p className="font-semibold text-bark">Adeyemo Rhodes-Vivour</p>
+                    <p>Founder, Oak Cherry Kraft</p>
+                  </div>
+                </Card>
+              </motion.div>
             </Reveal>
-              </div>
+          </div>
         </div>
       </section>
 
