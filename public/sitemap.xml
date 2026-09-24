@@ -7,6 +7,9 @@
     <loc>https://oakcherrykraft.com/products</loc>
   </url>
   <url>
+    <loc>https://oakcherrykraft.com/projects</loc>
+  </url>
+  <url>
     <loc>https://oakcherrykraft.com/about</loc>
   </url>
   <url>
@@ -17,8 +20,5 @@
   </url>
   <url>
     <loc>https://oakcherrykraft.com/request-quote</loc>
-  </url>
-  <url>
-    <loc>https://oakcherrykraft.com/projects</loc>
   </url>
 </urlset>
