@@ -10,6 +10,7 @@ import { supabase } from '../../lib/supabase';
 import { getEstimatedPriceRange } from '../../utils/priceEstimator';
 import { emailService } from '../../services/email';
 import { CATEGORY_HIERARCHY } from '../../lib/productCategories';
+import { trackQuoteSubmit } from '../../lib/analytics';
 
 export const categories = CATEGORY_HIERARCHY.flatMap((group) =>
   group.categories.map((cat) => cat.displayLabel)
@@ -197,6 +198,12 @@ export function QuoteForm({ className = '', defaultValues, onSuccess }: QuoteFor
       setFeedbackMessage(selectionError.message || 'There was a problem saving your configurator selections.');
       return;
     }
+
+    trackQuoteSubmit({
+      page_path: window.location.pathname,
+      product_category: values.category || undefined,
+      project_type: values.productType || undefined,
+    });
 
     setStatus('success');
     setFeedbackMessage('Your quote request has been received. Our team will review your brief and follow up within 1–2 business days.');

@@ -7,6 +7,7 @@ import { PageHeader } from '../components/layout/PageHeader';
 import { PageContainer } from '../components/layout/PageContainer';
 import { AnimatedImage, Button, Card, Breadcrumb, EmptyState, SectionHeader } from '../components/ui';
 import { fetchProject, type Project } from '../lib/projects';
+import { trackQuoteStart } from '../lib/analytics';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 24 },
@@ -136,7 +137,7 @@ export function ProjectDetail() {
                   <Link to="/contact">Request estimates</Link>
                 </Button>
                 <Button variant="secondary" asChild icon={<ArrowUpRight size={17} aria-hidden="true" />}>
-                  <Link to="/request-quote">Request quote</Link>
+                  <Link to="/request-quote" onClick={() => trackQuoteStart('project')}>Request quote</Link>
                 </Button>
               </div>
             </Card>

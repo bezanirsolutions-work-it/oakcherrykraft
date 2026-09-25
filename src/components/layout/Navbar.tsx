@@ -1,6 +1,7 @@
 import { Menu, X } from 'lucide-react';
 import { Link, NavLink } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
+import { trackQuoteStart } from '../../lib/analytics';
 import logoPath from '../../../public/assets/logo/LOGO-mobile.webp';
 
 const links = [
@@ -69,6 +70,7 @@ export function Navbar() {
           {navItems}
           <Link
             to="/request-quote"
+            onClick={() => trackQuoteStart('navbar')}
             className="btn-base btn-primary h-11 px-5 text-sm font-semibold"
           >
             Request quote
@@ -99,7 +101,10 @@ export function Navbar() {
         <Link
           to="/request-quote"
           className="btn-base btn-primary mt-4 inline-flex h-11 w-full items-center justify-center px-5 text-sm font-semibold"
-          onClick={() => setOpen(false)}
+          onClick={() => {
+            setOpen(false);
+            trackQuoteStart('navbar');
+          }}
         >
           Request quote
         </Link>

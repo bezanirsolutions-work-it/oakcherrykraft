@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { SEO } from '../components/layout/SEO';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { trackQuoteStart, trackWhatsAppClick } from '../lib/analytics';
 import {
   ArrowUpRight,
   ChevronRight,
@@ -441,10 +442,19 @@ export function Home() {
           />
           <div className="mt-6 flex flex-col justify-center gap-4 sm:flex-row sm:justify-center">
             <Button size="lg" asChild>
-              <Link to="/request-quote">Get free consultation</Link>
+              <Link to="/request-quote" onClick={() => trackQuoteStart('hero')}>Get free consultation</Link>
             </Button>
             <Button variant="secondary" size="lg" asChild icon={<ArrowUpRight size={17} aria-hidden="true" />}>
-              <a href="https://wa.me/2348034291245">WhatsApp us</a>
+              <a
+                href="https://wa.me/2348034291245"
+                onClick={(event) => {
+                  event.preventDefault();
+                  trackWhatsAppClick('hero');
+                  window.open('https://wa.me/2348034291245', '_blank', 'noopener,noreferrer');
+                }}
+              >
+                WhatsApp us
+              </a>
             </Button>
           </div>
         </div>

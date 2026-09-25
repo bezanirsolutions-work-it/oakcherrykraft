@@ -15,6 +15,7 @@ import {
   CATEGORY_HIERARCHY
 } from '../lib/productCategories';
 import { supabase } from '../lib/supabase';
+import { trackQuoteStart } from '../lib/analytics';
 import restaurantCategoryCover from '../../Restaurant.jpeg';
 import {
   recordProductsFetchStart,
@@ -323,7 +324,7 @@ export function Products() {
                           <Link to={`/products/${categorySlug}/${productSlug}`}>View product</Link>
                         </Button>
                         <Button variant="secondary" size="sm" asChild className="px-0" icon={<ArrowUpRight size={16} className="transition-transform duration-300 ease-brand group-hover:translate-x-1" aria-hidden="true" />}>
-                          <Link to="/request-quote">Request quote</Link>
+                          <Link to="/request-quote" onClick={() => trackQuoteStart('product')}>Request quote</Link>
                         </Button>
                       </div>
                       <div className="rounded-[1.75rem] border border-oak-200 bg-oak-50 p-5 text-sm text-bark/80">

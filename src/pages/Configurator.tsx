@@ -8,6 +8,7 @@ import { PageContainer } from '../components/layout/PageContainer';
 import { Breadcrumb, Button, Card, SectionHeader } from '../components/ui';
 import { QuoteFormValues, categories, productTypes, woodSpecies, finishes, budgetRanges } from '../components/ui/QuoteForm';
 import { getEstimatedPriceRange } from '../utils/priceEstimator';
+import { trackConfiguratorComplete } from '../lib/analytics';
 
 const stepDefinitions = [
   { label: 'Category', description: 'Choose the furniture family that fits your project.' },
@@ -276,6 +277,11 @@ export function Configurator() {
       woodSpecies: formatSelectionList(configuration.woodSpecies),
       finish: formatSelectionList(configuration.finish),
     };
+
+    trackConfiguratorComplete({
+      page_path: window.location.pathname,
+      product_category: configuration.category.length > 0 ? configuration.category.join(', ') : undefined,
+    });
 
     navigate('/request-quote', { state: { prefill: quotePrefill } });
   };

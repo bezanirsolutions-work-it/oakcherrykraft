@@ -28,6 +28,7 @@ import {
 } from '../lib/products';
 import { getCanonicalCategorySlug, getCategoryDisplayLabel } from '../lib/productCategories';
 import { supabase } from '../lib/supabase';
+import { trackQuoteStart } from '../lib/analytics';
 import { products as fallbackProducts } from '../data/products';
 
 const fadeIn = {
@@ -284,7 +285,7 @@ export function ProductDetail() {
 
           <div className="mt-8 flex flex-col gap-4 sm:flex-row">
             <Button asChild>
-              <Link to="/request-quote">Request a quote</Link>
+              <Link to="/request-quote" onClick={() => trackQuoteStart('product')}>Request a quote</Link>
             </Button>
             <Button asChild>
               <Link to="/configuration-selector" state={{ selectedProduct: product }}>Design Your Furniture</Link>

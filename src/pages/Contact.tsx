@@ -8,6 +8,7 @@ import { PageContainer } from '../components/layout/PageContainer';
 import { Button, Card, SectionHeader } from '../components/ui';
 import { supabase } from '../lib/supabase';
 import { BUSINESS_LOCATIONS } from '../lib/locations';
+import { trackContactSubmit, trackPhoneClick, trackWhatsAppClick } from '../lib/analytics';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 24 },
@@ -57,6 +58,11 @@ export function Contact() {
       return;
     }
 
+    trackContactSubmit({
+      page_path: window.location.pathname,
+      subject: subject || undefined,
+    });
+
     setStatus('success');
     setFeedbackMessage('Your message has been sent. We will get back to you shortly.');
     form.reset();
@@ -97,7 +103,27 @@ export function Contact() {
           </motion.div>
           <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
             {contactItems.map(({ label, value, href, Icon }) => (
-              <motion.a key={label} href={href} variants={fadeIn} whileHover={{ y: -3 }} className="group flex items-start gap-4 rounded-[1.25rem] border border-bark/10 bg-white p-5 shadow-card transition duration-300 hover:shadow-medium focus:outline-none focus-visible:ring-4 focus-visible:ring-oak-200">
+              <motion.a
+                key={label}
+                href={href}
+                variants={fadeIn}
+                whileHover={{ y: -3 }}
+                onClick={(event) => {
+                  if (href.startsWith('tel:')) {
+                    event.preventDefault();
+                    trackPhoneClick('contact');
+                    window.location.href = href;
+                    return;
+                  }
+
+                  if (href.includes('wa.me')) {
+                    event.preventDefault();
+                    trackWhatsAppClick('contact');
+                    window.open(href, '_blank', 'noopener,noreferrer');
+                  }
+                }}
+                className="group flex items-start gap-4 rounded-[1.25rem] border border-bark/10 bg-white p-5 shadow-card transition duration-300 hover:shadow-medium focus:outline-none focus-visible:ring-4 focus-visible:ring-oak-200"
+              >
                 <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-oak-100 text-oak-700"><Icon size={18} aria-hidden="true" /></span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-xs font-semibold uppercase tracking-[0.2em] text-bark/55">{label}</span>
@@ -187,7 +213,18 @@ export function Contact() {
               <h2 className="mt-4 font-display text-3xl font-semibold text-bark">Reach us directly on WhatsApp.</h2>
               <p className="mt-3 text-base leading-8 text-bark/70">Send a quick note and we&apos;ll help you take the next step.</p>
             </div>
-            <Button variant="secondary" asChild className="mt-8 self-start" icon={<MessageCircle size={17} aria-hidden="true" />}><a href="https://wa.me/2348034291245">WhatsApp the studio</a></Button>
+            <Button variant="secondary" asChild className="mt-8 self-start" icon={<MessageCircle size={17} aria-hidden="true" />}>
+              <a
+                href="https://wa.me/2348034291245"
+                onClick={(event) => {
+                  event.preventDefault();
+                  trackWhatsAppClick('contact');
+                  window.open('https://wa.me/2348034291245', '_blank', 'noopener,noreferrer');
+                }}
+              >
+                WhatsApp the studio
+              </a>
+            </Button>
           </Card>
         </motion.div>
       </motion.section>
