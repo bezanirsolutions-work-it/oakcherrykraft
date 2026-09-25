@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { MotionConfig } from 'framer-motion';
-import { Route, Routes, useLocation } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { ErrorBoundary, Layout } from './components/layout';
 
@@ -93,11 +93,7 @@ export default function App() {
               />
               <Route
                 path="gallery"
-                element={
-                  <motion.div {...pageTransition} className="w-full">
-                    <ProjectPortfolio />
-                  </motion.div>
-                }
+                element={<Navigate to="/projects" replace />}
               />
               <Route
                 path="projects/:slug"
@@ -115,22 +111,13 @@ export default function App() {
                   </motion.div>
                 }
               />
-              {/* Backwards compatibility: support old /quote link as alias */}
               <Route
                 path="quote"
-                element={
-                  <motion.div {...pageTransition} className="w-full">
-                    <QuoteRequest />
-                  </motion.div>
-                }
+                element={<Navigate to="/request-quote" replace />}
               />
               <Route
                 path="configurator"
-                element={
-                  <motion.div {...pageTransition} className="w-full">
-                    <Configurator />
-                  </motion.div>
-                }
+                element={<Navigate to="/configuration-selector" replace />}
               />
               <Route
                 path="configuration-selector"
