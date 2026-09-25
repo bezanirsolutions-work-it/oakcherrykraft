@@ -44,6 +44,21 @@ const getDisplayPrice = (product: Product) => {
   return formatted || 'Contact for price';
 };
 
+const CATEGORY_SEO_DESCRIPTIONS: Record<string, string> = {
+  'Entryway & Foyers': 'Explore handcrafted entryway and foyer furniture designed to make a warm, welcoming first impression in the home.',
+  'Living Spaces': 'Browse living space furniture and statement pieces crafted to bring comfort, character, and functional beauty to everyday routines.',
+  Dining: 'Discover handcrafted dining furniture designed for shared meals, gathering spaces, and enduring daily use.',
+  Kitchen: 'Explore custom kitchen pieces and cabinetry details that bring practicality, warmth, and lasting craftsmanship to the heart of the home.',
+  Bedroom: 'Shop handcrafted bedroom furniture designed for rest, storage, and a calm, personal sense of place.',
+  'Bathroom & Vanity': 'Explore handcrafted vanity and bathroom pieces designed for simplicity, practicality, and elegant daily rituals.',
+  'Hallways & Passages': 'See bespoke hallway and passageway pieces that add structure, flow, and character to transitional spaces.',
+  Anteroom: 'Discover refined anteroom furniture and custom pieces crafted to bring function and presence to quiet, in-between spaces.',
+  'Outdoor Living': 'Browse outdoor living pieces built for texture, comfort, and enduring use in open-air settings.',
+  Offices: 'Explore custom office furniture designed for focused work, refined atmosphere, and practical comfort in professional spaces.',
+  Restaurants: 'Discover crafted restaurant furniture and statement pieces shaped for hospitality, durability, and distinctive guest experiences.',
+  Lounges: 'Explore lounge furniture and distinctive pieces designed for comfort, atmosphere, and memorable social spaces.',
+};
+
 export function Products() {
   const { category: categoryParam } = useParams<{ category?: string }>();
   const [products, setProducts] = useState<Product[]>([]);
@@ -109,6 +124,13 @@ export function Products() {
     : null;
 
   const selectedCategoryName = selectedCategory?.label ?? null;
+  const categoryPageTitle = selectedCategoryName
+    ? `${selectedCategoryName} | Oak Cherry Kraft`
+    : 'Products | Oak Cherry Kraft';
+  const categoryPageDescription = selectedCategoryName
+    ? CATEGORY_SEO_DESCRIPTIONS[selectedCategoryName] ??
+      `Explore handcrafted ${selectedCategoryName.toLowerCase()} furniture designed for thoughtful, everyday living.`
+    : 'Discover our published furniture collection with live catalogue filtering by category, search, and product details.';
 
   const categoryOptions = useMemo(
     () => [{ slug: 'all', label: 'All' }, ...categories],
@@ -172,8 +194,8 @@ export function Products() {
   return (
     <PageContainer className="space-y-14 pb-16 sm:space-y-20 sm:pb-20">
       <SEO
-        title="Products | Oak Cherry Kraft"
-        description="Discover our published furniture collection with live catalogue filtering by category, search, and product details."
+        title={categoryPageTitle}
+        description={categoryPageDescription}
         url={pageUrl}
       />
 
