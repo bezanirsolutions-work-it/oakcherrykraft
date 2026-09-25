@@ -34,13 +34,21 @@ const structuredData = {
       areaServed: 'Nigeria',
       address: BUSINESS_LOCATIONS.map((location) => ({
         '@type': 'PostalAddress',
-        addressLocality: location.name === 'FHA Guzape' ? 'Abuja' : 'Lagos State',
-        addressRegion: location.name === 'FHA Guzape' ? 'Federal Capital Territory' : 'Lagos State',
+        streetAddress: location.streetAddress,
+        addressLocality: location.city,
+        addressRegion: location.region,
         addressCountry: 'NG',
       })),
       location: BUSINESS_LOCATIONS.map((location) => ({
         '@type': 'Place',
         name: `${location.name}, ${location.address}`,
+        address: {
+          '@type': 'PostalAddress',
+          streetAddress: location.streetAddress,
+          addressLocality: location.city,
+          addressRegion: location.region,
+          addressCountry: 'NG',
+        },
       })),
       openingHours: 'Mo-Sa 08:00-18:00',
       openingHoursSpecification: [
