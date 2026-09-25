@@ -73,30 +73,23 @@ export const normalizeProductImageFields = <T extends {
 
 export const getOptimizedSupabaseImageUrl = (
   src: string,
-  width = 800,
-  height = 600,
-  quality = 80
+  _width = 800,
+  _height = 600,
+  _quality = 80
 ): string => {
   if (!src) return src;
 
   const trimmed = src.trim();
   if (!trimmed) return trimmed;
 
-  const storageObjectMatch = trimmed.match(/\/storage\/v1\/object\/public\//i);
-  if (!storageObjectMatch) {
+  const publicStorageMatch = trimmed.match(/\/storage\/v1\/(?:object|render\/image)\/public\//i);
+  if (!publicStorageMatch) {
     return trimmed;
   }
 
-  try {
-    const renderUrl = new URL(trimmed.replace(/\/storage\/v1\/object\/public\//i, '/storage/v1/render/image/public/'));
-    renderUrl.searchParams.set('width', String(width));
-    renderUrl.searchParams.set('height', String(height));
-    renderUrl.searchParams.set('quality', String(quality));
-    renderUrl.searchParams.set('resize', 'cover');
-    return renderUrl.toString();
-  } catch {
-    return trimmed;
-  }
+  // Keep public Supabase object URLs as direct downloads rather than rewriting them
+  // through the /render/image/public endpoint, which currently returns 403 for these assets.
+  return trimmed;
 };
 
 export const getProductImage = (
