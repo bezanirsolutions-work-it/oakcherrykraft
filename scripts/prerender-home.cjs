@@ -156,7 +156,10 @@ async function main() {
       }
 
       fs.writeFileSync(spaPath, shellHtml);
-      const prerenderedHtml = await page.content();
+      const prerenderedHtml = (await page.content()).split(previewOrigin).join('');
+      if (/https?:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?/i.test(prerenderedHtml)) {
+        throw new Error('Prerendered HTML contains a loopback URL');
+      }
       fs.writeFileSync(indexPath, prerenderedHtml.replace(/^[\t ]+(?=\r?$)/gm, ''));
       console.log(`Prerendered homepage: ${checks.title}`);
       console.log(`Description: ${checks.descriptionCount}; canonical: ${checks.canonicalCount}; visible H1: ${checks.visibleH1Count}`);
