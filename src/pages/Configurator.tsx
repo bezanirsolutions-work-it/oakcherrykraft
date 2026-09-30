@@ -48,6 +48,16 @@ const formatSelectionList = (value?: string | string[] | null) => {
 const toggleSelection = (current: string[], option: string) =>
   current.includes(option) ? current.filter((item) => item !== option) : [...current, option];
 
+const colourOptions = [
+  { label: 'Natural', swatch: '#C6A477' },
+  { label: 'Walnut', swatch: '#6B4423' },
+  { label: 'Black', swatch: '#292524' },
+  { label: 'White', swatch: '#F8F8F5' },
+  { label: 'Grey', swatch: '#8B8B83' },
+];
+const otherColourOption = 'Other / Custom';
+const customColourPrefix = 'Custom: ';
+
 type ConfiguratorState = Omit<Partial<QuoteFormValues>, 'category' | 'productType' | 'woodSpecies' | 'finish'> & {
   product: string;
   category: string[];
@@ -246,7 +256,7 @@ export function Configurator() {
       { label: 'Wood species', value: formatSelectionList(configuration.woodSpecies) },
       { label: 'Finish', value: formatSelectionList(configuration.finish) },
       { label: 'Estimated price', value: getEstimatedPriceRange(configuration) },
-      { label: 'Colour', value: configuration.colour || 'Not selected' },
+      { label: 'Color', value: configuration.colour || 'Not selected' },
       { label: 'Leg style', value: configuration.legStyle || 'Not selected' },
       { label: 'Accessories', value: configuration.accessories || 'None' },
       { label: 'Quantity', value: configuration.quantity ? `${configuration.quantity}` : 'Not set' },
@@ -385,7 +395,13 @@ export function Configurator() {
             </div>
           </div>
         );
-      case 4:
+      case 4: {
+        const selectedColours = normalizeSelectionList(configuration.colour);
+        const customColours = selectedColours
+          .filter((option) => !colourOptions.some((colour) => colour.label === option) && option !== otherColourOption)
+          .map((option) => option.startsWith(customColourPrefix) ? option.slice(customColourPrefix.length) : option);
+        const isCustomColourSelected = selectedColours.includes(otherColourOption) || customColours.length > 0;
+
         return (
           <div className="space-y-5">
             <p className="text-base leading-7 text-bark/75">Select one or more finishes that bring out the grain and character of the wood.</p>
@@ -406,8 +422,62 @@ export function Configurator() {
                 );
               })}
             </div>
+            <section aria-labelledby="configurator-color-heading" className="space-y-4 border-t border-bark/10 pt-5">
+              <div>
+                <h3 id="configurator-color-heading" className="text-base font-semibold text-bark">Color</h3>
+                <p className="mt-1 text-sm leading-6 text-bark/70">Choose one or more colors for your furniture.</p>
+              </div>
+              <div role="group" aria-label="Color choices" className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {colourOptions.map((option) => {
+                  const isSelected = selectedColours.includes(option.label);
+
+                  return (
+                    <button
+                      key={option.label}
+                      type="button"
+                      aria-pressed={isSelected}
+                      onClick={() => updateField('colour', toggleSelection(selectedColours, option.label).join(', '))}
+                      className={`flex min-h-14 items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm font-medium transition ${isSelected ? 'border-oak-500 bg-oak-50 text-bark' : 'border-bark/10 bg-white text-bark/75 hover:border-oak-400 hover:bg-sand/80'}`}
+                    >
+                      <span className="h-6 w-6 shrink-0 rounded-full border border-bark/15" style={{ backgroundColor: option.swatch }} aria-hidden="true" />
+                      <span>{option.label}</span>
+                    </button>
+                  );
+                })}
+                <button
+                  type="button"
+                  aria-pressed={isCustomColourSelected}
+                  onClick={() => {
+                    const nextColours = isCustomColourSelected
+                      ? selectedColours.filter((option) => colourOptions.some((colour) => colour.label === option))
+                      : [...selectedColours, otherColourOption];
+                    updateField('colour', nextColours.join(', '));
+                  }}
+                  className={`min-h-14 rounded-xl border px-4 py-3 text-left text-sm font-medium transition ${isCustomColourSelected ? 'border-oak-500 bg-oak-50 text-bark' : 'border-bark/10 bg-white text-bark/75 hover:border-oak-400 hover:bg-sand/80'}`}
+                >
+                  {otherColourOption}
+                </button>
+              </div>
+              {isCustomColourSelected ? (
+                <label className="block text-sm font-medium text-bark">
+                  Describe your custom color
+                  <input
+                    type="text"
+                    value={customColours.join(', ')}
+                    onChange={(event) => {
+                      const knownColours = selectedColours.filter((option) => colourOptions.some((colour) => colour.label === option));
+                      const customColour = event.target.value.trim();
+                      updateField('colour', [...knownColours, customColour ? `${customColourPrefix}${customColour}` : otherColourOption].join(', '));
+                    }}
+                    className="mt-2 w-full rounded-xl border border-bark/10 bg-white px-4 py-3 text-base text-bark outline-none transition placeholder:text-bark/40 focus:border-oak-600 focus:ring-4 focus:ring-oak-200"
+                    placeholder="e.g. Sage green or a reference color"
+                  />
+                </label>
+              ) : null}
+            </section>
           </div>
         );
+      }
       case 5:
         return (
           <div className="space-y-6">
@@ -531,7 +601,7 @@ export function Configurator() {
             items: [
               { label: 'Wood species', value: formatSelectionList(configuration.woodSpecies) },
               { label: 'Finish', value: formatSelectionList(configuration.finish) },
-              { label: 'Colour', value: configuration.colour || 'Not selected' },
+              { label: 'Color', value: configuration.colour || 'Not selected' },
               { label: 'Leg style', value: configuration.legStyle || 'Not selected' },
               { label: 'Accessories', value: configuration.accessories || 'None' },
             ],
