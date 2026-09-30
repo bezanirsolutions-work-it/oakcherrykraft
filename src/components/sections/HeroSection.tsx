@@ -30,8 +30,7 @@ export function HeroSection({ children: _children }: HeroSectionProps) {
       {/* Absolute image for precise large-screen placement (keeps bg as fallback on smaller screens) */}
       <img
         src="/assets/hero/GENERATED.webp"
-        alt=""
-        aria-hidden="true"
+        alt="Bespoke furniture in a contemporary living space"
         className="pointer-events-none hidden lg:block absolute top-0 bottom-0 right-[-300px] w-[150%] object-cover -z-20"
         style={{ transform: 'scale(0.92) scaleX(-1)' }}
         width={1536}

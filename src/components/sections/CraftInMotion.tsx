@@ -142,7 +142,7 @@ export function CraftInMotion() {
                     style={reducedMotion ? undefined : { animation: `craftCardDance ${7.5 + index * 0.45}s ease-in-out infinite ${segment * 0.7 + index * 0.42}s` }}
                   >
                     <div className="relative aspect-[0.88/1] overflow-hidden bg-sand">
-                      <img src={stage.image} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover transition duration-700 ease-brand group-hover:scale-105" style={{ objectPosition: stage.imagePosition }} />
+                      <img src={stage.image} alt={stage.title} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover transition duration-700 ease-brand group-hover:scale-105" style={{ objectPosition: stage.imagePosition }} />
                       <div className="absolute inset-0 bg-gradient-to-t from-bark/95 via-bark/25 to-bark/10" aria-hidden="true" />
                       <span className="absolute left-4 top-4 rounded-full border border-white/75 bg-bark/65 px-4 py-2 text-[0.78rem] font-bold tracking-[0.2em] text-white shadow-[0_5px_16px_rgba(45,42,38,0.22)] backdrop-blur-sm">{stage.number}</span>
                       <div className="absolute inset-x-0 bottom-0 p-5 xl:p-6">
